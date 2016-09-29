@@ -16,7 +16,6 @@
 
 #include "apr_strings.h"
 #include "apr_thread_proc.h"    /* for RLIMIT stuff */
-#include "http_log.h"
 
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
@@ -27,6 +26,7 @@
 #include "http_core.h"
 #include "http_protocol.h"   /* For index_of_response().  Grump. */
 #include "http_request.h"
+#include "http_log.h"
 
 #include "util_filter.h"
 #include "util_ebcdic.h"
