@@ -35836,7 +35836,7 @@ fi
 
 set X $apr_ste_save_CXXFLAGS
 if test ${#} -eq 1; then
-  EXTRA_CXXFLAGS="$CXXFLAGS"
+  EXTRA_CXXFLAGS="$CXXFLAGS --std=c++11"
   CXXFLAGS=
 else
   if test "x$apr_ste_save_CXXFLAGS" = "x$CXXFLAGS"; then
