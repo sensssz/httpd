@@ -31,7 +31,7 @@ void log_command(const char *command);
 
 void SESSION_START();
 
-void SESSION_END(int successful);
+void SESSION_END();
 
 void PATH_SET(int path_count);
 

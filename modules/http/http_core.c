@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-
 #include "apr_strings.h"
 #include "apr_thread_proc.h"    /* for RLIMIT stuff */
 
@@ -247,12 +245,6 @@ static int ap_process_http_sync_connection(conn_rec *c)
 
 static int ap_process_http_connection(conn_rec *c)
 {
-    char dirname[200] = {0};
-    if (getcwd(dirname, sizeof(dirname)) != NULL) {
-        ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c, "cwd: %s", dirname);
-    } else {
-        ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c, "getcwd error!");
-    }
     ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
                   "ap_process_http_connection");
     if (async_mpm && !c->clogging_input_filters) {

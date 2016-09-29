@@ -134,7 +134,7 @@ static __thread timespec call_end;
 void set_id(int id) {
     TraceTool::get_instance()->id = id;
     if (!TraceTool::log_file.is_open()) {
-        TraceTool::log_file.open("logs/log_file_" + to_string(id));
+        TraceTool::log_file.open("/home/jiamin/usr/logs/log_file_" + to_string(id));
     }
 }
 
@@ -167,7 +167,7 @@ void SESSION_START() {
 void SESSION_END(int successful) {
 #ifdef LATENCY
     TraceTool::get_instance()->is_commit = true;
-    TraceTool::get_instance()->commit_successful = successful;
+    TraceTool::get_instance()->commit_successful = 1;
     TraceTool::get_instance()->end_trx();
 #endif
 }
@@ -400,6 +400,6 @@ void TraceTool::write_latency(string dir) {
 void TraceTool::write_log() {
 //    log_file << "Write log on instance " << instance << ", id is " << id << endl;
     if (id > 0) {
-        write_latency("latency/");
+        write_latency("/home/jiamin/usr/latency/");
     }
 }
