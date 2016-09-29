@@ -190,7 +190,7 @@ x-local-depend x-local-clean x-local-distclean x-local-extraclean:
 #
 # Implicit rules for creating outputs from input files
 #
-CXX_SUFFIX = cpp
+CXX_SUFFIX = cc
 SHLIB_SUFFIX = so
 
 .SUFFIXES:
