@@ -2,7 +2,7 @@
 # This is the Apache server configuration file providing SSL support.
 # It contains the configuration directives to instruct the server how to
 # serve pages over an https connection. For detailed information about these 
-# directives see <URL:http://httpd.apache.org/docs/trunk/mod/mod_ssl.html>
+# directives see <URL:http://httpd.apache.org/docs/2.4/mod/mod_ssl.html>
 # 
 # Do NOT simply read the instructions in here without understanding
 # what they do.  They're here only as hints or reminders.  If you are unsure
@@ -88,8 +88,8 @@ SSLPassPhraseDialog  builtin
 #   Inter-Process Session Cache:
 #   Configure the SSL Session Cache: First the mechanism 
 #   to use and second the expiring timeout (in seconds).
-#SSLSessionCache         "dbm:ssl_scache"
-SSLSessionCache        "shmcb:ssl_scache(512000)"
+#SSLSessionCache         "dbm:@exp_runtimedir@/ssl_scache"
+SSLSessionCache        "shmcb:@exp_runtimedir@/ssl_scache(512000)"
 SSLSessionCacheTimeout  300
 
 #   OCSP Stapling (requires OpenSSL 0.9.8h or later)
@@ -106,7 +106,7 @@ SSLSessionCacheTimeout  300
 #   the same mechanism that is used for the SSL session cache
 #   above.  If stapling is used with more than a few certificates,
 #   the size may need to be increased.  (AH01929 will be logged.)
-#SSLStaplingCache "shmcb:ssl_stapling(32768)"
+#SSLStaplingCache "shmcb:@exp_runtimedir@/ssl_stapling(32768)"
 
 #   Seconds before valid OCSP responses are expired from the cache
 #SSLStaplingStandardCacheTimeout 3600
@@ -124,8 +124,8 @@ SSLSessionCacheTimeout  300
 DocumentRoot "@exp_htdocsdir@"
 ServerName www.example.com:@@SSLPort@@
 ServerAdmin you@example.com
-ErrorLog "@rel_logfiledir@/error_log"
-TransferLog "@rel_logfiledir@/access_log"
+ErrorLog "@exp_logfiledir@/error_log"
+TransferLog "@exp_logfiledir@/access_log"
 
 #   SSL Engine Switch:
 #   Enable/Disable SSL for this virtual host.
@@ -141,9 +141,9 @@ SSLEngine on
 #   Some ECC cipher suites (http://www.ietf.org/rfc/rfc4492.txt)
 #   require an ECC certificate which can also be configured in
 #   parallel.
-SSLCertificateFile "@rel_sysconfdir@/server.crt"
-#SSLCertificateFile "@rel_sysconfdir@/server-dsa.crt"
-#SSLCertificateFile "@rel_sysconfdir@/server-ecc.crt"
+SSLCertificateFile "@exp_sysconfdir@/server.crt"
+#SSLCertificateFile "@exp_sysconfdir@/server-dsa.crt"
+#SSLCertificateFile "@exp_sysconfdir@/server-ecc.crt"
 
 #   Server Private Key:
 #   If the key is not combined with the certificate, use this
@@ -151,9 +151,9 @@ SSLCertificateFile "@rel_sysconfdir@/server.crt"
 #   you've both a RSA and a DSA private key you can configure
 #   both in parallel (to also allow the use of DSA ciphers, etc.)
 #   ECC keys, when in use, can also be configured in parallel
-SSLCertificateKeyFile "@rel_sysconfdir@/server.key"
-#SSLCertificateKeyFile "@rel_sysconfdir@/server-dsa.key"
-#SSLCertificateKeyFile "@rel_sysconfdir@/server-ecc.key"
+SSLCertificateKeyFile "@exp_sysconfdir@/server.key"
+#SSLCertificateKeyFile "@exp_sysconfdir@/server-dsa.key"
+#SSLCertificateKeyFile "@exp_sysconfdir@/server-ecc.key"
 
 #   Server Certificate Chain:
 #   Point SSLCertificateChainFile at a file containing the
@@ -162,7 +162,7 @@ SSLCertificateKeyFile "@rel_sysconfdir@/server.key"
 #   the referenced file can be the same as SSLCertificateFile
 #   when the CA certificates are directly appended to the server
 #   certificate for convenience.
-#SSLCertificateChainFile "@rel_sysconfdir@/server-ca.crt"
+#SSLCertificateChainFile "@exp_sysconfdir@/server-ca.crt"
 
 #   Certificate Authority (CA):
 #   Set the CA certificate verification path where to find CA
@@ -171,8 +171,8 @@ SSLCertificateKeyFile "@rel_sysconfdir@/server.key"
 #   Note: Inside SSLCACertificatePath you need hash symlinks
 #         to point to the certificate files. Use the provided
 #         Makefile to update the hash symlinks after changes.
-#SSLCACertificatePath "@rel_sysconfdir@/ssl.crt"
-#SSLCACertificateFile "@rel_sysconfdir@/ssl.crt/ca-bundle.crt"
+#SSLCACertificatePath "@exp_sysconfdir@/ssl.crt"
+#SSLCACertificateFile "@exp_sysconfdir@/ssl.crt/ca-bundle.crt"
 
 #   Certificate Revocation Lists (CRL):
 #   Set the CA revocation path where to find CA CRLs for client
@@ -183,8 +183,8 @@ SSLCertificateKeyFile "@rel_sysconfdir@/server.key"
 #   Note: Inside SSLCARevocationPath you need hash symlinks
 #         to point to the certificate files. Use the provided
 #         Makefile to update the hash symlinks after changes.
-#SSLCARevocationPath "@rel_sysconfdir@/ssl.crl"
-#SSLCARevocationFile "@rel_sysconfdir@/ssl.crl/ca-bundle.crl"
+#SSLCARevocationPath "@exp_sysconfdir@/ssl.crl"
+#SSLCARevocationFile "@exp_sysconfdir@/ssl.crl/ca-bundle.crl"
 #SSLCARevocationCheck chain
 
 #   Client Authentication (Type):
@@ -200,8 +200,8 @@ SSLCertificateKeyFile "@rel_sysconfdir@/server.key"
 #   file (containing login information for SRP user accounts). 
 #   Requires OpenSSL 1.0.1 or newer. See the mod_ssl FAQ for
 #   detailed instructions on creating this file. Example:
-#   "openssl srp -srpvfile @rel_sysconfdir@/passwd.srpv -add username"
-#SSLSRPVerifierFile "@rel_sysconfdir@/passwd.srpv"
+#   "openssl srp -srpvfile @exp_sysconfdir@/passwd.srpv -add username"
+#SSLSRPVerifierFile "@exp_sysconfdir@/passwd.srpv"
 
 #   Access Control:
 #   With SSLRequire you can do per-directory access control based
@@ -284,7 +284,7 @@ BrowserMatch "MSIE [2-5]" \
 #   Per-Server Logging:
 #   The home of a custom SSL log file. Use this when you want a
 #   compact non-error SSL logfile on a virtual host basis.
-CustomLog "@rel_logfiledir@/ssl_request_log" \
+CustomLog "@exp_logfiledir@/ssl_request_log" \
           "%t %h %{SSL_PROTOCOL}x %{SSL_CIPHER}x \"%r\" %b"
 
 </VirtualHost>                                  

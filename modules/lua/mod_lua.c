@@ -83,8 +83,6 @@ typedef struct
     int broken;
 } lua_filter_ctx;
 
-#define DEFAULT_LUA_SHMFILE "lua_ivm_shm"
-
 apr_global_mutex_t *lua_ivm_mutex;
 apr_shm_t *lua_ivm_shm;
 char *lua_ivm_shmfile;
@@ -907,7 +905,7 @@ typedef struct cr_ctx
 } cr_ctx;
 
 
-/* Okay, this deserves a little explanation -- in order for the errors that lua
+/* Okay, this deserves a little explaination -- in order for the errors that lua
  * generates to be 'accuarate', including line numbers, we basically inject
  * N line number new lines into the 'top' of the chunk reader.....
  *
@@ -1975,6 +1973,8 @@ static void *create_server_config(apr_pool_t *p, server_rec *s)
 {
 
     ap_lua_server_cfg *cfg = apr_pcalloc(p, sizeof(ap_lua_server_cfg));
+    cfg->vm_reslists = apr_hash_make(p);
+    apr_thread_rwlock_create(&cfg->vm_reslists_lock, p);
     cfg->root_path = NULL;
 
     return cfg;
@@ -1997,6 +1997,7 @@ static int lua_post_config(apr_pool_t *pconf, apr_pool_t *plog,
                              apr_pool_t *ptemp, server_rec *s)
 {
     apr_pool_t **pool;
+    const char *tempdir;
     apr_status_t rs;
 
     lua_ssl_val = APR_RETRIEVE_OPTIONAL_FN(ssl_var_lookup);
@@ -2012,20 +2013,21 @@ static int lua_post_config(apr_pool_t *pconf, apr_pool_t *plog,
         return HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    /* Create shared memory space, anonymous first if possible. */
-    rs = apr_shm_create(&lua_ivm_shm, sizeof pool, NULL, pconf);
-    if (APR_STATUS_IS_ENOTIMPL(rs)) {
-        /* Fall back to filename-based; nuke any left-over first. */
-        lua_ivm_shmfile = ap_runtime_dir_relative(pconf, DEFAULT_LUA_SHMFILE);
-
-        apr_shm_remove(lua_ivm_shmfile, pconf);
-        
-        rs = apr_shm_create(&lua_ivm_shm, sizeof pool, lua_ivm_shmfile, pconf);
+    /* Create shared memory space */
+    rs = apr_temp_dir_get(&tempdir, pconf);
+    if (rs != APR_SUCCESS) {
+        ap_log_error(APLOG_MARK, APLOG_ERR, rs, s, APLOGNO(02664)
+                 "mod_lua IVM: Failed to find temporary directory");
+        return HTTP_INTERNAL_SERVER_ERROR;
     }
+    lua_ivm_shmfile = apr_psprintf(pconf, "%s/httpd_lua_shm.%ld", tempdir,
+                           (long int)getpid());
+    rs = apr_shm_create(&lua_ivm_shm, sizeof(apr_pool_t**),
+                    (const char *) lua_ivm_shmfile, pconf);
     if (rs != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_ERR, rs, s, APLOGNO(02665)
             "mod_lua: Failed to create shared memory segment on file %s",
-                     lua_ivm_shmfile ? lua_ivm_shmfile : "(anonymous)");
+                     lua_ivm_shmfile);
         return HTTP_INTERNAL_SERVER_ERROR;
     }
     pool = (apr_pool_t **)apr_shm_baseaddr_get(lua_ivm_shm);

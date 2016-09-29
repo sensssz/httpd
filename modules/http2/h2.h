@@ -95,6 +95,8 @@ typedef enum {
     H2_SESSION_ST_IDLE,             /* nothing to write, expecting data inc */
     H2_SESSION_ST_BUSY,             /* read/write without stop */
     H2_SESSION_ST_WAIT,             /* waiting for tasks reporting back */
+    H2_SESSION_ST_LOCAL_SHUTDOWN,   /* we announced GOAWAY */
+    H2_SESSION_ST_REMOTE_SHUTDOWN,  /* client announced GOAWAY */
 } h2_session_state;
 
 typedef struct h2_session_props {
@@ -104,7 +106,6 @@ typedef struct h2_session_props {
     apr_uint32_t emitted_max;       /* the highest local stream id sent */
     apr_uint32_t error;             /* the last session error encountered */
     unsigned int accepting : 1;     /* if the session is accepting new streams */
-    unsigned int shutdown : 1;      /* if the final GOAWAY has been sent */
 } h2_session_props;
 
 
@@ -115,8 +116,8 @@ typedef struct h2_session_props {
 typedef struct h2_request h2_request;
 
 struct h2_request {
-    apr_uint32_t id;             /* stream id */
-    apr_uint32_t initiated_on;   /* initiating stream id (PUSH) or 0 */
+    int id;             /* stream id */
+    int initiated_on;   /* initiating stream id (PUSH) or 0 */
     
     const char *method; /* pseudo header values, see ch. 8.1.2.3 */
     const char *scheme;
@@ -130,6 +131,7 @@ struct h2_request {
     apr_off_t content_length;
     
     unsigned int chunked : 1; /* iff requst body needs to be forwarded as chunked */
+    unsigned int eoh     : 1; /* iff end-of-headers has been seen and request is complete */
     unsigned int body    : 1; /* iff this request has a body */
     unsigned int serialize : 1; /* iff this request is written in HTTP/1.1 serialization */
     unsigned int push_policy; /* which push policy to use for this request */
@@ -144,8 +146,6 @@ struct h2_response {
     apr_off_t   content_length;
     apr_table_t *headers;
     apr_table_t *trailers;
-    struct h2_response *next;
-    
     const char  *sos_filter;
 };
 

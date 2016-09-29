@@ -261,10 +261,16 @@ apr_status_t h2_headers_add_h1(apr_table_t *headers, apr_pool_t *pool,
  * h2_request helpers
  ******************************************************************************/
 
-struct h2_request *h2_req_create(int id, apr_pool_t *pool, const char *method, 
-                                 const char *scheme, const char *authority, 
-                                 const char *path, apr_table_t *header,
-                                 int serialize);
+struct h2_request *h2_req_createn(int id, apr_pool_t *pool, const char *method, 
+                                  const char *scheme, const char *authority, 
+                                  const char *path, apr_table_t *header,
+                                  int serialize);
+struct h2_request *h2_req_create(int id, apr_pool_t *pool, int serialize);
+
+apr_status_t h2_req_make(struct h2_request *req, apr_pool_t *pool,
+                         const char *method, const char *scheme, 
+                         const char *authority, const char *path, 
+                         apr_table_t *headers);
 
 /*******************************************************************************
  * apr brigade helpers
@@ -359,7 +365,7 @@ do { \
 
 /**
  * Transfer buckets from one brigade to another with a limit on the 
- * maximum amount of bytes transferred. Does no setaside magic, lifetime
+ * maximum amount of bytes transfered. Does no setaside magic, lifetime
  * of brigades must fit. 
  * @param to   brigade to transfer buckets to
  * @param from brigades to remove buckets from

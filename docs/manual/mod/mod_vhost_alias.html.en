@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_vhost_alias - Apache HTTP Server Version 2.5</title>
+<title>mod_vhost_alias - Apache HTTP Server Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,16 +17,17 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
-<p class="apache">Apache HTTP Server Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Apache Module mod_vhost_alias</h1>
 <div class="toplang">
 <p><span>Available Languages: </span><a href="../en/mod/mod_vhost_alias.html" title="English">&nbsp;en&nbsp;</a> |
+<a href="../fr/mod/mod_vhost_alias.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
 <a href="../tr/mod/mod_vhost_alias.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div>
 <table class="module"><tr><th><a href="module-dict.html#Description">Description:</a></th><td>Provides for dynamically configured mass virtual
@@ -185,15 +186,15 @@ VirtualDocumentRoot "/usr/local/apache/vhosts/%3+/%2.1/%2.2/%2.3/%2"</pre>
     <p>The example request would come from
     <code>/usr/local/apache/vhosts/example.com/d/o/m/ain/directory/file.html</code>.</p>
 
-<p> A very common request by users is the ability to point multiple domains to multiple
-document roots without having to worry about the length or number of parts of the
+<p> A very common request by users is the ability to point multiple domains to multiple 
+document roots without having to worry about the length or number of parts of the 
 hostname being requested. If the requested hostname is <code>sub.www.domain.example.com</code>
  instead of simply <code>www.domain.example.com</code>, then using %3+ will result in the document
 root being <code>/usr/local/apache/vhosts/domain.example.com/...</code> instead of the
-intended <code>example.com</code> directory. In such cases, it can be beneficial to use
-the combination <code>%-2.0.%-1.0</code>, which will always yield the domain name and the
-tld, for example <code>example.com</code> regardless of the number of subdomains appended
-to the hostname. As such, one can make a configuration that will direct all first, second
+intended <code>example.com</code> directory. In such cases, it can be beneficial to use 
+the combination <code>%-2.0.%-1.0</code>, which will always yield the domain name and the 
+tld, for example <code>example.com</code> regardless of the number of subdomains appended 
+to the hostname. As such, one can make a configuration that will direct all first, second 
 or third level subdomains to the same directory:
 </p>
 <pre class="prettyprint lang-config">VirtualDocumentRoot "/usr/local/apache/vhosts/%-2.0.%-1.0"</pre>
@@ -226,7 +227,7 @@ VirtualScriptAliasIP  "/usr/local/apache/vhosts/%1/%2/%3/%4/cgi-bin"</pre>
     a <code>%</code> directive, you can work around the problem in
     the following way:</p>
 
-    <pre class="prettyprint lang-config">VirtualDocumentRoot "/usr/local/apache/vhosts/%2.0.%3.0"</pre>
+<pre class="prettyprint lang-config">VirtualDocumentRoot "/usr/local/apache/vhosts/%2.0.%3.0"</pre>
 
 
     <p>A request for
@@ -260,10 +261,10 @@ for a given virtual host</td></tr>
     cannot be used in the same context as <code class="directive"><a href="#virtualdocumentrootip">VirtualDocumentRootIP</a></code>.</p>
 
 <div class="warning"><h3>Note</h3>
-<code class="directive">VirtualDocumentRoot</code> will override any <code class="directive"><a href="../mod/core.html#documentroot">DocumentRoot</a></code> directives you may have put in the same
-context or child contexts. Putting a <code class="directive">VirtualDocumentRoot</code>
-in the global server scope will effectively override <code class="directive"><a href="../mod/core.html#documentroot">DocumentRoot</a></code> directives in any virtual hosts defined later
-on, unless you set <code class="directive">VirtualDocumentRoot</code> to <code>None</code>
+<code class="directive">VirtualDocumentRoot</code> will override any <code class="directive"><a href="../mod/core.html#documentroot">DocumentRoot</a></code> directives you may have put in the same 
+context or child contexts. Putting a <code class="directive">VirtualDocumentRoot</code> 
+in the global server scope will effectively override <code class="directive"><a href="../mod/core.html#documentroot">DocumentRoot</a></code> directives in any virtual hosts defined later 
+on, unless you set <code class="directive">VirtualDocumentRoot</code> to <code>None</code> 
 in each virtual host.
 </div>
 
@@ -331,11 +332,12 @@ a given virtual host</td></tr>
 </div>
 <div class="bottomlang">
 <p><span>Available Languages: </span><a href="../en/mod/mod_vhost_alias.html" title="English">&nbsp;en&nbsp;</a> |
+<a href="../fr/mod/mod_vhost_alias.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
 <a href="../tr/mod/mod_vhost_alias.html" hreflang="tr" rel="alternate" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_vhost_alias.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_vhost_alias.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -345,13 +347,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_vhost_alia
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

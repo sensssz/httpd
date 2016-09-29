@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_authn_dbd - Serveur Apache HTTP Version 2.5</title>
+<title>mod_authn_dbd - Serveur Apache HTTP Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Module Apache mod_authn_dbd</h1>
 <div class="toplang">
@@ -33,7 +33,8 @@
 SQL</td></tr>
 <tr><th><a href="module-dict.html#Status">Statut:</a></th><td>Extension</td></tr>
 <tr><th><a href="module-dict.html#ModuleIdentifier">Identificateur de Module:</a></th><td>authn_dbd_module</td></tr>
-<tr><th><a href="module-dict.html#SourceFile">Fichier Source:</a></th><td>mod_authn_dbd.c</td></tr></table>
+<tr><th><a href="module-dict.html#SourceFile">Fichier Source:</a></th><td>mod_authn_dbd.c</td></tr>
+<tr><th><a href="module-dict.html#Compatibility">Compatibilité:</a></th><td>Disponible depuis la version 2.1 d'Apache</td></tr></table>
 <h3>Sommaire</h3>
 
     <p>Ce module permet aux frontaux d'authentification comme
@@ -43,7 +44,7 @@ SQL</td></tr>
     une fonctionnalité similaire.</p>
     <p>Ce module s'appuie sur <code class="module"><a href="../mod/mod_dbd.html">mod_dbd</a></code> pour spécifier le
     pilote de la base de données sous-jacente et les paramètres de
-    connexion, mais aussi  pour gérer les connexions à la base de
+    connexion, mais aussi pour gérer les connexions à la base de
     données.</p>
 
     <p>Si l'on utilise <code class="module"><a href="../mod/mod_auth_basic.html">mod_auth_basic</a></code> ou
@@ -55,7 +56,6 @@ SQL</td></tr>
 <li><img alt="" src="../images/down.gif" /> <a href="#socache">Performances et mise en cache</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#example">Exemple de configuration</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#exposed">Mise à disposition des informations de connexion</a></li>
-<li><img alt="" src="../images/down.gif" /> <a href="#security">Prévention contre les injections SQL</a></li>
 </ul><h3 class="directives">Directives</h3>
 <ul id="toc">
 <li><img alt="" src="../images/down.gif" /> <a href="#authdbduserpwquery">AuthDBDUserPWQuery</a></li>
@@ -94,8 +94,8 @@ soulager ainsi la base de données de la plus grande partie de la charge.</p>
 
 <p>Voici un exemple simple d'utilisation de ce module dans un contexte
 d'authentification et de bases de données.</p>
-<pre class="prettyprint lang-config"># configuration de mod_dbd modifiée pour inclure la mise en cache de
-# l'authentification
+<pre class="prettyprint lang-config"># configuration de mod_dbd
+# MISE À JOUR pour inclure la mise en cache de l'authentification
 DBDriver pgsql
 DBDParams "dbname=apacheauth user=apache password=xxxxxx"
 
@@ -144,21 +144,6 @@ base de données.</p>
 <p>Ceci va entraîner une simplification considérable du code et de la
 configuration nécessaire de certaines applications web.
 </p>
-</div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
-<div class="section">
-<h2><a name="security" id="security">Prévention contre les injections SQL</a></h2>
-
-  <p>Selon le driver DBD et le serveur d'arrière-plan que vous utilisez,
-  vous devrez prendre garde à la sécurité dans le domaine SQL.
-  Avec la plupart des drivers, vous n'avez rien à faire : la
-  requête est préparée par la base de données au démarrage, et l'entrée
-  utilisateur n'est utilisée qu'en tant que donnée. Mais vous aurez
-  peut-être à nettoyer cette entrée. Au moment où ces lignes sont
-  écrites, le seul driver qui peut nécessiter le nettoyage de l'entrée
-  est FreeTDS.</p>
-  <p>Veuillez vous référez à la documentation de
-  <code class="module"><a href="../mod/mod_dbd.html">mod_dbd</a></code> pour plus d'informations à propos de la
-  sécurité dans ce domaine.</p>
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="authdbduserpwquery" id="authdbduserpwquery">Directive</a> <a name="AuthDBDUserPWQuery" id="AuthDBDUserPWQuery">AuthDBDUserPWQuery</a></h2>
@@ -207,8 +192,8 @@ passe pour un utilisateur et un identifiant d'authentification.
 <tr><th><a href="directive-dict.html#Status">Statut:</a></th><td>Extension</td></tr>
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_authn_dbd</td></tr>
 </table>
-    <p>La directive <code class="directive">AuthDBDUserRealmQuery</code> spécifie
-    une requête SQL servant à vérifier une empreinte de mot
+    <p>La directive <code class="directive">AuthDBDUserRealmQuery</code> permet
+    de spécifier une requête SQL servant à vérifier une empreinte de mot
     de passe pour un utilisateur et un identifiant d'authentification
     donnés au cours d'un processus d'authentification digest. Les
     identifiants de l'utilisateur et de l'authentification
@@ -242,7 +227,7 @@ passe pour un utilisateur et un identifiant d'authentification.
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_authn_dbd.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_authn_dbd.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -252,13 +237,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_authn_dbd.
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

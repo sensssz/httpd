@@ -51,7 +51,7 @@ typedef struct h2_task h2_task;
 
 struct h2_task {
     const char *id;
-    apr_uint32_t stream_id;
+    int stream_id;
     conn_rec *c;
     apr_pool_t *pool;
     
@@ -61,6 +61,7 @@ struct h2_task {
     struct {
         struct h2_bucket_beam *beam;
         apr_bucket_brigade *bb;
+        apr_bucket_brigade *tmp;
         apr_read_type_e block;
         unsigned int chunked : 1;
         unsigned int eos : 1;
@@ -69,9 +70,7 @@ struct h2_task {
     struct {
         struct h2_bucket_beam *beam;
         struct h2_from_h1 *from_h1;
-        unsigned int opened : 1;
         unsigned int response_open : 1;
-        unsigned int copy_files : 1;
         apr_off_t written;
         apr_bucket_brigade *bb;
     } output;
@@ -85,7 +84,7 @@ struct h2_task {
     unsigned int frozen         : 1;
     unsigned int blocking       : 1;
     unsigned int detached       : 1;
-    unsigned int response_sent  : 1; /* a response has been sent to client */
+    unsigned int submitted      : 1; /* response has been submitted to client */
     unsigned int worker_started : 1; /* h2_worker started processing for this io */
     unsigned int worker_done    : 1; /* h2_worker finished for this io */
     
@@ -105,7 +104,7 @@ void h2_task_destroy(h2_task *task);
 
 apr_status_t h2_task_do(h2_task *task, apr_thread_t *thread);
 
-apr_status_t h2_task_add_response(h2_task *task, struct h2_response *response);
+void h2_task_set_response(h2_task *task, struct h2_response *response);
 
 void h2_task_redo(h2_task *task);
 int h2_task_can_redo(h2_task *task);

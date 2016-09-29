@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Seitenindex - Apache HTTP Server Version 2.5</title>
+<title>Seitenindex - Apache HTTP Server Version 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page">
 <div id="page-header">
-<p class="menu"><a href="./mod/">Module</a> | <a href="./mod/quickreference.html">Direktiven</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossar</a> | <a href="./sitemap.html">Seitenindex</a></p>
-<p class="apache">Apache HTTP Server Version 2.5</p>
+<p class="menu"><a href="./mod/">Module</a> | <a href="./mod/directives.html">Direktiven</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossar</a> | <a href="./sitemap.html">Seitenindex</a></p>
+<p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP-Server</a> &gt; <a href="http://httpd.apache.org/docs/">Dokumentation</a> &gt; <a href="./">Version 2.5</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP-Server</a> &gt; <a href="http://httpd.apache.org/docs/">Dokumentation</a> &gt; <a href="./">Version 2.4</a></div>
 <div id="page-content"><div id="preamble"><h1>Seitenindex</h1>
 <div class="toplang">
 <p><span>Verfügbare Sprachen: </span><a href="./de/sitemap.html" title="Deutsch">&nbsp;de&nbsp;</a> |
@@ -40,7 +40,7 @@
 
 <p>Diese Seite verzeichnet die zur Zeit verfügbaren Dokumente der
 <a href="./">Dokumentation zum Apache HTTP Server Version
-2.5</a>.</p>
+2.4</a>.</p>
 </div>
 <div id="quickview"><ul id="toc">
 <li><img alt="" src="./images/down.gif" /> <a href="#release">Hinweise zur Version</a></li>
@@ -77,7 +77,6 @@
 <li><a href="logs.html">Log-Dateien</a></li>
 <li><a href="urlmapping.html">URLs auf das Dateisystem abbilden</a></li>
 <li><a href="dso.html">Dynamic Shared Object (DSO)</a></li>
-<li><a href="compliance.html">HTTP-Protokoll-Konformität</a></li>
 <li><a href="content-negotiation.html">Content Negotiation</a></li>
 <li><a href="custom-error.html">Individuelle Fehlermeldungen</a></li>
 <li><a href="bind.html">Bestimmen der vom Apache verwendeten Adressen und Ports</a></li>
@@ -149,6 +148,7 @@ Microsoft Windows</a></li>
 <li><a href="platform/netware.html">Apache unter Novell NetWare einsetzen</a></li>
 <li><a href="platform/perf-hp.html">Einen Hochleistungs-Web-Server auf
 HPUX betreiben</a></li>
+<li><a href="platform/ebcdic.html">Die Apache EBCDIC-Portierung</a></li>
 </ul>
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section"><h2><a name="programs" id="programs">Apache HTTP Server und Hilfsprogramme</a></h2>
@@ -160,7 +160,6 @@ HPUX betreiben</a></li>
 <li><a href="programs/configure.html">configure</a></li>
 <li><a href="programs/dbmmanage.html">dbmmanage</a></li>
 <li><a href="programs/fcgistarter.html">fcgistarter</a></li>
-<li><a href="programs/firehose.html">firehose</a></li>
 <li><a href="programs/htcacheclean.html">htcacheclean</a></li>
 <li><a href="programs/htdbm.html">htdbm</a></li>
 <li><a href="programs/htdigest.html">htdigest</a></li>
@@ -177,7 +176,6 @@ HPUX betreiben</a></li>
 <div class="section"><h2><a name="misc" id="misc">Weitere Apache-Dokumentationen</a></h2>
 <ul><li class="separate"><a href="misc/">Übersicht</a></li>
 <li><a href="misc/perf-tuning.html">Performance-Hinweise</a></li>
-<li><a href="misc/perf-scaling.html">Performance-Skalierung</a></li>
 <li><a href="misc/security_tips.html">Tipps zur Sicherheit</a></li>
 <li><a href="misc/relevant_standards.html">Wichtige Standards</a></li>
 <li><a href="misc/password_encryptions.html">Verschlüsselungsformate für Passworte</a></li>
@@ -197,7 +195,6 @@ HPUX betreiben</a></li>
 </ul><ul><li><a href="mod/mod_access_compat.html">Apache-Modul mod_access_compat</a></li>
 <li><a href="mod/mod_actions.html">Apache-Modul mod_actions</a></li>
 <li><a href="mod/mod_alias.html">Apache-Modul mod_alias</a></li>
-<li><a href="mod/mod_allowhandlers.html">Apache-Modul mod_allowhandlers</a></li>
 <li><a href="mod/mod_allowmethods.html">Apache-Modul mod_allowmethods</a></li>
 <li><a href="mod/mod_asis.html">Apache-Modul mod_asis</a></li>
 <li><a href="mod/mod_auth_basic.html">Apache-Modul mod_auth_basic</a></li>
@@ -227,7 +224,6 @@ HPUX betreiben</a></li>
 <li><a href="mod/mod_cgi.html">Apache-Modul mod_cgi</a></li>
 <li><a href="mod/mod_cgid.html">Apache-Modul mod_cgid</a></li>
 <li><a href="mod/mod_charset_lite.html">Apache-Modul mod_charset_lite</a></li>
-<li><a href="mod/mod_crypto.html">Apache-Modul mod_crypto</a></li>
 <li><a href="mod/mod_data.html">Apache-Modul mod_data</a></li>
 <li><a href="mod/mod_dav.html">Apache-Modul mod_dav</a></li>
 <li><a href="mod/mod_dav_fs.html">Apache-Modul mod_dav_fs</a></li>
@@ -244,7 +240,6 @@ HPUX betreiben</a></li>
 <li><a href="mod/mod_ext_filter.html">Apache-Modul mod_ext_filter</a></li>
 <li><a href="mod/mod_file_cache.html">Apache-Modul mod_file_cache</a></li>
 <li><a href="mod/mod_filter.html">Apache-Modul mod_filter</a></li>
-<li><a href="mod/mod_firehose.html">Apache-Modul mod_firehose</a></li>
 <li><a href="mod/mod_headers.html">Apache-Modul mod_headers</a></li>
 <li><a href="mod/mod_heartbeat.html">Apache-Modul mod_heartbeat</a></li>
 <li><a href="mod/mod_heartmonitor.html">Apache-Modul mod_heartmonitor</a></li>
@@ -254,7 +249,6 @@ HPUX betreiben</a></li>
 <li><a href="mod/mod_include.html">Apache-Modul mod_include</a></li>
 <li><a href="mod/mod_info.html">Apache-Modul mod_info</a></li>
 <li><a href="mod/mod_isapi.html">Apache-Modul mod_isapi</a></li>
-<li><a href="mod/mod_journald.html">Apache-Modul mod_journald</a></li>
 <li><a href="mod/mod_lbmethod_bybusyness.html">Apache-Modul mod_lbmethod_bybusyness</a></li>
 <li><a href="mod/mod_lbmethod_byrequests.html">Apache-Modul mod_lbmethod_byrequests</a></li>
 <li><a href="mod/mod_lbmethod_bytraffic.html">Apache-Modul mod_lbmethod_bytraffic</a></li>
@@ -270,7 +264,6 @@ HPUX betreiben</a></li>
 <li><a href="mod/mod_mime_magic.html">Apache-Modul mod_mime_magic</a></li>
 <li><a href="mod/mod_negotiation.html">Apache-Modul mod_negotiation</a></li>
 <li><a href="mod/mod_nw_ssl.html">Apache-Modul mod_nw_ssl</a></li>
-<li><a href="mod/mod_policy.html">Apache-Modul mod_policy</a></li>
 <li><a href="mod/mod_privileges.html">Apache-Modul mod_privileges</a></li>
 <li><a href="mod/mod_proxy.html">Apache-Modul mod_proxy</a></li>
 <li><a href="mod/mod_proxy_ajp.html">Apache-Modul mod_proxy_ajp</a></li>
@@ -307,12 +300,9 @@ HPUX betreiben</a></li>
 <li><a href="mod/mod_socache_shmcb.html">Apache-Modul mod_socache_shmcb</a></li>
 <li><a href="mod/mod_speling.html">Apache-Modul mod_speling</a></li>
 <li><a href="mod/mod_ssl.html">Apache-Modul mod_ssl</a></li>
-<li><a href="mod/mod_ssl_ct.html">Apache-Modul mod_ssl_ct</a></li>
 <li><a href="mod/mod_status.html">Apache-Modul mod_status</a></li>
 <li><a href="mod/mod_substitute.html">Apache-Modul mod_substitute</a></li>
 <li><a href="mod/mod_suexec.html">Apache-Modul mod_suexec</a></li>
-<li><a href="mod/mod_syslog.html">Apache-Modul mod_syslog</a></li>
-<li><a href="mod/mod_systemd.html">Apache-Modul mod_systemd</a></li>
 <li><a href="mod/mod_unique_id.html">Apache-Modul mod_unique_id</a></li>
 <li><a href="mod/mod_unixd.html">Apache-Modul mod_unixd</a></li>
 <li><a href="mod/mod_userdir.html">Apache-Modul mod_userdir</a></li>
@@ -357,7 +347,7 @@ HPUX betreiben</a></li>
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Kommentare</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/sitemap.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/sitemap.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -367,13 +357,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/sitemap.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Lizenziert unter der <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="./mod/">Module</a> | <a href="./mod/quickreference.html">Direktiven</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossar</a> | <a href="./sitemap.html">Seitenindex</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Module</a> | <a href="./mod/directives.html">Direktiven</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossar</a> | <a href="./sitemap.html">Seitenindex</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

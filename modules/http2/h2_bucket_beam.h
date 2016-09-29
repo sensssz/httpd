@@ -163,14 +163,8 @@ typedef struct {
 typedef int h2_beam_can_beam_callback(void *ctx, h2_bucket_beam *beam,
                                       apr_file_t *file);
 
-/**
- * Will deny all transfer of apr_file_t across the beam and force
- * a data copy instead.
- */
-int h2_beam_no_files(void *ctx, h2_bucket_beam *beam, apr_file_t *file);
-
 struct h2_bucket_beam {
-    apr_uint32_t id;
+    int id;
     const char *tag;
     h2_blist red;
     h2_blist hold;
@@ -223,7 +217,7 @@ struct h2_bucket_beam {
  */
 apr_status_t h2_beam_create(h2_bucket_beam **pbeam,
                             apr_pool_t *red_pool, 
-                            apr_uint32_t id, const char *tag, 
+                            int id, const char *tag, 
                             apr_size_t buffer_size);
 
 /**
@@ -271,13 +265,6 @@ int h2_beam_closed(h2_bucket_beam *beam);
  * Call from red or green side.
  */
 int h2_beam_empty(h2_bucket_beam *beam);
-
-/**
- * Determine if beam has handed out proxy buckets that are not destroyed. 
- * 
- * Call from red or green side.
- */
-int h2_beam_holds_proxies(h2_bucket_beam *beam);
 
 /**
  * Abort the beam. Will cleanup any buffered buckets and answer all send

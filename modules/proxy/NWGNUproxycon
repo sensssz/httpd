@@ -18,7 +18,8 @@ endif
 XINCDIRS	+= \
 			$(APR)/include \
 			$(APRUTIL)/include \
-			$(SRC)/include \
+			$(AP_WORK)/include \
+			$(AP_WORK)/modules/http \
 			$(NWOS) \
 			$(EOLIST)
 
@@ -97,13 +98,13 @@ NLM_NAME	= proxycon
 # This is used by the link '-desc ' directive.
 # If left blank, NLM_NAME will be used.
 #
-NLM_DESCRIPTION	= Apache $(VERSION_STR) Proxy CONNECT Sub-Module
+NLM_DESCRIPTION	= Apache $(VERSION_STR) Proxy Connection Sub-Module
 
 #
 # This is used by the '-threadname' directive.  If left blank,
 # NLM_NAME Thread will be used.
 #
-NLM_THREAD_NAME	= Proxy CONNECT Module
+NLM_THREAD_NAME	= Proxy Conn Module
 
 #
 # If this is specified, it will override VERSION value in
@@ -148,7 +149,7 @@ XDCDATA		=
 # If there is an NLM target, put it here
 #
 TARGET_nlm = \
-	$(OBJDIR)/$(NLM_NAME).nlm \
+	$(OBJDIR)/proxycon.nlm \
 	$(EOLIST)
 
 #
@@ -204,7 +205,7 @@ FILE_nlm_copyright =
 FILES_nlm_Ximports = \
 	@aprlib.imp \
 	@httpd.imp \
-	@mod_proxy.imp \
+	@$(OBJDIR)/mod_proxy.imp \
 	@libc.imp \
 	$(EOLIST)
 
@@ -246,3 +247,5 @@ install :: nlms FORCE
 #
 
 include $(APBUILD)/NWGNUtail.inc
+
+

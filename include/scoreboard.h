@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#if APR_HAVE_SYS_TIME_H
+#ifdef HAVE_SYS_TIMES_H
 #include <sys/time.h>
 #include <sys/times.h>
 #endif
@@ -40,7 +40,7 @@ extern "C" {
 
 /* Scoreboard file, if there is one */
 #ifndef DEFAULT_SCOREBOARD
-#define DEFAULT_SCOREBOARD "apache_runtime_status" /* within DEFAULT_REL_RUNTIMEDIR */
+#define DEFAULT_SCOREBOARD "logs/apache_runtime_status"
 #endif
 
 /* Scoreboard info on a process is, for now, kept very brief ---
@@ -112,7 +112,7 @@ struct worker_score {
 #ifdef HAVE_TIMES
     struct tms times;
 #endif
-    char client[40];            /* Keep 'em small... but large enough to hold an IPv6 address */
+    char client[32];            /* Keep 'em small... */
     char request[64];           /* We just want an idea... */
     char vhost[32];             /* What virtual host is being accessed? */
     char protocol[16];          /* What protocol is used on the connection? */

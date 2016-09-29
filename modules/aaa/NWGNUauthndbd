@@ -18,9 +18,9 @@ endif
 XINCDIRS	+= \
 			$(APR)/include \
 			$(APRUTIL)/include \
-			$(SRC)/include \
+			$(AP_WORK)/include \
 			$(NWOS) \
-			$(STDMOD)/database \
+			$(AP_WORK)/modules/database \
 			$(EOLIST)
 
 #

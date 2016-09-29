@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Devingen olarak Yapılandırılan Kitlesel Sanal Barındırma - Apache HTTP Sunucusu Sürüm 2.5</title>
+<title>Devingen olarak Yapılandırılan Kitlesel Sanal Barındırma - Apache HTTP Sunucusu Sürüm 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -16,19 +16,18 @@
 
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p>
-<p class="apache">Apache HTTP Sunucusu Sürüm 2.5</p>
+<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p>
+<p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="../">Sürüm 2.5</a> &gt; <a href="./">Sanal Konaklar</a></div><div id="page-content"><div id="preamble"><h1>Devingen olarak Yapılandırılan Kitlesel Sanal Barındırma</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="../">Sürüm 2.4</a> &gt; <a href="./">Sanal Konaklar</a></div><div id="page-content"><div id="preamble"><h1>Devingen olarak Yapılandırılan Kitlesel Sanal Barındırma</h1>
 <div class="toplang">
 <p><span>Mevcut Diller: </span><a href="../en/vhosts/mass.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/vhosts/mass.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
 <a href="../ko/vhosts/mass.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
 <a href="../tr/vhosts/mass.html" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div>
-<div class="outofdate">Bu çeviri güncel olmayabilir. Son değişiklikler için İngilizce sürüm geçerlidir.</div>
 
 
     <p>Bu belgede sanal konakların sonu belirsiz bir şekilde artışı karşısında
@@ -56,23 +55,24 @@
       <code>&lt;VirtualHost&gt;</code> bölümü içereceği zaman yapılacaklar ile
       ilgilidir.</p>
 
-<pre>&lt;VirtualHost 111.22.33.44&gt;
+<pre class="prettyprint lang-config">&lt;VirtualHost 111.22.33.44&gt;
     ServerName                 musteri-1.example.com
-    DocumentRoot        /siteler/musteri-1/belgeler
-    ScriptAlias  /cgi-bin/  /siteler/musteri-1/cgi-bin
+    DocumentRoot        "/siteler/musteri-1/belgeler"
+    ScriptAlias  "/cgi-bin/"  "/siteler/musteri-1/cgi-bin"
 &lt;/VirtualHost&gt;
 
 &lt;VirtualHost 111.22.33.44&gt;
     ServerName                 musteri-2.example.com
-    DocumentRoot        /siteler/musteri-2/belgeler
-    ScriptAlias  /cgi-bin/  /siteler/musteri-2/cgi-bin
+    DocumentRoot        "/siteler/musteri-2/belgeler"
+    ScriptAlias   "/cgi-bin/"   "/siteler/musteri-2/cgi-bin"
 &lt;/VirtualHost&gt;
 
 &lt;VirtualHost 111.22.33.44&gt;
     ServerName                 musteri-N.example.com
-    DocumentRoot        /siteler/musteri-N/belgeler
-    ScriptAlias  /cgi-bin/  /siteler/musteri-N/cgi-bin
+    DocumentRoot          "/siteler/musteri-N/belgeler"
+    ScriptAlias   "/cgi-bin/"  "/siteler/musteri-N/cgi-bin"
 &lt;/VirtualHost&gt;</pre>
+
 
     <p>İsteğimiz çok sayıda <code>&lt;VirtualHost&gt;</code> bölümünü devingen
       olarak çalışan tek bir <code>&lt;VirtualHost&gt;</code> bölümüyle
@@ -150,20 +150,19 @@
       düzenlemesinin <code>mod_vhost_alias</code> kullanarak gerçekleştirilmiş
       halini içeren <code>httpd.conf</code> bölümü aşağıdadır.</p>
 
-<div class="example"><p><code>
-# sunucu ismini Host: başlığından elde edelim<br />
-UseCanonicalName Off<br />
-<br />
-# Bu günlükleme biçiminde split-logfile aracı kullanılarak<br />
-# ilk alana dayalı sanal konak günlükleri ayrıştırılabilir<br />
-LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon<br />
-CustomLog logs/access_log vcommon<br />
-<br />
-# istekleri yerine getirmek için kullanılacak<br />
-# dosya isimlerine sunucu ismini ekleyelim<br />
-VirtualDocumentRoot /siteler/%0/belgeler<br />
-VirtualScriptAlias  /siteler/%0/cgi-bin
-</code></p></div>
+<pre class="prettyprint lang-config"># sunucu ismini Host: başlığından elde edelim
+UseCanonicalName Off
+
+# Bu günlükleme biçiminde split-logfile aracı kullanılarak
+# sanal konak günlükleri ilk alana göre ayrıştırılabilir
+LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon
+CustomLog "logs/access_log vcommon"
+
+# istekleri yerine getirmek için kullanılacak
+# dosya isimlerine sunucu ismini ekleyelim
+VirtualDocumentRoot "/siteler/%0/belgeler"
+VirtualScriptAlias  "/siteler/%0/cgi-bin"</pre>
+
 
     <p>Bu yapılandırmayı IP’ye dayalı sanal konaklar için kullanmak isterseniz
       <code>UseCanonicalName Off</code> yerine <code>UseCanonicalName
@@ -187,18 +186,17 @@ VirtualScriptAlias  /siteler/%0/cgi-bin
       sanal konak için bir tane değil hepsi için bir tane <code>cgi-bin</code>
       olacaktır.</p>
 
-    <div class="example"><p><code>
-      UseCanonicalName Off<br />
-      <br />
-      LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon<br />
-      CustomLog logs/access_log vcommon<br />
-      <br />
-      # sunucu ismini içerecek dosya isimlerini oluşturalım<br />
-      VirtualDocumentRoot /home/%2/www<br />
-      <br />
-      # ortak cgi-bin dizini<br />
-      ScriptAlias  /cgi-bin/  /siteler/std-cgi/<br />
-    </code></p></div>
+    <pre class="prettyprint lang-config">UseCanonicalName Off
+
+LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon
+CustomLog logs/access_log vcommon
+
+# sunucu ismini içerecek dosya isimlerini oluşturalım
+VirtualDocumentRoot "/home/%2/www"
+
+# ortak cgi-bin dizini
+ScriptAlias  "/cgi-bin/"  "/siteler/std-cgi/"</pre>
+
 
     <p><code class="module"><a href="../mod/mod_vhost_alias.html">mod_vhost_alias</a></code> belgesinde daha karmaşık
       <code>VirtualDocumentRoot</code> örnekleri vardır.</p>
@@ -214,47 +212,38 @@ VirtualScriptAlias  /siteler/%0/cgi-bin
       başka bir IP adresiniz olsun. Her biri için ayrı ayrı sanal konaklar
       ayarlamak yerine aşağıdaki gibi bir yapılandırma kullanabilirsiniz:</p>
 
-<div class="example"><p><code>
-UseCanonicalName Off<br />
-<br />
-LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon<br />
-<br />
-&lt;Directory /siteler/kurumsal&gt;<br />
-<span class="indent">
-    Options FollowSymLinks<br />
-    AllowOverride All<br />
-</span>
-&lt;/Directory&gt;<br />
-<br />
-&lt;Directory /siteler/bireysel&gt;<br />
-<span class="indent">
-    Options FollowSymLinks<br />
-    AllowOverride None<br />
-</span>
-&lt;/Directory&gt;<br />
-<br />
-&lt;VirtualHost 111.22.33.44&gt;<br />
-<span class="indent">
-    ServerName kurumsal.example.com<br />
-    <br />
-    CustomLog logs/access_log.kurumsal vcommon<br />
-    <br />
-    VirtualDocumentRoot /siteler/kurumsal/%0/belgeler<br />
-    VirtualScriptAlias  /siteler/kurumsal/%0/cgi-bin<br />
-</span>
-&lt;/VirtualHost&gt;<br />
-<br />
-&lt;VirtualHost 111.22.33.45&gt;<br />
-<span class="indent">
-    ServerName bireysel.example.com<br />
-    <br />
-    CustomLog logs/access_log.bireysel vcommon<br />
-    <br />
-    VirtualDocumentRoot /siteler/bireysel/%0/belgeler<br />
-    ScriptAlias         /cgi-bin/ /siteler/std-cgi/<br />
-</span>
+<pre class="prettyprint lang-config">UseCanonicalName Off
+
+LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon
+
+&lt;Directory "/siteler/kurumsal"&gt;
+    Options FollowSymLinks
+    AllowOverride All
+&lt;/Directory&gt;
+
+&lt;Directory "/siteler/bireysel"&gt;
+    Options FollowSymLinks
+    AllowOverride None
+&lt;/Directory&gt;
+
+&lt;VirtualHost 111.22.33.44&gt;
+    ServerName kurumsal.example.com
+
+    CustomLog "logs/access_log.kurumsal" vcommon
+
+    VirtualDocumentRoot "/siteler/kurumsal/%0/belgeler"
+    VirtualScriptAlias  "/siteler/kurumsal/%0/cgi-bin"
 &lt;/VirtualHost&gt;
-</code></p></div>
+
+&lt;VirtualHost 111.22.33.45&gt;
+    ServerName bireysel.example.com
+
+    CustomLog "logs/access_log.bireysel" vcommon
+
+    VirtualDocumentRoot "/siteler/bireysel/%0/belgeler"
+    ScriptAlias         "/cgi-bin/" "/siteler/std-cgi/"
+&lt;/VirtualHost&gt;</pre>
+
 
     <div class="note"><h3>Bilginize</h3>
       <p>Eğer ilk <code>&lt;VirtualHost&gt;</code> bölümü bir <code class="directive"><a href="../mod/core.html#servername">ServerName</a></code> yönergesi içermezse ilgili IP
@@ -277,18 +266,17 @@ LogFormat "%V %h %l %u %t \"%r\" %s %b" vcommon<br />
       adreslerine göre düzenlenebilir. Günlük kayıtları da IP adreslerine göre
       ayrıştırılacak şekilde ayarlanabilir.</p>
 
-<div class="example"><p><code>
-# Sunucu ismini IP adresinden ters DNS sorgusu ile elde edelim<br />
-UseCanonicalName DNS<br />
-<br />
-# Günlük kayıtları IP adreslerine göre ayrıştırılabilsin<br />
-LogFormat "%A %h %l %u %t \"%r\" %s %b" vcommon<br />
-CustomLog logs/access_log vcommon<br />
-<br />
-# dosya isimleri IP adreslerini içersin<br />
-VirtualDocumentRootIP /siteler/%0/belgeler<br />
-VirtualScriptAliasIP  /siteler/%0/cgi-bin<br />
-</code></p></div>
+<pre class="prettyprint lang-config"># Sunucu ismini IP adresinden ters DNS sorgusu ile elde edelim
+UseCanonicalName DNS
+
+# Günlük kayıtları IP adreslerine göre ayrıştırılabilsin
+LogFormat "%A %h %l %u %t \"%r\" %s %b" vcommon
+CustomLog "logs/access_log" vcommon
+
+# dosya isimleri IP adreslerini içersin
+VirtualDocumentRootIP "/siteler/%0/belgeler"
+VirtualScriptAliasIP  "/siteler/%0/cgi-bin"</pre>
+
 
 </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
@@ -312,7 +300,7 @@ VirtualScriptAliasIP  /siteler/%0/cgi-bin<br />
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/vhosts/mass.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/vhosts/mass.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -322,13 +310,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/vhosts/mass.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
-<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

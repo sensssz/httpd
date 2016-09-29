@@ -333,7 +333,7 @@ static int uldap_connection_init(request_rec *r,
         rc = apr_ldap_rebind_add(ldc->rebind_pool, ldc->ldap, ldc->binddn, ldc->bindpw);
         if (rc != APR_SUCCESS) {
             ap_log_error(APLOG_MARK, APLOG_ERR, rc, r->server, APLOGNO(01277)
-                    "LDAP: Unable to add rebind cross reference entry. Out of memory? Try 'LDAPReferrals OFF'");
+                    "LDAP: Unable to add rebind cross reference entry. Out of memory?");
             uldap_connection_unbind(ldc);
             ldc->reason = "LDAP: Unable to add rebind cross reference entry.";
             return(rc);
@@ -608,7 +608,6 @@ static int uldap_connection_open(request_rec *r,
                           "ldap_simple_bind() timed out on %s "
                           "connection, dropped by firewall?",
                           new_connection ? "new" : "reused");
-            if (new_connection) break;
         }
         else {
             /* Other errors not retryable */
@@ -1128,7 +1127,7 @@ start_over:
     }
 
     if (LDAP_SUCCESS != (result = uldap_connection_open(r, ldc))) {
-        /* uldap_connection_open() retried already */
+        /* connect failed */
         return result;
     }
 
@@ -1255,7 +1254,7 @@ start_over:
 
 
     if (LDAP_SUCCESS != (result = uldap_connection_open(r, ldc))) {
-        /* uldap_connection_open() retried already */
+        /* connect failed */
         return res;
     }
 
@@ -2175,7 +2174,7 @@ static const char *util_ldap_set_cache_file(cmd_parms *cmd, void *dummy,
     }
 
     if (file) {
-        st->cache_file = ap_runtime_dir_relative(st->pool, file);
+        st->cache_file = ap_server_root_relative(st->pool, file);
     }
     else {
         st->cache_file = NULL;
@@ -2373,9 +2372,6 @@ static const char *util_ldap_set_trusted_global_cert(cmd_parms *cmd,
                                                      const char *file,
                                                      const char *password)
 {
-#if APR_HAS_MICROSOFT_LDAPSDK
-    return "certificates cannot be set using this method.";
-#else
     util_ldap_state_t *st =
         (util_ldap_state_t *)ap_get_module_config(cmd->server->module_config,
                                                   &ldap_module);
@@ -2433,7 +2429,6 @@ static const char *util_ldap_set_trusted_global_cert(cmd_parms *cmd,
     }
 
     return(NULL);
-#endif
 }
 
 
@@ -2451,9 +2446,6 @@ static const char *util_ldap_set_trusted_client_cert(cmd_parms *cmd,
                                                      const char *file,
                                                      const char *password)
 {
-#if APR_HAS_MICROSOFT_LDAPSDK
-    return "certificates cannot be set using this method.";
-#else
     util_ldap_config_t *dc =  config;
     apr_finfo_t finfo;
     apr_status_t rv;
@@ -2518,7 +2510,6 @@ static const char *util_ldap_set_trusted_client_cert(cmd_parms *cmd,
     }
 
     return(NULL);
-#endif
 }
 
 
@@ -2729,6 +2720,14 @@ static const char *util_ldap_set_op_timeout(cmd_parms *cmd,
     ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, cmd->server, APLOGNO(01313)
                  "ldap connection: Setting op timeout to %ld seconds.",
                  timeout);
+
+#ifndef LDAP_OPT_TIMEOUT
+
+    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, cmd->server, APLOGNO(01314)
+                 "LDAP: LDAP_OPT_TIMEOUT option not supported by the "
+                 "LDAP library in use. Using LDAPTimeout value as search "
+                 "timeout only." );
+#endif
 
     return NULL;
 }
@@ -3023,14 +3022,10 @@ static int util_ldap_post_config(apr_pool_t *p, apr_pool_t *plog,
                       NULL,
                       0,
                       &(result_err));
-#if APR_HAS_MICROSOFT_LDAPSDK
-   /* MICROSOFT_LDAPSDK uses Microsoft Management Console (MMC)  for that */
-#else
     if (APR_SUCCESS == rc) {
         rc = apr_ldap_set_option(ptemp, NULL, APR_LDAP_OPT_TLS_CERT,
                                  (void *)st->global_certs, &(result_err));
     }
-#endif
 
     if (APR_SUCCESS == rc) {
         st->ssl_supported = 1;

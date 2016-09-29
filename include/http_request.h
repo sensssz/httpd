@@ -149,18 +149,6 @@ AP_DECLARE(int) ap_run_sub_req(request_rec *r);
  */
 AP_DECLARE(void) ap_destroy_sub_req(request_rec *r);
 
-/**
- * An output filter to ensure that we avoid passing morphing buckets to
- * connection filters and in so doing defeat async write completion when
- * they are set aside. This should be inserted at the end of a request
- * filter stack.
- * @param f The current filter
- * @param bb The brigade to filter
- * @return status code
- */
-AP_CORE_DECLARE_NONSTD(apr_status_t) ap_request_core_filter(ap_filter_t *f,
-                                                            apr_bucket_brigade *bb);
-
 /*
  * Then there's the case that you want some other request to be served
  * as the top-level request INSTEAD of what the client requested directly.
@@ -199,7 +187,6 @@ AP_DECLARE(void) ap_internal_fast_redirect(request_rec *sub_req, request_rec *r)
  * @return 1 if authentication is required, 0 otherwise
  * @bug Behavior changed in 2.4.x refactoring, API no longer usable
  * @deprecated @see ap_some_authn_required()
- *
  */
 AP_DECLARE(int) ap_some_auth_required(request_rec *r);
 
@@ -231,7 +218,7 @@ AP_DECLARE(void) ap_clear_auth_internal(void);
  * Determine whether access control hooks will be run for all internal
  * requests with URIs distinct from that of the initial request, or only
  * those for which different configurations apply than those which applied
- * to the initial request.  To accommodate legacy external modules which
+ * to the initial request.  To accomodate legacy external modules which
  * may expect access control hooks to be run for all internal requests
  * with distinct URIs, this is the default behaviour unless all access
  * control hooks and authentication and authorization providers are
@@ -350,21 +337,6 @@ void ap_process_async_request(request_rec *r);
  */
 AP_DECLARE(void) ap_die(int type, request_rec *r);
 
-/**
- * Check whether a connection is still established and has data available,
- * optionnaly consuming blank lines ([CR]LF).
- * @param c The current connection
- * @param bb The brigade to filter
- * @param max_blank_lines Max number of blank lines to consume, or zero
- *                        to consider them as data (single read).
- * @return APR_SUCCESS: connection established with data available,
- *         APR_EAGAIN: connection established and empty,
- *         APR_NOTFOUND: too much blank lines,
- *         APR_E*: connection/general error.
- */
-AP_DECLARE(apr_status_t) ap_check_pipeline(conn_rec *c, apr_bucket_brigade *bb,
-                                           unsigned int max_blank_lines);
-
 /* Hooks */
 
 /**
@@ -408,7 +380,6 @@ AP_DECLARE_HOOK(int,map_to_storage,(request_rec *r))
  * by the 'Require' directive). It runs after the access_checker hook, and
  * before the auth_checker hook. This hook should be registered with
  * ap_hook_check_authn().
- * If "Satisfy any" is in effect, this hook may be skipped.
  *
  * @param r The current request
  * @return OK, DECLINED, or HTTP_...
@@ -453,9 +424,8 @@ AP_DECLARE_HOOK(int,access_checker,(request_rec *r))
 /**
  * This hook is used to apply additional access control and/or bypass
  * authentication for this resource. It runs *before* a user is authenticated,
- * but after the access_checker hook.
+ * but after the auth_checker hook.
  * This hook should be registered with ap_hook_check_access_ex().
- * If "Satisfy any" is in effect, this hook may be skipped.
  *
  * @param r the current request
  * @return OK (allow acces), DECLINED (let later modules decide),
@@ -472,7 +442,6 @@ AP_DECLARE_HOOK(int,access_checker_ex,(request_rec *r))
  * it will *only* be called if Apache determines that access control has
  * been applied to this resource (through a 'Require' directive). This
  * hook should be registered with ap_hook_check_authz().
- * If "Satisfy any" is in effect, this hook may be skipped.
  *
  * @param r the current request
  * @return OK, DECLINED, or HTTP_...

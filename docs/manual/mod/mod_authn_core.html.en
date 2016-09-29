@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_authn_core - Apache HTTP Server Version 2.5</title>
+<title>mod_authn_core - Apache HTTP Server Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
-<p class="apache">Apache HTTP Server Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Apache Module mod_authn_core</h1>
 <div class="toplang">
@@ -78,13 +78,13 @@
 &lt;/AuthnProviderAlias&gt;
 
 # Then check here
-&lt;AuthnProviderAlias file file2&gt;
+&lt;AuthnProviderAlias file file2&gt;   
     AuthUserFile "/www/conf/passwords2"
 &lt;/AuthnProviderAlias&gt;
 
 &lt;Directory "/var/web/pages/secure"&gt;
     AuthBasicProvider file1 file2
-
+    
     AuthType Basic
     AuthName "Protected Area"
     Require valid-user
@@ -97,24 +97,24 @@
         hosts:</p>
 
         <div class="example"><h3>Checking multiple LDAP servers</h3><pre class="prettyprint lang-config">&lt;AuthnProviderAlias ldap ldap-alias1&gt;
-    AuthLDAPBindDN "cn=youruser,o=ctx"
+    AuthLDAPBindDN cn=youruser,o=ctx
     AuthLDAPBindPassword yourpassword
-    AuthLDAPURL "ldap://ldap.host/o=ctx"
+    AuthLDAPURL ldap://ldap.host/o=ctx
 &lt;/AuthnProviderAlias&gt;
 &lt;AuthnProviderAlias ldap ldap-other-alias&gt;
-    AuthLDAPBindDN "cn=yourotheruser,o=dev"
+    AuthLDAPBindDN cn=yourotheruser,o=dev
     AuthLDAPBindPassword yourotherpassword
-    AuthLDAPURL "ldap://other.ldap.host/o=dev?cn"
+    AuthLDAPURL ldap://other.ldap.host/o=dev?cn
 &lt;/AuthnProviderAlias&gt;
 
 Alias "/secure" "/webpages/secure"
 &lt;Directory "/webpages/secure"&gt;
     AuthBasicProvider ldap-other-alias  ldap-alias1
-
+    
     AuthType Basic
     AuthName "LDAP Protected Place"
     Require valid-user
-    # Note that Require ldap-* would not work here, since the
+    # Note that Require ldap-* would not work here, since the 
     # AuthnProviderAlias does not provide the config to authorization providers
     # that are implemented in the same module as the authentication provider.
 &lt;/Directory&gt;</pre>
@@ -150,15 +150,6 @@ authentication</td></tr>
 
     <p>The string provided for the <code>AuthName</code> is what will
     appear in the password dialog provided by most browsers.</p>
-
-    <p>The <a href="../expr.html">expression syntax</a> can be
-    used inside the directive to produce the name dynamically.</p>
-
-   <p>For example:</p>
-
-   <pre class="prettyprint lang-config">AuthName "%{HTTP_HOST}"</pre>
-
-
 
 <h3>See also</h3>
 <ul>
@@ -235,9 +226,6 @@ the specified alias</td></tr>
 &lt;/Directory&gt;</pre>
 
 
-    <p>From 2.4.13, <a href="../expr.html">expression syntax</a> can be
-    used inside the directive to specify the type dynamically.</p>
-
     <div class="note">When disabling authentication, note that clients which have
     already authenticated against another portion of the server's document
     tree will typically continue to send authentication HTTP headers
@@ -257,7 +245,7 @@ the specified alias</td></tr>
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_authn_core.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_authn_core.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -267,13 +255,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_authn_core
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

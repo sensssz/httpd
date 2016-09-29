@@ -17,9 +17,6 @@
 #include "httpd.h"
 #include "http_config.h"
 #include "apr_strings.h"
-#if !defined(_MSC_VER) && !defined(NETWARE)
-#include "ap_config_auto.h"
-#endif
 
 #include "mod_dav.h"
 #include "repos.h"
@@ -42,15 +39,7 @@ const char *dav_get_lockdb_path(const request_rec *r)
 
 static void *dav_fs_create_server_config(apr_pool_t *p, server_rec *s)
 {
-    dav_fs_server_conf *conf = apr_pcalloc(p, sizeof(dav_fs_server_conf));
-#ifdef DEFAULT_EXP_DAVLOCKDB
-    conf->lockdb_path = DEFAULT_EXP_DAVLOCKDB;
-    if (*conf->lockdb_path == '\0') {
-        conf->lockdb_path = NULL;
-    }
-#endif
-
-    return conf;
+    return apr_pcalloc(p, sizeof(dav_fs_server_conf));
 }
 
 static void *dav_fs_merge_server_config(apr_pool_t *p,

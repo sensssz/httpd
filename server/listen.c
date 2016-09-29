@@ -34,10 +34,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef HAVE_SYSTEMD
-#include <systemd/sd-daemon.h>
-#endif
-
 /* we know core's module_index is 0 */
 #undef APLOG_MODULE_INDEX
 #define APLOG_MODULE_INDEX AP_CORE_MODULE_INDEX
@@ -63,12 +59,9 @@ static int ap_listenbacklog;
 static int ap_listencbratio;
 static int send_buffer_size;
 static int receive_buffer_size;
-#ifdef HAVE_SYSTEMD
-static int use_systemd = -1;
-#endif
 
 /* TODO: make_sock is just begging and screaming for APR abstraction */
-static apr_status_t make_sock(apr_pool_t *p, ap_listen_rec *server, int do_bind_listen)
+static apr_status_t make_sock(apr_pool_t *p, ap_listen_rec *server)
 {
     apr_socket_t *s = server->sd;
     int one = 1;
@@ -100,6 +93,20 @@ static apr_status_t make_sock(apr_pool_t *p, ap_listen_rec *server, int do_bind_
         apr_socket_close(s);
         return stat;
     }
+
+#if APR_HAVE_IPV6
+    if (server->bind_addr->family == APR_INET6) {
+        stat = apr_socket_opt_set(s, APR_IPV6_V6ONLY, v6only_setting);
+        if (stat != APR_SUCCESS && stat != APR_ENOTIMPL) {
+            ap_log_perror(APLOG_MARK, APLOG_CRIT, stat, p, APLOGNO(00069)
+                          "make_sock: for address %pI, apr_socket_opt_set: "
+                          "(IPV6_V6ONLY)",
+                          server->bind_addr);
+            apr_socket_close(s);
+            return stat;
+        }
+    }
+#endif
 
     /*
      * To send data over high bandwidth-delay connections at full
@@ -162,37 +169,21 @@ static apr_status_t make_sock(apr_pool_t *p, ap_listen_rec *server, int do_bind_
     }
 #endif
 
-    if (do_bind_listen) {
-#if APR_HAVE_IPV6
-        if (server->bind_addr->family == APR_INET6) {
-            stat = apr_socket_opt_set(s, APR_IPV6_V6ONLY, v6only_setting);
-            if (stat != APR_SUCCESS && stat != APR_ENOTIMPL) {
-                ap_log_perror(APLOG_MARK, APLOG_CRIT, stat, p, APLOGNO(00069)
-                              "make_sock: for address %pI, apr_socket_opt_set: "
-                              "(IPV6_V6ONLY)",
-                              server->bind_addr);
-                apr_socket_close(s);
-                return stat;
-            }
-        }
-#endif
+    if ((stat = apr_socket_bind(s, server->bind_addr)) != APR_SUCCESS) {
+        ap_log_perror(APLOG_MARK, APLOG_STARTUP|APLOG_CRIT, stat, p, APLOGNO(00072)
+                      "make_sock: could not bind to address %pI",
+                      server->bind_addr);
+        apr_socket_close(s);
+        return stat;
+    }
 
-        if ((stat = apr_socket_bind(s, server->bind_addr)) != APR_SUCCESS) {
-            ap_log_perror(APLOG_MARK, APLOG_STARTUP|APLOG_CRIT, stat, p, APLOGNO(00072)
-                          "make_sock: could not bind to address %pI",
-                          server->bind_addr);
-            apr_socket_close(s);
-            return stat;
-        }
-
-        if ((stat = apr_socket_listen(s, ap_listenbacklog)) != APR_SUCCESS) {
-            ap_log_perror(APLOG_MARK, APLOG_STARTUP|APLOG_ERR, stat, p, APLOGNO(00073)
-                          "make_sock: unable to listen for connections "
-                          "on address %pI",
-                          server->bind_addr);
-            apr_socket_close(s);
-            return stat;
-        }
+    if ((stat = apr_socket_listen(s, ap_listenbacklog)) != APR_SUCCESS) {
+        ap_log_perror(APLOG_MARK, APLOG_STARTUP|APLOG_ERR, stat, p, APLOGNO(00073)
+                      "make_sock: unable to listen for connections "
+                      "on address %pI",
+                      server->bind_addr);
+        apr_socket_close(s);
+        return stat;
     }
 
 #ifdef WIN32
@@ -285,124 +276,6 @@ static apr_status_t close_listeners_on_exec(void *v)
     ap_close_listeners();
     return APR_SUCCESS;
 }
-
-
-#ifdef HAVE_SYSTEMD
-
-static int find_systemd_socket(process_rec * process, apr_port_t port)
-{
-    int fdcount, fd;
-    int sdc = sd_listen_fds(0);
-
-    if (sdc < 0) {
-        ap_log_perror(APLOG_MARK, APLOG_CRIT, sdc, process->pool, APLOGNO(02486)
-                      "find_systemd_socket: Error parsing enviroment, sd_listen_fds returned %d",
-                      sdc);
-        return -1;
-    }
-
-    if (sdc == 0) {
-        ap_log_perror(APLOG_MARK, APLOG_CRIT, sdc, process->pool, APLOGNO(02487)
-                      "find_systemd_socket: At least one socket must be set.");
-        return -1;
-    }
-
-    fdcount = atoi(getenv("LISTEN_FDS"));
-    for (fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START + fdcount; fd++) {
-        if (sd_is_socket_inet(fd, 0, 0, -1, port) > 0) {
-            return fd;
-        }
-    }
-
-    return -1;
-}
-
-static apr_status_t alloc_systemd_listener(process_rec * process,
-                                           int fd, const char *proto,
-                                           ap_listen_rec **out_rec)
-{
-    apr_status_t rv;
-    struct sockaddr sa;
-    socklen_t len = sizeof(struct sockaddr);
-    apr_os_sock_info_t si;
-    ap_listen_rec *rec;
-    *out_rec = NULL;
-
-    memset(&si, 0, sizeof(si));
-
-    rv = getsockname(fd, &sa, &len);
-
-    if (rv != 0) {
-        rv = apr_get_netos_error();
-        ap_log_perror(APLOG_MARK, APLOG_CRIT, rv, process->pool, APLOGNO(02489)
-                      "getsockname on %d failed.", fd);
-        return rv;
-    }
-
-    si.os_sock = &fd;
-    si.family = sa.sa_family;
-    si.local = &sa;
-    si.type = SOCK_STREAM;
-    si.protocol = APR_PROTO_TCP;
-
-    rec = apr_palloc(process->pool, sizeof(ap_listen_rec));
-    rec->active = 0;
-    rec->next = 0;
-
-    rv = apr_os_sock_make(&rec->sd, &si, process->pool);
-    if (rv != APR_SUCCESS) {
-        ap_log_perror(APLOG_MARK, APLOG_CRIT, rv, process->pool, APLOGNO(02490)
-                      "apr_os_sock_make on %d failed.", fd);
-        return rv;
-    }
-
-    rv = apr_socket_addr_get(&rec->bind_addr, APR_LOCAL, rec->sd);
-    if (rv != APR_SUCCESS) {
-        ap_log_perror(APLOG_MARK, APLOG_CRIT, rv, process->pool, APLOGNO(02491)
-                      "apr_socket_addr_get on %d failed.", fd);
-        return rv;
-    }
-
-    rec->protocol = apr_pstrdup(process->pool, proto);
-
-    *out_rec = rec;
-
-    return make_sock(process->pool, rec, 0);
-}
-
-static const char *set_systemd_listener(process_rec *process, apr_port_t port,
-                                        const char *proto)
-{
-    ap_listen_rec *last, *new;
-    apr_status_t rv;
-    int fd = find_systemd_socket(process, port);
-    if (fd < 0) {
-        return "Systemd socket activation is used, but this port is not "
-                "configured in systemd";
-    }
-
-    last = ap_listeners;
-    while (last && last->next) {
-        last = last->next;
-    }
-
-    rv = alloc_systemd_listener(process, fd, proto, &new);
-    if (rv != APR_SUCCESS) {
-        return "Failed to setup socket passed by systemd using socket activation";
-    }
-
-    if (last == NULL) {
-        ap_listeners = last = new;
-    }
-    else {
-        last->next = new;
-        last = new;
-    }
-
-    return NULL;
-}
-
-#endif /* HAVE_SYSTEMD */
 
 static const char *alloc_listener(process_rec *process, char *addr,
                                   apr_port_t port, const char* proto,
@@ -606,7 +479,7 @@ static int open_listeners(apr_pool_t *pool)
                 }
             }
 #endif
-            if (make_sock(pool, lr, 1) == APR_SUCCESS) {
+            if (make_sock(pool, lr) == APR_SUCCESS) {
                 ++num_open;
             }
             else {
@@ -718,28 +591,8 @@ AP_DECLARE(int) ap_setup_listeners(server_rec *s)
         }
     }
 
-#ifdef HAVE_SYSTEMD
-    if (use_systemd) {
-        const char *userdata_key = "ap_open_systemd_listeners";
-        void *data;
-        /* clear the enviroment on our second run
-        * so that none of our future children get confused.
-        */
-        apr_pool_userdata_get(&data, userdata_key, s->process->pool);
-        if (!data) {
-            apr_pool_userdata_set((const void *)1, userdata_key,
-                                apr_pool_cleanup_null, s->process->pool);
-        }
-        else {
-            sd_listen_fds(1);
-        }        
-    }
-    else
-#endif
-    {
-        if (open_listeners(s->process->pool)) {
-            return 0;
-        }
+    if (open_listeners(s->process->pool)) {
+        return 0;
     }
 
     for (lr = ap_listeners; lr; lr = lr->next) {
@@ -812,37 +665,24 @@ AP_DECLARE(apr_status_t) ap_duplicate_listeners(apr_pool_t *p, server_rec *s,
             char *hostname;
             apr_port_t port;
             apr_sockaddr_t *sa;
-#ifdef HAVE_SYSTEMD
-            if (use_systemd) {
-                int thesock;
-                apr_os_sock_get(&thesock, lr->sd);
-                if ((stat = alloc_systemd_listener(s->process, thesock,
-                    lr->protocol, &duplr)) != APR_SUCCESS) {
-                    return stat;
-                }
+            duplr = apr_palloc(p, sizeof(ap_listen_rec));
+            duplr->slave = NULL;
+            duplr->protocol = apr_pstrdup(p, lr->protocol);
+            hostname = apr_pstrdup(p, lr->bind_addr->hostname);
+            port = lr->bind_addr->port;
+            apr_sockaddr_info_get(&sa, hostname, APR_UNSPEC, port, 0, p);
+            duplr->bind_addr = sa;
+            duplr->next = NULL;
+            stat = apr_socket_create(&duplr->sd, duplr->bind_addr->family,
+                                     SOCK_STREAM, 0, p);
+            if (stat != APR_SUCCESS) {
+                ap_log_perror(APLOG_MARK, APLOG_CRIT, 0, p, APLOGNO(02640)
+                            "ap_duplicate_listeners: for address %pI, "
+                            "cannot duplicate a new socket!",
+                            duplr->bind_addr);
+                return stat;
             }
-            else
-#endif
-            {
-                duplr = apr_palloc(p, sizeof(ap_listen_rec));
-                duplr->slave = NULL;
-                duplr->protocol = apr_pstrdup(p, lr->protocol);
-                hostname = apr_pstrdup(p, lr->bind_addr->hostname);
-                port = lr->bind_addr->port;
-                apr_sockaddr_info_get(&sa, hostname, APR_UNSPEC, port, 0, p);
-                duplr->bind_addr = sa;
-                duplr->next = NULL;
-                stat = apr_socket_create(&duplr->sd, duplr->bind_addr->family,
-                                         SOCK_STREAM, 0, p);
-                if (stat != APR_SUCCESS) {
-                    ap_log_perror(APLOG_MARK, APLOG_CRIT, 0, p, APLOGNO(02640)
-                                "ap_duplicate_listeners: for address %pI, "
-                                "cannot duplicate a new socket!",
-                                duplr->bind_addr);
-                    return stat;
-                }
-                make_sock(p, duplr, 1);
-            }
+            make_sock(p, duplr);
 #if AP_NONBLOCK_WHEN_MULTI_LISTEN
             use_nonblock = (ap_listeners && ap_listeners->next);
             stat = apr_socket_opt_set(duplr->sd, APR_SO_NONBLOCK, use_nonblock);
@@ -923,7 +763,7 @@ AP_DECLARE(void) ap_listen_pre_config(void)
     /* Check once whether or not SO_REUSEPORT is supported. */
     if (ap_have_so_reuseport < 0) {
         /* This is limited to Linux with defined SO_REUSEPORT (ie. 3.9+) for
-         * now since the implementation evenly distributes connections across
+         * now since the implementation evenly distributes connections accross
          * all the listening threads/processes.
          *
          * *BSDs have SO_REUSEPORT too but with a different semantic: the first
@@ -969,11 +809,6 @@ AP_DECLARE_NONSTD(const char *) ap_set_listener(cmd_parms *cmd, void *dummy,
     if (argc < 1 || argc > 2) {
         return "Listen requires 1 or 2 arguments.";
     }
-#ifdef HAVE_SYSTEMD
-    if (use_systemd == -1) {
-        use_systemd = sd_listen_fds(0) > 0;
-    }
-#endif
 
     rv = apr_parse_addr_port(&host, &scope_id, &port, argv[0], cmd->pool);
     if (rv != APR_SUCCESS) {
@@ -1004,12 +839,6 @@ AP_DECLARE_NONSTD(const char *) ap_set_listener(cmd_parms *cmd, void *dummy,
         proto = apr_pstrdup(cmd->pool, argv[1]);
         ap_str_tolower(proto);
     }
-
-#ifdef HAVE_SYSTEMD
-    if (use_systemd) {
-        return set_systemd_listener(cmd->server->process, port, proto);
-    }
-#endif
 
     return alloc_listener(cmd->server->process, host, port, proto, NULL);
 }

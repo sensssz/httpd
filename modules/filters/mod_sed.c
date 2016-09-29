@@ -268,7 +268,7 @@ static apr_status_t sed_response_filter(ap_filter_t *f,
                                         apr_bucket_brigade *bb)
 {
     apr_bucket *b;
-    apr_status_t status = APR_SUCCESS;
+    apr_status_t status;
     sed_config *cfg = ap_get_module_config(f->r->per_dir_config,
                                            &sed_module);
     sed_filter_ctxt *ctx = f->ctx;
@@ -293,9 +293,9 @@ static apr_status_t sed_response_filter(ap_filter_t *f,
              return status;
         ctx = f->ctx;
         apr_table_unset(f->r->headers_out, "Content-Length");
-
-        ctx->bb = apr_brigade_create(f->r->pool, f->c->bucket_alloc);
     }
+
+    ctx->bb = apr_brigade_create(f->r->pool, f->c->bucket_alloc);
 
     /* Here is the main logic. Iterate through all the buckets, read the
      * content of the bucket, call sed_eval_buffer on the data.
@@ -317,51 +317,63 @@ static apr_status_t sed_response_filter(ap_filter_t *f,
      * in sed's internal buffer which can't be flushed until new line
      * character is arrived.
      */
-    while (!APR_BRIGADE_EMPTY(bb)) {
-        b = APR_BRIGADE_FIRST(bb);
+    for (b = APR_BRIGADE_FIRST(bb); b != APR_BRIGADE_SENTINEL(bb);) {
+        const char *buf = NULL;
+        apr_size_t bytes = 0;
         if (APR_BUCKET_IS_EOS(b)) {
+            apr_bucket *b1 = APR_BUCKET_NEXT(b);
             /* Now clean up the internal sed buffer */
             sed_finalize_eval(&ctx->eval, ctx);
             status = flush_output_buffer(ctx);
             if (status != APR_SUCCESS) {
-                break;
+                clear_ctxpool(ctx);
+                return status;
             }
-            /* Move the eos bucket to ctx->bb brigade */
             APR_BUCKET_REMOVE(b);
+            /* Insert the eos bucket to ctx->bb brigade */
             APR_BRIGADE_INSERT_TAIL(ctx->bb, b);
+            b = b1;
         }
         else if (APR_BUCKET_IS_FLUSH(b)) {
+            apr_bucket *b1 = APR_BUCKET_NEXT(b);
+            APR_BUCKET_REMOVE(b);
             status = flush_output_buffer(ctx);
             if (status != APR_SUCCESS) {
-                break;
+                clear_ctxpool(ctx);
+                return status;
             }
-            /* Move the flush bucket to ctx->bb brigade */
-            APR_BUCKET_REMOVE(b);
             APR_BRIGADE_INSERT_TAIL(ctx->bb, b);
+            b = b1;
+        }
+        else if (APR_BUCKET_IS_METADATA(b)) {
+            b = APR_BUCKET_NEXT(b);
+        }
+        else if (apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ)
+                 == APR_SUCCESS) {
+            apr_bucket *b1 = APR_BUCKET_NEXT(b);
+            status = sed_eval_buffer(&ctx->eval, buf, bytes, ctx);
+            if (status != APR_SUCCESS) {
+                clear_ctxpool(ctx);
+                return status;
+            }
+            APR_BUCKET_REMOVE(b);
+            apr_bucket_delete(b);
+            b = b1;
         }
         else {
-            if (!APR_BUCKET_IS_METADATA(b)) {
-                const char *buf = NULL;
-                apr_size_t bytes = 0;
-
-                status = apr_bucket_read(b, &buf, &bytes, APR_BLOCK_READ);
-                if (status == APR_SUCCESS) {
-                    status = sed_eval_buffer(&ctx->eval, buf, bytes, ctx);
-                }
-                if (status != APR_SUCCESS) {
-                    break;
-                }
-            }
-            apr_bucket_delete(b);
+            apr_bucket *b1 = APR_BUCKET_NEXT(b);
+            APR_BUCKET_REMOVE(b);
+            b = b1;
         }
     }
-    if (status == APR_SUCCESS) {
-        status = flush_output_buffer(ctx);
+    apr_brigade_cleanup(bb);
+    status = flush_output_buffer(ctx);
+    if (status != APR_SUCCESS) {
+        clear_ctxpool(ctx);
+        return status;
     }
     if (!APR_BRIGADE_EMPTY(ctx->bb)) {
-        if (status == APR_SUCCESS) {
-            status = ap_pass_brigade(f->next, ctx->bb);
-        }
+        status = ap_pass_brigade(f->next, ctx->bb);
         apr_brigade_cleanup(ctx->bb);
     }
     clear_ctxpool(ctx);

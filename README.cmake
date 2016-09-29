@@ -47,7 +47,7 @@ The following support libraries are mandatory:
     Apache httpd are installed.
   + Additional APR settings affect httpd but are not mandatory, such as
     APR_HAVE_IPV6.
-* PCRE (version 6.7 or higher)
+* PCRE
 
 Certain optional features of APR 2.0-dev (trunk) or APR-Util 1.5.x
 allow some optional features of httpd to be enabled.  For example,
@@ -309,8 +309,7 @@ Known Bugs and Limitations
   of httpd and support libraries in a manner suitable for typical users
 * no logic to find support libraries or otherwise build these modules:
   + mod_socache_dc (requires distcache), mod_serf (requires serf)
-  + additionally, mod_lbmethod_rr and mod_firehose don't compile on Windows
-    anyway
+  + additionally, mod_firehose doesn't compile on Windows anyway
 * buildmark.c isn't necessarily rebuilt when httpd.exe is regenerated
 * ApacheMonitor has a build error and is disabled
 * CGI examples aren't installed

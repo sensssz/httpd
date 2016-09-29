@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_remoteip - Apache HTTP Server Version 2.5</title>
+<title>mod_remoteip - Apache HTTP Server Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
-<p class="apache">Apache HTTP Server Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Apache Module mod_remoteip</h1>
 <div class="toplang">
@@ -134,12 +134,9 @@ via the request headers.
     <var>header-field</var> header as the useragent IP address, or list
     of intermediate useragent IP addresses, subject to further configuration
     of the <code class="directive"><a href="#remoteipinternalproxy">RemoteIPInternalProxy</a></code> and
-    <code class="directive"><a href="#remoteiptrustedproxy">RemoteIPTrustedProxy</a></code> directives.</p>
-
-    <div class="warning"> Unless these other directives are used, <code class="module"><a href="../mod/mod_remoteip.html">mod_remoteip</a></code> 
-    will trust all hosts presenting a non internal address in the 
-    <code class="directive"><a href="#remoteipheader">RemoteIPHeader</a></code> header value.
-    </div>
+    <code class="directive"><a href="#remoteiptrustedproxy">RemoteIPTrustedProxy</a></code> directives.  Unless these
+    other directives are used, <code class="module"><a href="../mod/mod_remoteip.html">mod_remoteip</a></code> will trust all
+    hosts presenting a <code class="directive"><a href="#remoteipheader">RemoteIPHeader</a></code> IP value.</p>
 
     <div class="example"><h3>Internal (Load Balancer) Example</h3><pre class="prettyprint lang-config">RemoteIPHeader X-Client-IP</pre>
 </div>
@@ -221,26 +218,20 @@ RemoteIPProxiesHeader X-Forwarded-By</pre>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="RemoteIPTrustedProxy" id="RemoteIPTrustedProxy">RemoteIPTrustedProxy</a> <a name="remoteiptrustedproxy" id="remoteiptrustedproxy">Directive</a></h2>
 <table class="directive">
-<tr><th><a href="directive-dict.html#Description">Description:</a></th><td>Restrict client IP addresses trusted to present the RemoteIPHeader value</td></tr>
+<tr><th><a href="directive-dict.html#Description">Description:</a></th><td>Declare client intranet IP addresses trusted to present the RemoteIPHeader value</td></tr>
 <tr><th><a href="directive-dict.html#Syntax">Syntax:</a></th><td><code>RemoteIPTrustedProxy <var>proxy-ip</var>|<var>proxy-ip/subnet</var>|<var>hostname</var> ...</code></td></tr>
 <tr><th><a href="directive-dict.html#Context">Context:</a></th><td>server config, virtual host</td></tr>
 <tr><th><a href="directive-dict.html#Status">Status:</a></th><td>Base</td></tr>
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_remoteip</td></tr>
 </table>
-    <p>The <code class="directive"><a href="#remoteiptrustedproxy">RemoteIPTrustedProxy</a></code> 
-    directive restricts which peer IP addresses (or address blocks) will be
-    trusted to present  a valid RemoteIPHeader value of the useragent IP.</p>
-  
-    <p> Unlike the <code class="directive"><a href="#remoteipinternalproxy">RemoteIPInternalProxy</a></code> directive, any intranet
+    <p>The <code class="directive"><a href="#remoteiptrustedproxy">RemoteIPTrustedProxy</a></code> directive adds one
+    or more addresses (or address blocks) to trust as presenting a valid
+    RemoteIPHeader value of the useragent IP.  Unlike the
+    <code class="directive"><a href="#remoteipinternalproxy">RemoteIPInternalProxy</a></code> directive, any intranet
     or private IP address reported by such proxies, including the 10/8, 172.16/12,
     192.168/16, 169.254/16 and 127/8 blocks (or outside of the IPv6 public
     2000::/3 block) are not trusted as the useragent IP, and are left in the
     <code class="directive"><a href="#remoteipheader">RemoteIPHeader</a></code> header's value.</p>
-
-    <div class="warning">By default, <code class="module"><a href="../mod/mod_remoteip.html">mod_remoteip</a></code> will trust 
-    all hosts presenting a non internal address in the 
-    <code class="directive"><a href="#remoteipheader">RemoteIPHeader</a></code> header value.
-    </div>
 
     <div class="example"><h3>Trusted (Load Balancer) Example</h3><pre class="prettyprint lang-config">RemoteIPHeader X-Forwarded-For
 RemoteIPTrustedProxy 10.0.2.16/28
@@ -251,7 +242,7 @@ RemoteIPTrustedProxy proxy.example.com</pre>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="RemoteIPTrustedProxyList" id="RemoteIPTrustedProxyList">RemoteIPTrustedProxyList</a> <a name="remoteiptrustedproxylist" id="remoteiptrustedproxylist">Directive</a></h2>
 <table class="directive">
-<tr><th><a href="directive-dict.html#Description">Description:</a></th><td>Restrict client IP addresses trusted to present the RemoteIPHeader value</td></tr>
+<tr><th><a href="directive-dict.html#Description">Description:</a></th><td>Declare client intranet IP addresses trusted to present the RemoteIPHeader value</td></tr>
 <tr><th><a href="directive-dict.html#Syntax">Syntax:</a></th><td><code>RemoteIPTrustedProxyList <var>filename</var></code></td></tr>
 <tr><th><a href="directive-dict.html#Context">Context:</a></th><td>server config, virtual host</td></tr>
 <tr><th><a href="directive-dict.html#Status">Status:</a></th><td>Base</td></tr>
@@ -283,7 +274,7 @@ RemoteIPTrustedProxyList conf/trusted-proxies.lst</pre>
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_remoteip.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_remoteip.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -293,13 +284,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_remoteip.h
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

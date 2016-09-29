@@ -346,9 +346,9 @@ static int add_push(link_ctx *ctx)
                 }
                 headers = apr_table_make(ctx->pool, 5);
                 apr_table_do(set_push_header, headers, ctx->req->headers, NULL);
-                req = h2_req_create(0, ctx->pool, method, ctx->req->scheme,
-                                    ctx->req->authority, path, headers,
-                                    ctx->req->serialize);
+                req = h2_req_createn(0, ctx->pool, method, ctx->req->scheme,
+                                     ctx->req->authority, path, headers,
+                                     ctx->req->serialize);
                 /* atm, we do not push on pushes */
                 h2_request_end_headers(req, ctx->pool, 1, 0);
                 push->req = req;
@@ -561,7 +561,7 @@ static h2_push_diary *diary_create(apr_pool_t *p, h2_push_digest_type dtype,
         
         diary->NMax        = ceil_power_of_2(N);
         diary->N           = diary->NMax;
-        /* the mask we use in value comparison depends on where we got
+        /* the mask we use in value comparision depends on where we got
          * the values from. If we calculate them ourselves, we can use
          * the full 64 bits.
          * If we set the diary via a compressed golomb set, we have less

@@ -161,7 +161,7 @@ struct magic {
         unsigned char hl[4];   /* 2 bytes of a fixed-endian "long" */
     } value;                   /* either number or string */
     unsigned long mask;        /* mask before comparison with value */
-    char nospflag;             /* suppress space character */
+    char nospflag;             /* supress space character */
 
     /* NOTE: this string is suspected of overrunning - find it! */
     char desc[MAXDESC];        /* description */
@@ -606,7 +606,7 @@ static int magic_rsl_putchar(request_rec *r, char c)
     /* high overhead for 1 char - just hope they don't do this much */
     str[0] = c;
     str[1] = '\0';
-    return magic_rsl_add(r, apr_pstrdup(r->pool, str));
+    return magic_rsl_add(r, str);
 }
 
 /* allocate and copy a contiguous string from a result string list */

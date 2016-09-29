@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Apache’de Başarımın Arttırılması - Apache HTTP Sunucusu Sürüm 2.5</title>
+<title>Apache’de Başarımın Arttırılması - Apache HTTP Sunucusu Sürüm 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -16,19 +16,18 @@
 
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p>
-<p class="apache">Apache HTTP Sunucusu Sürüm 2.5</p>
+<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p>
+<p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="../">Sürüm 2.5</a> &gt; <a href="./">Çeşitli Belgeler</a></div><div id="page-content"><div id="preamble"><h1>Apache’de Başarımın Arttırılması</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="../">Sürüm 2.4</a> &gt; <a href="./">Çeşitli Belgeler</a></div><div id="page-content"><div id="preamble"><h1>Apache’de Başarımın Arttırılması</h1>
 <div class="toplang">
 <p><span>Mevcut Diller: </span><a href="../en/misc/perf-tuning.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/misc/perf-tuning.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
 <a href="../ko/misc/perf-tuning.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
 <a href="../tr/misc/perf-tuning.html" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div>
-<div class="outofdate">Bu çeviri güncel olmayabilir. Son değişiklikler için İngilizce sürüm geçerlidir.</div>
 
 
     <p>Apache 2.x, esneklik, taşınabilirlik ve başarım arasında bir denge
@@ -138,21 +137,18 @@
         kullanınız.</p>
 
       <p><code class="directive"><a href="../mod/core.html#hostnamelookups">HostnameLookups</a></code>
-        yönergelerinin <code>&lt;Location /server-status&gt;</code> gibi
+        yönergelerinin <code>&lt;Location "/server-status"&gt;</code> gibi
         bölüm yönergelerinin içinde de yer alabileceğini unutmayın. Bu gibi
         durumlarda DNS sorguları sadece istek kuralla eşleştiği takdirde
         yapılacaktır. Aşağıdaki örnekte <code>.html</code> ve
         <code>.cgi</code> dosyalarına yapılan istekler hariç DNS sorguları
         iptal edilmektedir:</p>
 
-      <div class="example"><p><code>
-        HostnameLookups off<br />
-        &lt;Files ~ "\.(html|cgi)$"&gt;<br />
-        <span class="indent">
-          HostnameLookups on<br />
-        </span>
-        &lt;/Files&gt;
-      </code></p></div>
+      <pre class="prettyprint lang-config">HostnameLookups off
+&lt;Files ~ "\.(html|cgi)$"&gt;
+  HostnameLookups on
+&lt;/Files&gt;</pre>
+
 
       <p>Yine de bazı CGI’lerin DNS isimlerine ihtiyacı olursa bu CGI’lerin
         bu ihtiyaçlarına yönelik olarak <code>gethostbyname</code> çağrıları
@@ -171,14 +167,11 @@
         bağın üzerinde bazı sınamalar yapmak için ek bir sistem çağrısından
         başka istenen her dosya için de ayrı bir çağrı yapacaktır.</p>
 
-      <div class="example"><h3>Örnek:</h3><p><code>
-        DocumentRoot /siteler/htdocs<br />
-        &lt;Directory /&gt;<br />
-        <span class="indent">
-          Options SymLinksIfOwnerMatch<br />
-        </span>
-        &lt;/Directory&gt;
-      </code></p></div>
+      <pre class="prettyprint lang-config">DocumentRoot "/siteler/htdocs"
+&lt;Directory /&gt;
+  Options SymLinksIfOwnerMatch
+&lt;/Directory&gt;</pre>
+
 
       <p>Bu durumda <code>/index.html</code> için bir istek yapıldığında
         Apache, <code>/siteler</code>, <code>/siteler/htdocs</code> ve<br />
@@ -188,20 +181,15 @@
         yinelenecektir. Amacınız gerçekten sembolik bağları güvenlik
         açısından sınamaksa bunu şöyle yapabilirsiniz:</p>
 
-      <div class="example"><p><code>
-        DocumentRoot /siteler/htdocs<br />
-        &lt;Directory /&gt;<br />
-        <span class="indent">
-          Options FollowSymLinks<br />
-        </span>
-        &lt;/Directory&gt;<br />
-        <br />
-        &lt;Directory /sitem/htdocs&gt;<br />
-        <span class="indent">
-          Options -FollowSymLinks +SymLinksIfOwnerMatch<br />
-        </span>
-        &lt;/Directory&gt;
-      </code></p></div>
+      <pre class="prettyprint lang-config">DocumentRoot "/siteler/htdocs"
+&lt;Directory "/"&gt;
+  Options FollowSymLinks
+&lt;/Directory&gt;
+
+&lt;Directory "/siteler/htdocs"&gt;
+  Options -FollowSymLinks +SymLinksIfOwnerMatch
+&lt;/Directory&gt;</pre>
+
 
       <p>Böylece <code class="directive"><a href="../mod/core.html#documentroot">DocumentRoot</a></code> altındaki
         dosyalar için fazladan bir çağrı yapılmasını engellemiş olursunuz.
@@ -224,14 +212,11 @@
         her dosya bileşeni için bu <code>.htaccess</code> dosyalarını açmaya
         çalışacaktır.</p>
 
-      <div class="example"><h3>Örnek:</h3><p><code>
-        DocumentRoot /siteler/htdocs<br />
-        &lt;Directory /&gt;<br />
-        <span class="indent">
-          AllowOverride all<br />
-        </span>
-        &lt;/Directory&gt;
-      </code></p></div>
+      <pre class="prettyprint lang-config">DocumentRoot "/siteler/htdocs"
+&lt;Directory "/"&gt;
+  AllowOverride all
+&lt;/Directory&gt;</pre>
+
 
       <p>Bu durumda <code>/index.html</code> sayfasına yapılan bir istek için
         Apache, <code>/.htaccess</code>, <code>/siteler/.htaccess</code> ve
@@ -251,16 +236,14 @@
         isterken büyük başarım kayıplarına uğrayabilirsiniz. Böyle bir
         durumda sunucunun başarımını arttırmanın tek bir yolu vardır. </p>
 
-      <div class="example"><p><code>
-        DirectoryIndex index
-      </code></p></div>
+      <pre class="prettyprint lang-config">DirectoryIndex index</pre>
+
 
       <p>Yukarıdaki gibi bir dosya ismi kalıbı kullanmak yerine, aşağıdaki
         gibi seçenekleri tam bir liste halinde belirtin:</p>
 
-      <div class="example"><p><code>
-        DirectoryIndex index.cgi index.pl index.shtml index.html
-      </code></p></div>
+      <pre class="prettyprint lang-config">DirectoryIndex index.cgi index.pl index.shtml index.html</pre>
+
 
       <p>Buradaki sıralama öncelik sırasını belirler; yani,
         öncelikli olmasını istediğiniz seçeneği listenin başına
@@ -442,6 +425,12 @@
           vermesi nedeniyle yüksek trafiğe sahip sunucularda
           <code class="module"><a href="../mod/prefork.html">prefork</a></code> modülüne göre daha iyi bir seçimdir.</li>
 
+        <li><code class="module"><a href="../mod/event.html">event</a></code> modülü <code class="module"><a href="../mod/worker.html">worker</a></code> modülü gibi
+          çok evreli bir modüldür, fakat aunı anda dahafazla isteğe yanıt
+          verecek şekilde tasarlanmıştır. Bunu, evreleri destekleyen bazı
+          işlemleri yapmamak suretiyle yeni isteklerle çalışacak ana evreleri
+          serbestleştirerek sağlar.</li>
+
         <li><code class="module"><a href="../mod/prefork.html">prefork</a></code> modülü her biri tek bir evreye sahip
           çok sayıda çocuk süreç kullanımını destekler. Her süreç aynı anda
           tek bir bağlantıya hizmet sunar. Çoğu sistemde daha hızlı olması
@@ -581,52 +570,41 @@
       bağlantılar denenebilir. Gerçekte çalışan kod bu olmasa da meramımızı
       anlatmak için kodun şöyle bir şey olduğunu varsayabiliriz:</p>
 
-      <div class="example"><p><code>
-        for (;;) {<br />
-        <span class="indent">
-          for (;;) {<br />
-          <span class="indent">
-            fd_set accept_fds;<br />
-            <br />
-            FD_ZERO (&amp;accept_fds);<br />
-            for (i = first_socket; i &lt;= last_socket; ++i) {<br />
-            <span class="indent">
-              FD_SET (i, &amp;accept_fds);<br />
-            </span>
-            }<br />
-            rc = select (last_socket+1, &amp;accept_fds, NULL, NULL, NULL);<br />
-            if (rc &lt; 1) continue;<br />
-            new_connection = -1;<br />
-            for (i = first_socket; i &lt;= last_socket; ++i) {<br />
-            <span class="indent">
-              if (FD_ISSET (i, &amp;accept_fds)) {<br />
-              <span class="indent">
-                new_connection = accept (i, NULL, NULL);<br />
-                if (new_connection != -1) break;<br />
-              </span>
-              }<br />
-            </span>
-            }<br />
-            if (new_connection != -1) break;<br />
-          </span>
-          }<br />
-          process the new_connection;<br />
-        </span>
-        }
-      </code></p></div>
+      <pre class="prettyprint lang-c">        for (;;) {
+          for (;;) {
+            fd_set accept_fds;
+
+            FD_ZERO (&amp;accept_fds);
+            for (i = first_socket; i &lt;= last_socket; ++i) {
+              FD_SET (i, &amp;accept_fds);
+            }
+            rc = select (last_socket+1, &amp;accept_fds, NULL, NULL, NULL);
+            if (rc &lt; 1) continue;
+            new_connection = -1;
+            for (i = first_socket; i &lt;= last_socket; ++i) {
+              if (FD_ISSET (i, &amp;accept_fds)) {
+                new_connection = accept (i, NULL, NULL);
+                if (new_connection != -1) break;
+              }
+            }
+            if (new_connection != -1) break;
+          }
+          process_the(new_connection);
+        }</pre>
+
 
       <p>Bu özet gerçeklenim bir takım açlık sorunlarına sebep olur. Bu
       döngünün çalışması sırasında aynı anda çok sayıda çocuk süreç yeniden
       çağrılır ve istekler arasında kalan çoğu çocuk da <code>select</code>
       ile engellenir. Engellenen tüm bu çocuklar soketlerden herhangi biri
       üzerinde tek bir istek göründüğünde <code>select</code> tarafından
-      uyandırılıp işleme sokulmak üzere döndürülürler (uyandırılan çocuk
+      uyandırılıp işleme sokulmak üzere döndürülürler. (Uyandırılan çocuk
       sayısı işletim sistemine ve zamanlama ayarlarına göre değişiklik
-      gösterir). Bunların hepsi döngüye katılıp bağlantı kabul etmeye
+      gösterir,) Bunların hepsi döngüye katılıp bağlantı kabul etmeye
       (<code>accept</code>) çalışırlar. Fakat içlerinden yalnız biri
       (sadece bir bağlantı isteğinin mevcut olduğu varsayımıyla) bunu
       başarabilir. Kalanının bağlantı kabul etmesi (<code>accept</code>)
-      engellenir. Bu durum, bu çocukları istekleri başka başka soketlerden
+      <em>engellenir</em>. Bu durum, bu çocukları istekleri başka başka soketlerden
       değil mecburen tek bir soketten kabul etmeye kilitler ve bu soket
       üzerinde yeni bir istek belirip uyandırılana kadar bu durumda
       kalırlar. Bu açlık sorunu ilk olarak <a href="http://bugs.apache.org/index/full/467">PR#467</a> sayılı raporla
@@ -650,41 +628,30 @@
       bir iç döngüde sıraya sokmaktır. Döngü aşağıda örneklenmiştir (farklar
       vurgulanmıştır):</p>
 
-      <div class="example"><p><code>
-        for (;;) {<br />
-        <span class="indent">
-          <strong>accept_mutex_on ();</strong><br />
-          for (;;) {<br />
-          <span class="indent">
-            fd_set accept_fds;<br />
-            <br />
-            FD_ZERO (&amp;accept_fds);<br />
-            for (i = first_socket; i &lt;= last_socket; ++i) {<br />
-            <span class="indent">
-              FD_SET (i, &amp;accept_fds);<br />
-            </span>
-            }<br />
-            rc = select (last_socket+1, &amp;accept_fds, NULL, NULL, NULL);<br />
-            if (rc &lt; 1) continue;<br />
-            new_connection = -1;<br />
-            for (i = first_socket; i &lt;= last_socket; ++i) {<br />
-            <span class="indent">
-              if (FD_ISSET (i, &amp;accept_fds)) {<br />
-              <span class="indent">
-                new_connection = accept (i, NULL, NULL);<br />
-                if (new_connection != -1) break;<br />
-              </span>
-              }<br />
-            </span>
-            }<br />
-            if (new_connection != -1) break;<br />
-          </span>
-          }<br />
-          <strong>accept_mutex_off ();</strong><br />
-          process the new_connection;<br />
-        </span>
-        }
-      </code></p></div>
+      <pre class="prettyprint lang-c">        for (;;) {
+          <strong>accept_mutex_on ();</strong>
+          for (;;) {
+            fd_set accept_fds;
+
+            FD_ZERO (&amp;accept_fds);
+            for (i = first_socket; i &lt;= last_socket; ++i) {
+              FD_SET (i, &amp;accept_fds);
+            }
+            rc = select (last_socket+1, &amp;accept_fds, NULL, NULL, NULL);
+            if (rc &lt; 1) continue;
+            new_connection = -1;
+            for (i = first_socket; i &lt;= last_socket; ++i) {
+              if (FD_ISSET (i, &amp;accept_fds)) {
+                new_connection = accept (i, NULL, NULL);
+                if (new_connection != -1) break;
+              }
+            }
+            if (new_connection != -1) break;
+          }
+          <strong>accept_mutex_off ();</strong>
+          process the new_connection;
+        }</pre>
+
 
       <p><code>accept_mutex_on</code> ve <code>accept_mutex_off</code> <a id="serialize" name="serialize">işlevleri</a> bir karşılıklı red
       semoforu oluştururlar. Mutekse aynı anda sadece bir çocuk sahip
@@ -784,42 +751,30 @@
       <code>lingering_close</code> adında bir işlevle gerçekler. Bu işlev
       kabaca şöyle görünür:</p>
 
-      <div class="example"><p><code>
-        void lingering_close (int s)<br />
-        {<br />
-        <span class="indent">
-          char junk_buffer[2048];<br />
-          <br />
-          /* gönderen tarafı kapat */<br />
-          shutdown (s, 1);<br />
-          <br />
-          signal (SIGALRM, lingering_death);<br />
-          alarm (30);<br />
-          <br />
-          for (;;) {<br />
-          <span class="indent">
-            /* s'i okumak için, 2 saniyelik zaman aşımı ile seç */<br />
-            select (s for reading, 2 second timeout);<br />
-            /* Hata oluşmuşsa döngüden çık */<br />
-            if (error) break;<br />
-            /* s okumak için hazırsa */<br />
-            if (s is ready for reading) {<br />
-            <span class="indent">
-              if (read (s, junk_buffer, sizeof (junk_buffer)) &lt;= 0) {<br />
-              <span class="indent">
-                break;<br />
-              </span>
-              }<br />
-              /* geri kalan herşey burada */<br />
-            </span>
-            }<br />
-          </span>
-          }<br />
-          <br />
-          close (s);<br />
-        </span>
-        }
-      </code></p></div>
+      <pre class="prettyprint lang-c">        void lingering_close (int s)
+        {
+          char junk_buffer[2048];
+
+          /* shutdown the sending side */
+          shutdown (s, 1);
+
+          signal (SIGALRM, lingering_death);
+          alarm (30);
+
+          for (;;) {
+            select (s for reading, 2 second timeout);
+            if (error) break;
+            if (s is ready for reading) {
+              if (read (s, junk_buffer, sizeof (junk_buffer)) &lt;= 0) {
+                break;
+              }
+              /* just toss away whatever is here */
+            }
+          }
+
+          close (s);
+        }</pre>
+
 
       <p>Bağlantı sonunda bu doğal olarak biraz daha masrafa yol açar, fakat
       güvenilir bir gerçeklenim için bu gereklidir. HTTP/1.1'in daha yaygın
@@ -1042,7 +997,7 @@
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/misc/perf-tuning.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/misc/perf-tuning.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -1052,13 +1007,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/misc/perf-tuning.h
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
-<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modüller</a> | <a href="../mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="../glossary.html">Terimler</a> | <a href="../sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

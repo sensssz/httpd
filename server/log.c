@@ -53,7 +53,6 @@
 #include "http_main.h"
 #include "util_time.h"
 #include "ap_mpm.h"
-#include "ap_provider.h"
 #include "ap_listen.h"
 
 #if HAVE_GETTID
@@ -76,6 +75,71 @@ APR_HOOK_STRUCT(
 )
 
 int AP_DECLARE_DATA ap_default_loglevel = DEFAULT_LOGLEVEL;
+
+#ifdef HAVE_SYSLOG
+
+static const TRANS facilities[] = {
+    {"auth",    LOG_AUTH},
+#ifdef LOG_AUTHPRIV
+    {"authpriv",LOG_AUTHPRIV},
+#endif
+#ifdef LOG_CRON
+    {"cron",    LOG_CRON},
+#endif
+#ifdef LOG_DAEMON
+    {"daemon",  LOG_DAEMON},
+#endif
+#ifdef LOG_FTP
+    {"ftp", LOG_FTP},
+#endif
+#ifdef LOG_KERN
+    {"kern",    LOG_KERN},
+#endif
+#ifdef LOG_LPR
+    {"lpr", LOG_LPR},
+#endif
+#ifdef LOG_MAIL
+    {"mail",    LOG_MAIL},
+#endif
+#ifdef LOG_NEWS
+    {"news",    LOG_NEWS},
+#endif
+#ifdef LOG_SYSLOG
+    {"syslog",  LOG_SYSLOG},
+#endif
+#ifdef LOG_USER
+    {"user",    LOG_USER},
+#endif
+#ifdef LOG_UUCP
+    {"uucp",    LOG_UUCP},
+#endif
+#ifdef LOG_LOCAL0
+    {"local0",  LOG_LOCAL0},
+#endif
+#ifdef LOG_LOCAL1
+    {"local1",  LOG_LOCAL1},
+#endif
+#ifdef LOG_LOCAL2
+    {"local2",  LOG_LOCAL2},
+#endif
+#ifdef LOG_LOCAL3
+    {"local3",  LOG_LOCAL3},
+#endif
+#ifdef LOG_LOCAL4
+    {"local4",  LOG_LOCAL4},
+#endif
+#ifdef LOG_LOCAL5
+    {"local5",  LOG_LOCAL5},
+#endif
+#ifdef LOG_LOCAL6
+    {"local6",  LOG_LOCAL6},
+#endif
+#ifdef LOG_LOCAL7
+    {"local7",  LOG_LOCAL7},
+#endif
+    {NULL,      -1},
+};
+#endif
 
 static const TRANS priorities[] = {
     {"emerg",   APLOG_EMERG},
@@ -277,10 +341,8 @@ static int log_child(apr_pool_t *p, const char *progname,
                 rc = apr_procattr_child_err_set(procattr, errfile, NULL);
         }
 
-        if (rc == APR_SUCCESS) {
-            rc = apr_proc_create(procnew, args[0], (const char * const *)args,
-                                 NULL, procattr, p);
-        }
+        rc = apr_proc_create(procnew, args[0], (const char * const *)args,
+                             NULL, procattr, p);
 
         if (rc == APR_SUCCESS) {
             apr_pool_note_subprocess(p, procnew, APR_KILL_AFTER_TIMEOUT);
@@ -332,14 +394,29 @@ static int open_error_log(server_rec *s, int is_main, apr_pool_t *p)
 
         s->error_log = dummy;
     }
-    else if (s->errorlog_provider) {
-        s->errorlog_provider_handle = s->errorlog_provider->init(p, s);
-        s->error_log = NULL;
-        if (!s->errorlog_provider_handle) {
-            /* provider must log something to the console */
-            return DONE;
+
+#ifdef HAVE_SYSLOG
+    else if (!strncasecmp(s->error_fname, "syslog", 6)) {
+        if ((fname = strchr(s->error_fname, ':'))) {
+            const TRANS *fac;
+
+            fname++;
+            for (fac = facilities; fac->t_name; fac++) {
+                if (!strcasecmp(fname, fac->t_name)) {
+                    openlog(ap_server_argv0, LOG_NDELAY|LOG_CONS|LOG_PID,
+                            fac->t_val);
+                    s->error_log = NULL;
+                    return OK;
+                }
+            }
         }
+        else {
+            openlog(ap_server_argv0, LOG_NDELAY|LOG_CONS|LOG_PID, LOG_LOCAL7);
+        }
+
+        s->error_log = NULL;
     }
+#endif
     else {
         fname = ap_server_root_relative(p, s->error_fname);
         if (!fname) {
@@ -438,12 +515,9 @@ int ap_open_logs(apr_pool_t *pconf, apr_pool_t *p /* plog */,
 #define NULL_DEVICE "/dev/null"
 #endif
 
-    if (replace_stderr) {
-        if (freopen(NULL_DEVICE, "w", stderr) == NULL) {
-            ap_log_error(APLOG_MARK, APLOG_CRIT, errno, s_main, APLOGNO(00093)
-                        "unable to replace stderr with %s", NULL_DEVICE);
-        }
-        stderr_log = NULL;
+    if (replace_stderr && freopen(NULL_DEVICE, "w", stderr) == NULL) {
+        ap_log_error(APLOG_MARK, APLOG_CRIT, errno, s_main, APLOGNO(00093)
+                     "unable to replace stderr with %s", NULL_DEVICE);
     }
 
     for (virt = s_main->next; virt; virt = virt->next) {
@@ -463,18 +537,6 @@ int ap_open_logs(apr_pool_t *pconf, apr_pool_t *p /* plog */,
             else {
                 virt->error_log = q->error_log;
             }
-        }
-        else if (virt->errorlog_provider) {
-            /* separately-configured vhost-specific provider */
-            if (open_error_log(virt, 0, p) != OK) {
-                return DONE;
-            }
-        }
-        else if (s_main->errorlog_provider) {
-            /* inherit provider from s_main */
-            virt->errorlog_provider = s_main->errorlog_provider;
-            virt->errorlog_provider_handle = s_main->errorlog_provider_handle;
-            virt->error_log = NULL;
         }
         else {
             virt->error_log = s_main->error_log;
@@ -596,7 +658,7 @@ static int log_log_id(const ap_errorlog_info *info, const char *arg,
      * c: log conn log id if available and not a once-per-request log line
      * else: log request log id if available
      */
-    if (arg && (*arg == 'c' || *arg == 'C')) {
+    if (arg && !strcasecmp(arg, "c")) {
         if (info->c && (*arg != 'C' || !info->r)) {
             return cpystrn(buf, info->c->log_id, buflen);
         }
@@ -848,7 +910,7 @@ AP_DECLARE(void) ap_register_log_hooks(apr_pool_t *p)
 
 /*
  * This is used if no error log format is defined and during startup.
- * It automatically omits the timestamp if logging using provider.
+ * It automatically omits the timestamp if logging to syslog.
  */
 static int do_errorlog_default(const ap_errorlog_info *info, char *buf,
                                int buflen, int *errstr_start, int *errstr_end,
@@ -861,7 +923,7 @@ static int do_errorlog_default(const ap_errorlog_info *info, char *buf,
     char scratch[MAX_STRING_LEN];
 #endif
 
-    if (!info->using_provider && !info->startup) {
+    if (!info->using_syslog && !info->startup) {
         buf[len++] = '[';
         len += log_ctime(info, "u", buf + len, buflen - len);
         buf[len++] = ']';
@@ -1020,9 +1082,22 @@ static int do_errorlog_format(apr_array_header_t *fmt, ap_errorlog_info *info,
 static void write_logline(char *errstr, apr_size_t len, apr_file_t *logf,
                           int level)
 {
-
-    apr_file_puts(errstr, logf);
-    apr_file_flush(logf);
+    /* NULL if we are logging to syslog */
+    if (logf) {
+        /* Truncate for the terminator (as apr_snprintf does) */
+        if (len > MAX_STRING_LEN - sizeof(APR_EOL_STR)) {
+            len = MAX_STRING_LEN - sizeof(APR_EOL_STR);
+        }
+        strcpy(errstr + len, APR_EOL_STR);
+        apr_file_puts(errstr, logf);
+        apr_file_flush(logf);
+    }
+#ifdef HAVE_SYSLOG
+    else {
+        syslog(level < LOG_PRIMASK ? level : APLOG_DEBUG, "%.*s",
+               (int)len, errstr);
+    }
+#endif
 }
 
 static void log_error_core(const char *file, int line, int module_index,
@@ -1038,8 +1113,6 @@ static void log_error_core(const char *file, int line, int module_index,
     const request_rec *rmain = NULL;
     core_server_config *sconf = NULL;
     ap_errorlog_info info;
-    ap_errorlog_provider *errorlog_provider = NULL;
-    void *errorlog_provider_handle = NULL;
 
     /* do we need to log once-per-req or once-per-conn info? */
     int log_conn_info = 0, log_req_info = 0;
@@ -1066,30 +1139,32 @@ static void log_error_core(const char *file, int line, int module_index,
 #endif
 
         logf = stderr_log;
-        if (!logf && ap_server_conf && ap_server_conf->errorlog_provider) {
-            errorlog_provider = ap_server_conf->errorlog_provider;
-            errorlog_provider_handle = ap_server_conf->errorlog_provider_handle;
-        }
     }
     else {
         int configured_level = r ? ap_get_request_module_loglevel(r, module_index)        :
                                c ? ap_get_conn_server_module_loglevel(c, s, module_index) :
                                    ap_get_server_module_loglevel(s, module_index);
-        /*
-         * If we are doing normal logging, don't log messages that are
-         * above the module's log level unless it is a startup/shutdown notice
-         */
-        if ((level_and_mask != APLOG_NOTICE)
-            && (level_and_mask > configured_level)) {
-            return;
-        }
-
         if (s->error_log) {
+            /*
+             * If we are doing normal logging, don't log messages that are
+             * above the module's log level unless it is a startup/shutdown notice
+             */
+            if ((level_and_mask != APLOG_NOTICE)
+                && (level_and_mask > configured_level)) {
+                return;
+            }
+
             logf = s->error_log;
         }
-
-        errorlog_provider = s->errorlog_provider;
-        errorlog_provider_handle = s->errorlog_provider_handle;
+        else {
+            /*
+             * If we are doing syslog logging, don't log messages that are
+             * above the module's log level (including a startup/shutdown notice)
+             */
+            if (level_and_mask > configured_level) {
+                return;
+            }
+        }
 
         /* the faked server_rec from mod_cgid does not have s->module_config */
         if (s->module_config) {
@@ -1119,22 +1194,13 @@ static void log_error_core(const char *file, int line, int module_index,
         }
     }
 
-    if (!logf && !(errorlog_provider && errorlog_provider_handle)) {
-        /* There is no file to send the log message to (or it is
-         * redirected to /dev/null and therefore any formating done below
-         * would be lost anyway) and there is no initialized log provider
-         * available, so we just return here.
-         */
-        return;
-    }
-
     info.s             = s;
     info.c             = c;
     info.pool          = pool;
     info.file          = NULL;
     info.line          = 0;
     info.status        = 0;
-    info.using_provider= (logf == NULL);
+    info.using_syslog  = (logf == NULL);
     info.startup       = ((level & APLOG_STARTUP) == APLOG_STARTUP);
     info.format        = fmt;
 
@@ -1212,24 +1278,7 @@ static void log_error_core(const char *file, int line, int module_index,
              */
             continue;
         }
-
-        if (logf || (errorlog_provider->flags &
-            AP_ERRORLOG_PROVIDER_ADD_EOL_STR)) {
-            /* Truncate for the terminator (as apr_snprintf does) */
-            if (len > MAX_STRING_LEN - sizeof(APR_EOL_STR)) {
-                len = MAX_STRING_LEN - sizeof(APR_EOL_STR);
-            }
-            strcpy(errstr + len, APR_EOL_STR);
-            len += strlen(APR_EOL_STR);
-        }
-
-        if (logf) {
-            write_logline(errstr, len, logf, level_and_mask);
-        }
-        else {
-            errorlog_provider->writer(&info, errorlog_provider_handle,
-                                      errstr, len);
-        }
+        write_logline(errstr, len, logf, level_and_mask);
 
         if (done) {
             /*
@@ -1500,7 +1549,7 @@ AP_DECLARE(void) ap_log_mpm_common(server_rec *s)
 AP_DECLARE(void) ap_remove_pid(apr_pool_t *p, const char *rel_fname)
 {
     apr_status_t rv;
-    const char *fname = ap_runtime_dir_relative(p, rel_fname);
+    const char *fname = ap_server_root_relative(p, rel_fname);
 
     if (fname != NULL) {
         rv = apr_file_remove(fname, p);
@@ -1529,7 +1578,7 @@ AP_DECLARE(void) ap_log_pid(apr_pool_t *p, const char *filename)
         return;
     }
 
-    fname = ap_runtime_dir_relative(p, filename);
+    fname = ap_server_root_relative(p, filename);
     if (!fname) {
         ap_log_error(APLOG_MARK, APLOG_STARTUP|APLOG_CRIT, APR_EBADPATH,
                      NULL, APLOGNO(00097) "Invalid PID file path %s, ignoring.", filename);
@@ -1582,7 +1631,7 @@ AP_DECLARE(apr_status_t) ap_read_pid(apr_pool_t *p, const char *filename,
         return APR_EGENERAL;
     }
 
-    fname = ap_runtime_dir_relative(p, filename);
+    fname = ap_server_root_relative(p, filename);
     if (!fname) {
         ap_log_error(APLOG_MARK, APLOG_STARTUP|APLOG_CRIT, APR_EBADPATH,
                      NULL, APLOGNO(00101) "Invalid PID file path %s, ignoring.", filename);

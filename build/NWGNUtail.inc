@@ -106,9 +106,9 @@ $(APBUILD)/NWGNUversion.inc: $(APBUILD)/nw_ver.awk $(SRC)/include/ap_release.h
 ifneq "$(strip $(VERSION_STR))" ""
 VERSION_INC = $(APBUILD)/NWGNUversion.inc
 else
-VERSION		= 2,5,0
-VERSION_STR	= 2.5.0
-VERSION_MAJMIN	= 25
+VERSION		= 2,4,0
+VERSION_STR	= 2.4.0
+VERSION_MAJMIN	= 24
 endif
 endif
 endif
@@ -221,7 +221,7 @@ $(OBJDIR)/$(NLM_NAME)_link.opt : $($(NLM_NAME)_LINKOPT_DEPENDS)
 	$(call DEL,$@)
 	$(call DEL,$(@:.opt=.def))
 	@echo $(DL)GEN  $@$(DL)
-	@echo $(DL)-nlmversion=$(NLM_VERSION) $(DL)>> $@
+	@echo $(DL)-nlmversion=$(NLM_VERSION)$(DL)>> $@
 	@echo $(DL)-warnings off$(DL)>> $@
 	@echo $(DL)-zerobss$(DL)>> $@
 	@echo $(DL)-o $(TARGET_nlm)$(DL)>> $@

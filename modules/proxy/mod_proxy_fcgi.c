@@ -39,7 +39,7 @@ static int proxy_fcgi_canon(request_rec *r, char *url)
     fcgi_req_config_t *rconf = NULL;
     const char *pathinfo_type = NULL;
 
-    if (ap_cstr_casecmpn(url, "fcgi:", 5) == 0) {
+    if (strncasecmp(url, "fcgi:", 5) == 0) {
         url += 5;
     }
     else {
@@ -253,6 +253,7 @@ static apr_status_t send_environment(proxy_conn_rec *conn, request_rec *r,
     apr_status_t rv;
     apr_size_t avail_len, len, required_len;
     int next_elem, starting_elem;
+    char *proxyfilename = r->filename;
     fcgi_req_config_t *rconf = ap_get_module_config(r->request_config, &proxy_fcgi_module);
 
     if (rconf) { 
@@ -271,13 +272,6 @@ static apr_status_t send_environment(proxy_conn_rec *conn, request_rec *r,
         else if (!strncmp(r->filename, "proxy:fcgi://", 13)) {
             newfname = apr_pstrdup(r->pool, r->filename+13);
         }
-        /* Query string in environment only */
-        if (newfname && r->args && *r->args) { 
-            char *qs = strrchr(newfname, '?');
-            if (qs && !strcmp(qs+1, r->args)) { 
-                *qs = '\0';
-            }
-        }
 
         if (newfname) {
             newfname = ap_strchr(newfname, '/');
@@ -288,6 +282,8 @@ static apr_status_t send_environment(proxy_conn_rec *conn, request_rec *r,
     ap_add_common_vars(r);
     ap_add_cgi_vars(r);
  
+    r->filename = proxyfilename;
+
     /* XXX are there any FastCGI specific env vars we need to send? */
 
     /* XXX mod_cgi/mod_cgid use ap_create_environment here, which fills in
@@ -658,32 +654,22 @@ recv_again:
                                 rv = ap_pass_brigade(r->output_filters, ob);
                                 if (rv != APR_SUCCESS) {
                                     *err = "passing headers brigade to output filters";
-                                    break;
                                 }
-                                else if (status == HTTP_NOT_MODIFIED
-                                         || status == HTTP_PRECONDITION_FAILED) {
-                                    /* Special 'status' cases handled:
-                                     * 1) HTTP 304 response MUST NOT contain
-                                     *    a message-body, ignore it.
-                                     * 2) HTTP 412 response.
-                                     * The break is not added since there might
-                                     * be more bytes to read from the FCGI
-                                     * connection. Even if the message-body is
-                                     * ignored (and the EOS bucket has already
-                                     * been sent) we want to avoid subsequent
-                                     * bogus reads. */
+                                else if (status == HTTP_NOT_MODIFIED) {
+                                    /* The 304 response MUST NOT contain
+                                     * a message-body, ignore it. */
                                     ignore_body = 1;
                                 }
                                 else {
                                     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01070)
                                                     "Error parsing script headers");
                                     rv = APR_EINVAL;
-                                    break;
                                 }
+                                break;
                             }
 
-                            if (conf->error_override
-                                && ap_is_HTTP_ERROR(r->status) && ap_is_initial_req(r)) {
+                            if (conf->error_override &&
+                                ap_is_HTTP_ERROR(r->status)) {
                                 /*
                                  * set script_error_status to discard
                                  * everything after the headers
@@ -912,7 +898,7 @@ static int proxy_fcgi_handler(request_rec *r, proxy_worker *worker,
                   "url: %s proxyname: %s proxyport: %d",
                   url, proxyname, proxyport);
 
-    if (ap_cstr_casecmpn(url, "fcgi:", 5) != 0) {
+    if (strncasecmp(url, "fcgi:", 5) != 0) {
         ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(01077) "declining URL %s", url);
         return DECLINED;
     }
@@ -953,10 +939,7 @@ static int proxy_fcgi_handler(request_rec *r, proxy_worker *worker,
     }
 
     /* Step Two: Make the Connection */
-    if (ap_proxy_check_connection(FCGI_SCHEME, backend, r->server, 0,
-                                  PROXY_CHECK_CONN_EMPTY)
-            && ap_proxy_connect_backend(FCGI_SCHEME, backend, worker,
-                                        r->server)) {
+    if (ap_proxy_connect_backend(FCGI_SCHEME, backend, worker, r->server)) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01079)
                       "failed to make connection to backend: %s",
                       backend->hostname);

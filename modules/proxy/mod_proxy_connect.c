@@ -119,7 +119,7 @@ static int allowed_port(connect_conf *conf, int port)
     int i;
     port_range *list = (port_range *) conf->allowed_connect_ports->elts;
 
-    if (apr_is_empty_array(conf->allowed_connect_ports)) {
+    if (apr_is_empty_array(conf->allowed_connect_ports)){
         return port == APR_URI_HTTPS_DEFAULT_PORT
                || port == APR_URI_SNEWS_DEFAULT_PORT;
     }
@@ -158,7 +158,7 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
     conn_rec *backconn;
     int done = 0;
 
-    apr_bucket_brigade *bb_front;
+    apr_bucket_brigade *bb_front = apr_brigade_create(p, c->bucket_alloc);
     apr_bucket_brigade *bb_back;
     apr_status_t rv;
     apr_size_t nbytes;
@@ -216,7 +216,7 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
     }
 
     /* Check ProxyBlock directive on the hostname/address.  */
-    if (ap_proxy_checkproxyblock(r, conf, uri.hostname, 
+    if (ap_proxy_checkproxyblock2(r, conf, uri.hostname, 
                                  proxyname ? NULL : nexthop) != OK) {
         return ap_proxyerror(r, HTTP_FORBIDDEN,
                              "Connect to remote machine blocked");
@@ -227,9 +227,9 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
                   connectname, connectport);
 
     /* Check if it is an allowed port */
-    if (!allowed_port(c_conf, uri.port)) {
-        return ap_proxyerror(r, HTTP_FORBIDDEN,
-                             "Connect to remote machine blocked");
+    if(!allowed_port(c_conf, uri.port)) {
+              return ap_proxyerror(r, HTTP_FORBIDDEN,
+                                   "Connect to remote machine blocked");
     }
 
     /*
@@ -299,7 +299,7 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
         apr_socket_close(sock);
         return HTTP_INTERNAL_SERVER_ERROR;
     }
-    ap_proxy_ssl_engine(backconn, r->per_dir_config, 0);
+    ap_proxy_ssl_disable(backconn);
     rc = ap_run_pre_connection(backconn, sock);
     if (rc != OK && rc != DONE) {
         backconn->aborted = 1;
@@ -315,7 +315,6 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
                    backconn->local_addr->port));
 
 
-    bb_front = apr_brigade_create(p, c->bucket_alloc);
     bb_back = apr_brigade_create(p, backconn->bucket_alloc);
 
     /* If we are connecting through a remote proxy, we need to pass
@@ -382,9 +381,10 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
             ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r, APLOGNO(01023) "error apr_poll()");
             return HTTP_INTERNAL_SERVER_ERROR;
         }
-
-        ap_log_rerror(APLOG_MARK, APLOG_TRACE2, 0, r, APLOGNO(01024)
+#ifdef DEBUGGING
+        ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(01024)
                       "woke from poll(), i=%d", pollcnt);
+#endif
 
         for (pi = 0; pi < pollcnt; pi++) {
             const apr_pollfd_t *cur = &signalled[pi];
@@ -392,18 +392,20 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
             if (cur->desc.s == sock) {
                 pollevent = cur->rtnevents;
                 if (pollevent & (APR_POLLIN | APR_POLLHUP)) {
-                    ap_log_rerror(APLOG_MARK, APLOG_TRACE2, 0, r, APLOGNO(01025)
-                                  "backend was readable");
+#ifdef DEBUGGING
+                    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(01025)
+                                  "sock was readable");
+#endif
                     done |= ap_proxy_transfer_between_connections(r, backconn,
                                                                   c, bb_back,
                                                                   bb_front,
-                                                                  "backend", NULL,
+                                                                  "sock", NULL,
                                                                   CONN_BLKSZ, 1)
                                                                  != APR_SUCCESS;
                 }
                 else if (pollevent & APR_POLLERR) {
-                    ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01026)
-                                  "err on backend connection");
+                    ap_log_rerror(APLOG_MARK, APLOG_NOTICE, 0, r, APLOGNO(01026)
+                                  "err on backconn");
                     backconn->aborted = 1;
                     done = 1;
                 }
@@ -411,8 +413,10 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
             else if (cur->desc.s == client_socket) {
                 pollevent = cur->rtnevents;
                 if (pollevent & (APR_POLLIN | APR_POLLHUP)) {
-                    ap_log_rerror(APLOG_MARK, APLOG_TRACE2, 0, r, APLOGNO(01027)
+#ifdef DEBUGGING
+                    ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, r, APLOGNO(01027)
                                   "client was readable");
+#endif
                     done |= ap_proxy_transfer_between_connections(r, c,
                                                                   backconn,
                                                                   bb_front,
@@ -423,8 +427,8 @@ static int proxy_connect_handler(request_rec *r, proxy_worker *worker,
                                                                  != APR_SUCCESS;
                 }
                 else if (pollevent & APR_POLLERR) {
-                    ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(02827)
-                                  "err on client connection");
+                    ap_log_rerror(APLOG_MARK, APLOG_NOTICE, 0, r, APLOGNO(02827)
+                                  "err on client");
                     c->aborted = 1;
                     done = 1;
                 }

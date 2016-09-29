@@ -27,14 +27,13 @@
 
 #include "apr_proc_mutex.h"
 #include "ap_listen.h"
-#include "scoreboard.h"
 
 /* From service.c: */
 
 #define SERVICE_APACHE_RESTART 128
 
 #ifndef AP_DEFAULT_SERVICE_NAME
-#define AP_DEFAULT_SERVICE_NAME "Apache2.x"
+#define AP_DEFAULT_SERVICE_NAME "Apache2.4"
 #endif
 
 #define SERVICECONFIG "System\\CurrentControlSet\\Services\\%s"
@@ -72,7 +71,6 @@ extern module AP_MODULE_DECLARE_DATA mpm_winnt_module;
 extern int ap_threads_per_child;
 
 extern DWORD my_pid;
-extern volatile ap_generation_t my_generation;
 extern apr_proc_mutex_t *start_mutex;
 extern HANDLE exit_event;
 
@@ -93,6 +91,9 @@ void hold_console_open_on_error(void);
 
 /* From child.c: */
 void child_main(apr_pool_t *pconf, DWORD parent_pid);
+apr_status_t winnt_insert_network_bucket(conn_rec *c,
+                                         apr_bucket_brigade *bb,
+                                         apr_socket_t *socket);
 
 #endif /* APACHE_MPM_WINNT_H */
 /** @} */

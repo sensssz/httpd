@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Les drapeaux de réécriture - Serveur Apache HTTP Version 2.5</title>
+<title>Les drapeaux de réécriture - Serveur Apache HTTP Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -16,18 +16,16 @@
 
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Rewrite</a></div><div id="page-content"><div id="preamble"><h1>Les drapeaux de réécriture</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Rewrite</a></div><div id="page-content"><div id="preamble"><h1>Les drapeaux de réécriture</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="../en/rewrite/flags.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/rewrite/flags.html" title="Français">&nbsp;fr&nbsp;</a></p>
 </div>
-<div class="outofdate">Cette traduction peut être périmée. Vérifiez la version
-            anglaise pour les changements récents.</div>
 
 <p>Ce document décrit les drapeaux disponibles dans la directive
 <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code>, en fournissant
@@ -35,8 +33,6 @@ des explications détaillées et des exemples.</p>
 </div>
 <div id="quickview"><ul id="toc"><li><img alt="" src="../images/down.gif" /> <a href="#introduction">Introduction</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#flag_b">B (échappement dans les références arrières)</a></li>
-<li><img alt="" src="../images/down.gif" /> <a href="#flag_bnp">BNP|backrefnoplus (ne pas échapper
-l'espace en +)</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#flag_c">C|chain</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#flag_co">CO|cookie</a></li>
 <li><img alt="" src="../images/down.gif" /> <a href="#flag_dpi">DPI|discardpath</a></li>
@@ -90,13 +86,7 @@ d'utilisation.</p>
 <div class="section">
 <h2><a name="flag_b" id="flag_b">B (échappement dans les références arrières)</a></h2>
 <p>Avec le drapeau [B], la directive <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> échappe les caractères
-non-alphanumériques avant d'appliquer la transformation. A partir
-de la version 2.4.10, vous pouvez limiter l'échappement dans les
-références arrières à une liste de caractères que vous pouvez spécifiez comme
-dans cet exemple : <code>[B=#?;]</code>. Notez que l'espace peut faire
-partie de la liste des caractères à échapper, mais qu'il ne doit pas
-être le dernier caractère de cette liste.
-</p>
+non-alphanumériques avant d'appliquer la transformation.</p>
 
 <p><code>mod_rewrite</code> doit supprimer les séquences d'échappement
 des URLs avant leur
@@ -132,19 +122,6 @@ rencontre un.</p>
 contexte d'un mandataire, où l'accès au serveur d'arrière-plan échouera
 si on présente à ce dernier une URL non échappée.</p>
 
-<p>Une alternative à ce drapeau consiste à utiliser une directive
-<code class="directive"><a href="../mod/mod_rewrite.html#rewritecond">RewriteCond</a></code> pour capturer
-%{THE_REQUEST}, les chaînes capturées se présentant
-alors sous la forme codée.</p>
-
-</div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
-<div class="section">
-<h2><a name="flag_bnp" id="flag_bnp">BNP|backrefnoplus (ne pas échapper
-l'espace en +)</a></h2>
-<p>Si le drapeau [BNP] est spécifié, la directive <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> échappera le caractère
-espace en %20 au lieu de '+' dans les références arrières. Ceci s'avère
-utile lorsque la référence arrière est utilisée dans la partie chemin,
-et non dans les paramètres de la requête.</p>
 </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="flag_c" id="flag_c">C|chain</a></h2>
@@ -310,9 +287,10 @@ avec une valeur de '1' si l'URI de la requête correspond à un fichier
 image. Cette variable d'environnement est ensuite utilisée pour exclure
 une telle requête du journal des accès.</p>
 
-<pre class="prettyprint lang-config">RewriteRule "\.(png|gif|jpg)" "-" [E=image:1]<br />
-CustomLog "logs/access_log" combined env=!image</pre>
-
+<div class="example"><p><code>
+RewriteRule "\.(png|gif|jpg)" "-" [E=image:1]<br />
+CustomLog "logs/access_log" combined env=!image
+</code></p></div>
 
 <p>Notez que le même effet peut être obtenu à l'aide de la directive
 <code class="directive"><a href="../mod/mod_setenvif.html#setenvif">SetEnvIf</a></code>. Cette technique
@@ -443,7 +421,7 @@ directive <code class="directive"><a href="../mod/mod_rewrite.html#rewritecond">
 la requête concerne déjà <code>index.php</code>, la directive <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> sera sautée.</p>
 
 <pre class="prettyprint lang-config">RewriteBase "/"
-RewriteCond "%{REQUEST_URI}" !=/index.php
+RewriteCond "%{REQUEST_URI}" "!=/index.php"
 RewriteRule "^(.*)" "/index.php?req=$1" [L,PT]</pre>
 
 </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
@@ -471,11 +449,11 @@ dire, tant que l'URI contient un <code>A</code>),
 effectuer la substitution (c'est à dire, remplacer le <code>A</code> par
 un <code>B</code>).</p>
 
-<p>A partir de la version 2.5.0, ce module renvoie une erreur après
-10000 itérations afin d'éviter les boucles infinies. Ce nombre maximum
+<p>A partir de la version 2.4.8, ce module renvoie une erreur après
+32000 itérations afin d'éviter les boucles infinies. Ce nombre maximum
 d'itération peut être modifié via le drapeau N.</p>
 <pre class="prettyprint lang-config"># On veut remplacer 1 caractère à chaque itération de la boucle
-RewriteRule "(.+)[&gt;&lt;;]$" "$1" [N=32000]
+RewriteRule "(.+)[&gt;&lt;;]$" "$1" [N=64000]
 # ... ou s'arrêter après 10 itérations
 RewriteRule "(.+)[&gt;&lt;;]$" "$1" [N=10]</pre>
 
@@ -733,16 +711,14 @@ avertissements 'Invalid URI in request'.
 <p>Le drapeau [S] sert à sauter des règles que vous ne voulez pas voir
 exécuter. La syntaxe du drapeau [S] est [S=<em>N</em>], où
 <em>N</em> correspond au nombre de règles à sauter (sous
-réserve que la règle <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> corresponde et qu'au moins
-une condition <code class="directive"><a href="../mod/mod_rewrite.html#rewritecond">RewriteCond</a></code>
-préalable soit vérifiée). 
+réserve que la règle <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> corresponde).
 Ceci peut s'interpréter comme une instruction
 <code>goto</code>  dans votre jeu de règles de réécriture. Dans
 l'exemple suivant, nous ne voulons exécuter la règle <code class="directive"><a href="../mod/mod_rewrite.html#rewriterule">RewriteRule</a></code> que si l'URI demandé ne
 correspond pas à un fichier existant.</p>
 <pre class="prettyprint lang-config"># La requête concerne-t-elle un fichier qui n'existe pas ?
-RewriteCond "%{REQUEST_FILENAME}" !-f
-RewriteCond "%{REQUEST_FILENAME}" !-d
+RewriteCond "%{REQUEST_FILENAME}" "!-f"
+RewriteCond "%{REQUEST_FILENAME}" "!-d"
 # Si c'est la cas, on saute les deux règles de réécriture suivantes
 RewriteRule ".?" "-" [S=2]
 
@@ -762,8 +738,8 @@ d'élaborer des pseudo-constructions if-then-else : la dernière règle du
 bloc then contiendra <code>skip=N</code>, où N est le nombre de règles
 contenues dans le bloc else :</p>
 <pre class="prettyprint lang-config"># Est-ce que le fichier existe ?
-RewriteCond "%{REQUEST_FILENAME}" !-f
-RewriteCond "%{REQUEST_FILENAME}" !-d
+RewriteCond "%{REQUEST_FILENAME}" "!-f"
+RewriteCond "%{REQUEST_FILENAME}" "!-d"
 # Create an if-then-else construct by skipping 3 lines if we meant to go to the "else" stanza.
 RewriteRule ".?" "-" [S=3]
 
@@ -773,7 +749,7 @@ RewriteRule "(.*\.gif)" "images.php?$1"
     # Skip past the "else" stanza.
     RewriteRule ".?" "-" [S=1]
 # ELSE...
-RewriteRule "(.*)" "404.php?file=$1"
+RewriteRule "(.*)" "404.php?file=$1
 # END</pre>
 
 
@@ -824,7 +800,7 @@ utiliser le drapeau <code>L</code> pour terminer la séquence
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/rewrite/flags.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/rewrite/flags.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -834,13 +810,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/rewrite/flags.html
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

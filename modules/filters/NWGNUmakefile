@@ -154,7 +154,6 @@ XDCDATA		=
 TARGET_nlm = \
 	$(OBJDIR)/extfiltr.nlm \
 	$(OBJDIR)/charsetl.nlm \
-        $(OBJDIR)/mod_crypto.nlm \
 	$(OBJDIR)/mod_data.nlm \
 	$(OBJDIR)/mod_filter.nlm \
 	$(OBJDIR)/mod_request.nlm \

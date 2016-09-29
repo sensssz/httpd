@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Index des directives - Serveur Apache HTTP Version 2.5</title>
+<title>Index des directives - Serveur Apache HTTP Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="directive-index"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div><div id="preamble"><h1>Index des directives</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div><div id="preamble"><h1>Index des directives</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="../de/mod/directives.html" hreflang="de" rel="alternate" title="Deutsch">&nbsp;de&nbsp;</a> |
 <a href="../en/mod/directives.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
@@ -41,9 +41,8 @@
     </p>
 
     <p>
-      Un <a href="quickreference.html">
-      Document de référence rapide des directives</a>
-      est également disponible. Il fournit des détails à propos de chaque directive
+      Un <a href="quickreference.html">Document de référence rapide des directives</a>
+      est également disponible. Il donne des détails à propos de chaque directive
       sous une forme abrégée.
     </p>
   
@@ -76,7 +75,6 @@
 <li><a href="mod_access_compat.html#allow">Allow</a></li>
 <li><a href="mod_proxy_connect.html#allowconnect">AllowCONNECT</a></li>
 <li><a href="core.html#allowencodedslashes">AllowEncodedSlashes</a></li>
-<li><a href="mod_allowhandlers.html#allowhandlers">AllowHandlers</a></li>
 <li><a href="mod_allowmethods.html#allowmethods">AllowMethods</a></li>
 <li><a href="core.html#allowoverride">AllowOverride</a></li>
 <li><a href="core.html#allowoverridelist">AllowOverrideList</a></li>
@@ -85,7 +83,6 @@
 <li><a href="mod_authn_anon.html#anonymous_mustgiveemail">Anonymous_MustGiveEmail</a></li>
 <li><a href="mod_authn_anon.html#anonymous_nouserid">Anonymous_NoUserID</a></li>
 <li><a href="mod_authn_anon.html#anonymous_verifyemail">Anonymous_VerifyEmail</a></li>
-<li><a href="core.html#asyncfilter">AsyncFilter</a></li>
 <li><a href="event.html#asyncrequestworkerfactor">AsyncRequestWorkerFactor</a></li>
 <li><a href="mod_auth_basic.html#authbasicauthoritative">AuthBasicAuthoritative</a></li>
 <li><a href="mod_auth_basic.html#authbasicfake">AuthBasicFake</a></li>
@@ -98,8 +95,6 @@
 <li><a href="mod_authn_dbm.html#authdbmuserfile">AuthDBMUserFile</a></li>
 <li><a href="mod_auth_digest.html#authdigestalgorithm">AuthDigestAlgorithm</a></li>
 <li><a href="mod_auth_digest.html#authdigestdomain">AuthDigestDomain</a></li>
-<li><a href="mod_auth_digest.html#authdigestnccheck">AuthDigestNcCheck</a></li>
-<li><a href="mod_auth_digest.html#authdigestnonceformat">AuthDigestNonceFormat</a></li>
 <li><a href="mod_auth_digest.html#authdigestnoncelifetime">AuthDigestNonceLifetime</a></li>
 <li><a href="mod_auth_digest.html#authdigestprovider">AuthDigestProvider</a></li>
 <li><a href="mod_auth_digest.html#authdigestqop">AuthDigestQop</a></li>
@@ -209,7 +204,6 @@
 <li><a href="mod_charset_lite.html#charsetdefault">CharsetDefault</a></li>
 <li><a href="mod_charset_lite.html#charsetoptions">CharsetOptions</a></li>
 <li><a href="mod_charset_lite.html#charsetsourceenc">CharsetSourceEnc</a></li>
-<li><a href="mod_speling.html#checkbasenamematch">CheckBasenameMatch</a></li>
 <li><a href="mod_speling.html#checkcaseonly">CheckCaseOnly</a></li>
 <li><a href="mod_speling.html#checkspelling">CheckSpelling</a></li>
 <li><a href="mod_unixd.html#chrootdir">ChrootDir</a></li>
@@ -220,20 +214,6 @@
 <li><a href="mod_usertrack.html#cookiestyle">CookieStyle</a></li>
 <li><a href="mod_usertrack.html#cookietracking">CookieTracking</a></li>
 <li><a href="mpm_common.html#coredumpdirectory">CoreDumpDirectory</a></li>
-<li><a href="mod_crypto.html#cryptocipher">CryptoCipher</a></li>
-<li><a href="mod_crypto.html#cryptodriver">CryptoDriver</a></li>
-<li><a href="mod_crypto.html#cryptoiv">CryptoIV</a></li>
-<li><a href="mod_crypto.html#cryptokey">CryptoKey</a></li>
-<li><a href="mod_crypto.html#cryptosize">CryptoSize</a></li>
-<li><a href="mod_ssl_ct.html#ctauditstorage">CTAuditStorage</a></li>
-<li><a href="mod_ssl_ct.html#ctlogclient">CTLogClient</a></li>
-<li><a href="mod_ssl_ct.html#ctlogconfigdb">CTLogConfigDB</a></li>
-<li><a href="mod_ssl_ct.html#ctmaxsctage">CTMaxSCTAge</a></li>
-<li><a href="mod_ssl_ct.html#ctproxyawareness">CTProxyAwareness</a></li>
-<li><a href="mod_ssl_ct.html#ctsctstorage">CTSCTStorage</a></li>
-<li><a href="mod_ssl_ct.html#ctserverhellosctlimit">CTServerHelloSCTLimit</a></li>
-<li><a href="mod_ssl_ct.html#ctstaticlogconfig">CTStaticLogConfig</a></li>
-<li><a href="mod_ssl_ct.html#ctstaticscts">CTStaticSCTs</a></li>
 <li><a href="mod_log_config.html#customlog">CustomLog</a></li>
 <li><a href="mod_dav.html#dav" id="D" name="D">Dav</a></li>
 <li><a href="mod_dav.html#davdepthinfinity">DavDepthInfinity</a></li>
@@ -254,7 +234,6 @@
 <li><a href="core.html#defaultruntimedir">DefaultRuntimeDir</a></li>
 <li><a href="core.html#defaulttype">DefaultType</a></li>
 <li><a href="core.html#define">Define</a></li>
-<li><a href="mod_deflate.html#deflatealteretag">DeflateAlterETag</a></li>
 <li><a href="mod_deflate.html#deflatebuffersize">DeflateBufferSize</a></li>
 <li><a href="mod_deflate.html#deflatecompressionlevel">DeflateCompressionLevel</a></li>
 <li><a href="mod_deflate.html#deflatefilternote">DeflateFilterNote</a></li>
@@ -299,12 +278,6 @@
 <li><a href="mod_filter.html#filterprotocol">FilterProtocol</a></li>
 <li><a href="mod_filter.html#filterprovider">FilterProvider</a></li>
 <li><a href="mod_filter.html#filtertrace">FilterTrace</a></li>
-<li><a href="mod_firehose.html#firehoseconnectioninput">FirehoseConnectionInput</a></li>
-<li><a href="mod_firehose.html#firehoseconnectionoutput">FirehoseConnectionOutput</a></li>
-<li><a href="mod_firehose.html#firehoseproxyconnectioninput">FirehoseProxyConnectionInput</a></li>
-<li><a href="mod_firehose.html#firehoseproxyconnectionoutput">FirehoseProxyConnectionOutput</a></li>
-<li><a href="mod_firehose.html#firehoserequestinput">FirehoseRequestInput</a></li>
-<li><a href="mod_firehose.html#firehoserequestoutput">FirehoseRequestOutput</a></li>
 <li><a href="mod_negotiation.html#forcelanguagepriority">ForceLanguagePriority</a></li>
 <li><a href="core.html#forcetype">ForceType</a></li>
 <li><a href="mod_log_forensic.html#forensiclog">ForensicLog</a></li>
@@ -312,8 +285,7 @@
 <li><a href="core.html#gprofdir">GprofDir</a></li>
 <li><a href="mpm_common.html#gracefulshutdowntimeout">GracefulShutdownTimeout</a></li>
 <li><a href="mod_unixd.html#group">Group</a></li>
-<li><a href="mod_http2.html#h2copyfiles" id="H" name="H">H2CopyFiles</a></li>
-<li><a href="mod_http2.html#h2direct">H2Direct</a></li>
+<li><a href="mod_http2.html#h2direct" id="H" name="H">H2Direct</a></li>
 <li><a href="mod_http2.html#h2maxsessionstreams">H2MaxSessionStreams</a></li>
 <li><a href="mod_http2.html#h2maxworkeridleseconds">H2MaxWorkerIdleSeconds</a></li>
 <li><a href="mod_http2.html#h2maxworkers">H2MaxWorkers</a></li>
@@ -337,10 +309,8 @@
 <li><a href="mod_heartmonitor.html#heartbeatstorage">HeartbeatStorage</a></li>
 <li><a href="mod_lbmethod_heartbeat.html#heartbeatstorage">HeartbeatStorage</a></li>
 <li><a href="core.html#hostnamelookups">HostnameLookups</a></li>
-<li><a href="core.html#httpprotocoloptions">HttpProtocolOptions</a></li>
 <li><a href="mod_ident.html#identitycheck" id="I" name="I">IdentityCheck</a></li>
 <li><a href="mod_ident.html#identitychecktimeout">IdentityCheckTimeout</a></li>
-<li><a href="mod_systemd.html#idleshutdown">IdleShutdown</a></li>
 <li><a href="core.html#if">&lt;If&gt;</a></li>
 <li><a href="core.html#ifdefine">&lt;IfDefine&gt;</a></li>
 <li><a href="core.html#ifmodule">&lt;IfModule&gt;</a></li>
@@ -403,7 +373,6 @@
 <li><a href="mod_log_config.html#logformat">LogFormat</a></li>
 <li><a href="mod_logio.html#logiotrackttfb">LogIOTrackTTFB</a></li>
 <li><a href="core.html#loglevel">LogLevel</a></li>
-<li><a href="core.html#logleveloverride">LogLevelOverride</a></li>
 <li><a href="mod_log_debug.html#logmessage">LogMessage</a></li>
 <li><a href="mod_lua.html#luaauthzprovider">LuaAuthzProvider</a></li>
 <li><a href="mod_lua.html#luacodecache">LuaCodeCache</a></li>
@@ -458,26 +427,6 @@
 <li><a href="mod_sed.html#outputsed">OutputSed</a></li>
 <li><a href="mod_env.html#passenv" id="P" name="P">PassEnv</a></li>
 <li><a href="mpm_common.html#pidfile">PidFile</a></li>
-<li><a href="mod_policy.html#policyconditional">PolicyConditional</a></li>
-<li><a href="mod_policy.html#policyconditionalurl">PolicyConditionalURL</a></li>
-<li><a href="mod_policy.html#policyenvironment">PolicyEnvironment</a></li>
-<li><a href="mod_policy.html#policyfilter">PolicyFilter</a></li>
-<li><a href="mod_policy.html#policykeepalive">PolicyKeepalive</a></li>
-<li><a href="mod_policy.html#policykeepaliveurl">PolicyKeepaliveURL</a></li>
-<li><a href="mod_policy.html#policylength">PolicyLength</a></li>
-<li><a href="mod_policy.html#policylengthurl">PolicyLengthURL</a></li>
-<li><a href="mod_policy.html#policymaxage">PolicyMaxage</a></li>
-<li><a href="mod_policy.html#policymaxageurl">PolicyMaxageURL</a></li>
-<li><a href="mod_policy.html#policynocache">PolicyNocache</a></li>
-<li><a href="mod_policy.html#policynocacheurl">PolicyNocacheURL</a></li>
-<li><a href="mod_policy.html#policytype">PolicyType</a></li>
-<li><a href="mod_policy.html#policytypeurl">PolicyTypeURL</a></li>
-<li><a href="mod_policy.html#policyvalidation">PolicyValidation</a></li>
-<li><a href="mod_policy.html#policyvalidationurl">PolicyValidationURL</a></li>
-<li><a href="mod_policy.html#policyvary">PolicyVary</a></li>
-<li><a href="mod_policy.html#policyvaryurl">PolicyVaryURL</a></li>
-<li><a href="mod_policy.html#policyversion">PolicyVersion</a></li>
-<li><a href="mod_policy.html#policyversionurl">PolicyVersionURL</a></li>
 <li><a href="mod_privileges.html#privilegesmode">PrivilegesMode</a></li>
 <li><a href="core.html#protocol">Protocol</a></li>
 <li><a href="mod_echo.html#protocolecho">ProtocolEcho</a></li>
@@ -532,9 +481,6 @@
 <li><a href="mod_proxy.html#proxystatus">ProxyStatus</a></li>
 <li><a href="mod_proxy.html#proxytimeout">ProxyTimeout</a></li>
 <li><a href="mod_proxy.html#proxyvia">ProxyVia</a></li>
-<li><a href="mod_proxy_wstunnel.html#proxywebsocketasync">ProxyWebsocketAsync</a></li>
-<li><a href="mod_proxy_wstunnel.html#proxywebsocketasyncdelay">ProxyWebsocketAsyncDelay</a></li>
-<li><a href="mod_proxy_wstunnel.html#proxywebsocketidletimeout">ProxyWebsocketIdleTimeout</a></li>
 <li><a href="core.html#qualifyredirecturl" id="Q" name="Q">QualifyRedirectURL</a></li>
 <li><a href="mod_autoindex.html#readmename" id="R" name="R">ReadmeName</a></li>
 <li><a href="mpm_common.html#receivebuffersize">ReceiveBufferSize</a></li>
@@ -543,7 +489,6 @@
 <li><a href="mod_alias.html#redirectpermanent">RedirectPermanent</a></li>
 <li><a href="mod_alias.html#redirecttemp">RedirectTemp</a></li>
 <li><a href="mod_reflector.html#reflectorheader">ReflectorHeader</a></li>
-<li><a href="core.html#registerhttpmethod">RegisterHttpMethod</a></li>
 <li><a href="mod_remoteip.html#remoteipheader">RemoteIPHeader</a></li>
 <li><a href="mod_remoteip.html#remoteipinternalproxy">RemoteIPInternalProxy</a></li>
 <li><a href="mod_remoteip.html#remoteipinternalproxylist">RemoteIPInternalProxyList</a></li>
@@ -611,7 +556,6 @@
 <li><a href="mod_session_dbd.html#sessiondbdupdatelabel">SessionDBDUpdateLabel</a></li>
 <li><a href="mod_session.html#sessionenv">SessionEnv</a></li>
 <li><a href="mod_session.html#sessionexclude">SessionExclude</a></li>
-<li><a href="mod_session.html#sessionexpiryupdateinterval">SessionExpiryUpdateInterval</a></li>
 <li><a href="mod_session.html#sessionheader">SessionHeader</a></li>
 <li><a href="mod_session.html#sessioninclude">SessionInclude</a></li>
 <li><a href="mod_session.html#sessionmaxage">SessionMaxAge</a></li>
@@ -732,8 +676,7 @@
 <li><a href="core.html#virtualhost">&lt;VirtualHost&gt;</a></li>
 <li><a href="mod_vhost_alias.html#virtualscriptalias">VirtualScriptAlias</a></li>
 <li><a href="mod_vhost_alias.html#virtualscriptaliasip">VirtualScriptAliasIP</a></li>
-<li><a href="core.html#warning" id="W" name="W">Warning</a></li>
-<li><a href="mod_watchdog.html#watchdoginterval">WatchdogInterval</a></li>
+<li><a href="mod_watchdog.html#watchdoginterval" id="W" name="W">WatchdogInterval</a></li>
 <li><a href="mod_include.html#xbithack" id="X" name="X">XBitHack</a></li>
 <li><a href="mod_xml2enc.html#xml2encalias">xml2EncAlias</a></li>
 <li><a href="mod_xml2enc.html#xml2encdefault">xml2EncDefault</a></li>
@@ -751,7 +694,7 @@
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/directives.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/directives.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -761,13 +704,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/directives.htm
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

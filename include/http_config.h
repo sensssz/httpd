@@ -50,7 +50,7 @@ enum cmd_how {
     RAW_ARGS,           /**< cmd_func parses command line itself */
     TAKE1,              /**< one argument only */
     TAKE2,              /**< two arguments only */
-    ITERATE,            /**< one argument, occurring multiple times
+    ITERATE,            /**< one argument, occuring multiple times
                          * (e.g., IndexIgnore)
                          */
     ITERATE2,           /**< two arguments, 2nd occurs multiple times
@@ -117,7 +117,7 @@ typedef union {
 
 /** mechanism for declaring a directive with no arguments */
 # define AP_INIT_NO_ARGS(directive, func, mconfig, where, help) \
-    { directive, { .no_args=func }, mconfig, where, NO_ARGS, help }
+    { directive, { .no_args=func }, mconfig, where, RAW_ARGS, help }
 /** mechanism for declaring a directive with raw argument parsing */
 # define AP_INIT_RAW_ARGS(directive, func, mconfig, where, help) \
     { directive, { .raw_args=func }, mconfig, where, RAW_ARGS, help }
@@ -168,7 +168,7 @@ typedef const char *(*cmd_func) ();
 # define AP_FLAG     func
 
 # define AP_INIT_NO_ARGS(directive, func, mconfig, where, help) \
-    { directive, func, mconfig, where, NO_ARGS, help }
+    { directive, func, mconfig, where, RAW_ARGS, help }
 # define AP_INIT_RAW_ARGS(directive, func, mconfig, where, help) \
     { directive, func, mconfig, where, RAW_ARGS, help }
 # define AP_INIT_TAKE_ARGV(directive, func, mconfig, where, help) \
@@ -249,8 +249,6 @@ struct command_struct {
 #define NONFATAL_UNKNOWN 1024    /* Unrecognised directive */
 #define NONFATAL_ALL (NONFATAL_OVERRIDE|NONFATAL_UNKNOWN)
 
-#define PROXY_CONF 2048      /**< *.conf inside &lt;Proxy&gt; only */
-
 /** this directive can be placed anywhere */
 #define OR_ALL (OR_LIMIT|OR_OPTIONS|OR_FILEINFO|OR_AUTHCFG|OR_INDEXES)
 
@@ -327,10 +325,7 @@ struct cmd_parms_struct {
     struct ap_conf_vector_t *context;
     /** directive with syntax error */
     const ap_directive_t *err_directive;
- 
-    /** If the current directive is EXEC_ON_READ, this is the last 
-        (non-EXEC_ON_READ)  enclosing directive  */
-    ap_directive_t *parent;
+
 };
 
 /**
@@ -415,23 +410,6 @@ struct module_struct {
 };
 
 /**
- * The AP_MAYBE_UNUSED macro is used for variable declarations that
- * might potentially exhibit "unused var" warnings on some compilers if
- * left untreated.
- * Since static intializers are not part of the C language (C89), making
- * (void) usage is not possible. However many compiler have proprietary 
- * mechanism to suppress those warnings.  
- */
-#ifdef AP_MAYBE_UNUSED
-#elif defined(__GNUC__)
-# define AP_MAYBE_UNUSED(x) x __attribute__((unused)) 
-#elif defined(__LCLINT__)
-# define AP_MAYBE_UNUSED(x) /*@unused@*/ x  
-#else
-# define AP_MAYBE_UNUSED(x) x
-#endif
-    
-/**
  * The APLOG_USE_MODULE macro is used choose which module a file belongs to.
  * This is necessary to allow per-module loglevel configuration.
  *
@@ -446,7 +424,7 @@ struct module_struct {
  */
 #define APLOG_USE_MODULE(foo) \
     extern module AP_MODULE_DECLARE_DATA foo##_module;                  \
-    AP_MAYBE_UNUSED(static int * const aplog_module_index) = &(foo##_module.module_index)
+    static int * const aplog_module_index = &(foo##_module.module_index)
 
 /**
  * AP_DECLARE_MODULE is a convenience macro that combines a call of
@@ -834,7 +812,7 @@ AP_DECLARE(apr_status_t) ap_cfg_getc(char *ch, ap_configfile_t *cfp);
 /**
  * Detach from open ap_configfile_t, calling the close handler
  * @param cfp The file to close
- * @return 1 on success, 0 on failure
+ * @return 1 on sucess, 0 on failure
  */
 AP_DECLARE(int) ap_cfg_closefile(ap_configfile_t *cfp);
 
@@ -925,10 +903,9 @@ AP_DECLARE(const char *) ap_check_cmd_context(cmd_parms *cmd,
 #define  NOT_IN_LOCATION        0x08 /**< Forbidden in &lt;Location&gt; */
 #define  NOT_IN_FILES           0x10 /**< Forbidden in &lt;Files&gt; or &lt;If&gt;*/
 #define  NOT_IN_HTACCESS        0x20 /**< Forbidden in .htaccess files */
-#define  NOT_IN_PROXY           0x40 /**< Forbidden in &lt;Proxy&gt; */
-/** Forbidden in &lt;Directory&gt;/&lt;Location&gt;/&lt;Files&gt;&lt;If&gt;&lt;Proxy&gt;*/
-#define  NOT_IN_DIR_LOC_FILE    (NOT_IN_DIRECTORY|NOT_IN_LOCATION|NOT_IN_FILES|NOT_IN_PROXY)
-/** Forbidden in &lt;VirtualHost&gt;/&lt;Limit&gt;/&lt;Directory&gt;/&lt;Location&gt;/&lt;Files&gt;/&lt;If&gt;&lt;Proxy&gt;*/
+/** Forbidden in &lt;Directory&gt;/&lt;Location&gt;/&lt;Files&gt;&lt;If&gt;*/
+#define  NOT_IN_DIR_LOC_FILE    (NOT_IN_DIRECTORY|NOT_IN_LOCATION|NOT_IN_FILES)
+/** Forbidden in &lt;VirtualHost&gt;/&lt;Limit&gt;/&lt;Directory&gt;/&lt;Location&gt;/&lt;Files&gt;/&lt;If&gt; */
 #define  GLOBAL_ONLY            (NOT_IN_VIRTUALHOST|NOT_IN_LIMIT|NOT_IN_DIR_LOC_FILE)
 
 /** @} */
@@ -1252,7 +1229,6 @@ AP_CORE_DECLARE(void *) ap_set_config_vectors(server_rec *server,
  * Run the header parser functions for each module
  * @param r The current request
  * @return OK or DECLINED
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,header_parser,(request_rec *r))
 
@@ -1262,7 +1238,6 @@ AP_DECLARE_HOOK(int,header_parser,(request_rec *r))
  * @param plog The logging streams pool
  * @param ptemp The temporary pool
  * @return OK or DECLINED on success anything else is a error
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,pre_config,(apr_pool_t *pconf,apr_pool_t *plog,
                                 apr_pool_t *ptemp))
@@ -1274,7 +1249,6 @@ AP_DECLARE_HOOK(int,pre_config,(apr_pool_t *pconf,apr_pool_t *plog,
  * @param ptemp The temporary pool
  * @param s the server to operate upon
  * @return OK or DECLINED on success anything else is a error
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,check_config,(apr_pool_t *pconf, apr_pool_t *plog,
                                   apr_pool_t *ptemp, server_rec *s))
@@ -1287,7 +1261,7 @@ AP_DECLARE_HOOK(int,check_config,(apr_pool_t *pconf, apr_pool_t *plog,
  * @note To avoid reordering problems due to different buffering, hook
  *       functions should only apr_file_*() to print to stdout/stderr and
  *       not simple printf()/fprintf().
- * @ingroup hooks
+ *     
  */
 AP_DECLARE_HOOK(void,test_config,(apr_pool_t *pconf, server_rec *s))
 
@@ -1298,7 +1272,6 @@ AP_DECLARE_HOOK(void,test_config,(apr_pool_t *pconf, server_rec *s))
  * @param ptemp The temporary pool
  * @param s The list of server_recs
  * @return OK or DECLINED on success anything else is a error
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,post_config,(apr_pool_t *pconf,apr_pool_t *plog,
                                  apr_pool_t *ptemp,server_rec *s))
@@ -1310,7 +1283,6 @@ AP_DECLARE_HOOK(int,post_config,(apr_pool_t *pconf,apr_pool_t *plog,
  * @param ptemp The temporary pool
  * @param s The list of server_recs
  * @return OK or DECLINED on success anything else is a error
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,open_logs,(apr_pool_t *pconf,apr_pool_t *plog,
                                apr_pool_t *ptemp,server_rec *s))
@@ -1319,7 +1291,6 @@ AP_DECLARE_HOOK(int,open_logs,(apr_pool_t *pconf,apr_pool_t *plog,
  * Run the child_init functions for each module
  * @param pchild The child pool
  * @param s The list of server_recs in this server
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(void,child_init,(apr_pool_t *pchild, server_rec *s))
 
@@ -1327,7 +1298,6 @@ AP_DECLARE_HOOK(void,child_init,(apr_pool_t *pchild, server_rec *s))
  * Run the handler functions for each module
  * @param r The request_rec
  * @remark non-wildcard handlers should HOOK_MIDDLE, wildcard HOOK_LAST
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,handler,(request_rec *r))
 
@@ -1341,7 +1311,6 @@ AP_DECLARE_HOOK(int,handler,(request_rec *r))
  * @param lookup_uri Controls whether the caller actually wants content or not.
  * lookup is set when the quick_handler is called out of
  * ap_sub_req_lookup_uri()
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(int,quick_handler,(request_rec *r, int lookup_uri))
 
@@ -1349,7 +1318,6 @@ AP_DECLARE_HOOK(int,quick_handler,(request_rec *r, int lookup_uri))
  * Retrieve the optional functions for each module.
  * This is run immediately before the server starts. Optional functions should
  * be registered during the hook registration phase.
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(void,optional_fn_retrieve,(void))
 
@@ -1366,7 +1334,6 @@ AP_DECLARE_HOOK(void,optional_fn_retrieve,(void))
  *         APR_ENOENT or APR_ENOTDIR if no htaccess file exists,
  *         AP_DECLINED to let later modules do the opening,
  *         any other error code on error.
- * @ingroup hooks
  */
 AP_DECLARE_HOOK(apr_status_t,open_htaccess,
                 (request_rec *r, const char *dir_name, const char *access_name,

@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Fichiers journaux - Serveur Apache HTTP Version 2.5</title>
+<title>Fichiers journaux - Serveur Apache HTTP Version 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.5</a></div><div id="page-content"><div id="preamble"><h1>Fichiers journaux</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.4</a></div><div id="page-content"><div id="preamble"><h1>Fichiers journaux</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="./en/logs.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="./fr/logs.html" title="Français">&nbsp;fr&nbsp;</a> |
@@ -211,8 +211,7 @@
     dehors du sujet de ce document et ne fait pas vraiment partie intégrante
     du travail du serveur web lui-même. Pour plus d'informations à propos de ce
     sujet et des applications dédiées à l'analyse de journaux, vous pouvez vous
-    référer à <a href="http://dmoz.org/Computers/Software/Internet/     Site_Management/Log_analysis/">Open Directory</a>.
-    </p>
+    référer à <a href="http://dmoz.org/Computers/Software/Internet/     Site_Management/Log_Analysis/">Open Directory</a>.</p>
 
     <p>Différentes versions du démon Apache httpd utilisaient d'autres modules
     et directives pour contrôler la journalisation des accès, à l'instar de
@@ -235,7 +234,7 @@
       <p>Voici une configuration typique pour le journal des accès :</p>
 
       <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common
-CustomLog "logs/access_log" common</pre>
+CustomLog logs/access_log common</pre>
 
 
       <p>Ici est définie l'<em>identité</em> <code>common</code> qui est
@@ -385,7 +384,7 @@ CustomLog "logs/access_log" common</pre>
       comme suit :</p>
 
       <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
-CustomLog "log/access_log" combined</pre>
+CustomLog log/access_log combined</pre>
 
 
       <p>Ce format est identique au Common Log Format, avec deux champs
@@ -436,9 +435,9 @@ CustomLog "log/access_log" combined</pre>
       <code>AgentLog</code>.</p>
 
       <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common
-CustomLog "logs/access_log" common
-CustomLog "logs/referer_log" "%{Referer}i -&gt; %U"
-CustomLog "logs/agent_log" "%{User-agent}i"</pre>
+CustomLog logs/access_log common
+CustomLog logs/referer_log "%{Referer}i -&gt; %U"
+CustomLog logs/agent_log "%{User-agent}i"</pre>
 
 
       <p>Cet exemple montre aussi qu'il n'est pas obligatoire d'associer
@@ -469,7 +468,7 @@ SetEnvIf Remote_Addr "127\.0\.0\.1" dontlog
 # Marque les requêtes pour le fichier robots.txt
 SetEnvIf Request_URI "^/robots\.txt$" dontlog
 # Journalise toutes les autres requêtes
-CustomLog "logs/access_log" common env=!dontlog</pre>
+CustomLog logs/access_log common env=!dontlog</pre>
 
 
       <p>Autre exemple, imaginons l'enregistrement des requêtes en provenance
@@ -477,8 +476,8 @@ CustomLog "logs/access_log" common env=!dontlog</pre>
       utilisateurs dans un autre journal.</p>
 
       <pre class="prettyprint lang-config">        SetEnvIf Accept-Language "en" english
-        CustomLog "logs/english_log" common env=english
-        CustomLog "logs/non_english_log" common env=!english</pre>
+        CustomLog logs/english_log common env=english
+        CustomLog logs/non_english_log common env=!english</pre>
 
 
 	<p>Dans le contexte d'une mise en cache, il peut être
@@ -487,7 +486,7 @@ CustomLog "logs/access_log" common env=!dontlog</pre>
 
       <pre class="prettyprint lang-config">SetEnv CACHE_MISS 1
 LogFormat "%h %l %u %t "%r " %&gt;s %b %{CACHE_MISS}e" common-cache
-CustomLog "logs/access_log" common-cache</pre>
+CustomLog logs/access_log common-cache</pre>
 
 
       <p><code class="module"><a href="./mod/mod_cache.html">mod_cache</a></code> va s'exécuter avant
@@ -673,7 +672,7 @@ CustomLog "|$/usr/local/apache/bin/rotatelogs   /var/log/access_log 86400" commo
     individuels. Considérons par exemple les directives suivantes :</p>
 
     <pre class="prettyprint lang-config">LogFormat "%v %l %u %t \"%r\" %&gt;s %b" comonvhost
-CustomLog "logs/access_log" comonvhost</pre>
+CustomLog logs/access_log comonvhost</pre>
 
 
     <p>Le champ <code>%v</code> sert à enregistrer le nom de l'hôte virtuel qui
@@ -740,7 +739,7 @@ CustomLog "logs/access_log" comonvhost</pre>
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/logs.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/logs.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -750,13 +749,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/logs.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

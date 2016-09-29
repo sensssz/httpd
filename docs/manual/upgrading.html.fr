@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Mise à jour de la version 2.2 vers la version 2.4 - Serveur Apache HTTP Version 2.5</title>
+<title>Mise à jour de la version 2.2 vers la version 2.4 - Serveur Apache HTTP Version 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.5</a></div><div id="page-content"><div id="preamble"><h1>Mise à jour de la version 2.2 vers la version 2.4</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.4</a></div><div id="page-content"><div id="preamble"><h1>Mise à jour de la version 2.2 vers la version 2.4</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="./en/upgrading.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="./fr/upgrading.html" title="Français">&nbsp;fr&nbsp;</a></p>
@@ -39,8 +39,8 @@
   l'API</a>.</p>
 
   <p>Ce document présente les changements de comportement du serveur qui
-  peuvent nécessiter une modification de la configuration, et la manière
-  d'utiliser la version 2.4 du serveur en parallèle avec la
+  peuvent nécessiter une modification de la configuration, et une
+  méthode pour utiliser la version 2.4 du serveur en parallèle avec la
   version 2.2. Pour tirer parti des nouvelles fonctionnalités de la
   version 2.4, reportez-vous au document "Nouvelles fonctionnalités".</p>
 
@@ -114,7 +114,7 @@ nécessiter une mise à jour des fichiers de configuration de la version
       probablement être mis à jour.</p>
 
     <p>Vous devez vous reporter au document <a href="howto/auth.html">Authentification, autorisation et contrôle
-    d'accès</a>, et plus particulièrement à la section <a href="howto/auth.html#beyond">Plus loin qu'une simple
+    d'accès</a>, et plus particulièrement à la section <a href="howto/auth.html#beyond">Pour aller plus loin qu'une simple
     autorisation</a> qui explique les nouveaux mécanismes permettant de
     contrôler l'ordre dans lequel les directives d'autorisation sont
     appliquées.</p>
@@ -142,7 +142,7 @@ nécessiter une mise à jour des fichiers de configuration de la version
       <p>Dans la version 2.4, ce contrôle d'accès est assuré, comme tout
       contrôle d'autorisation, par le nouveau module
       <code class="module"><a href="./mod/mod_authz_host.html">mod_authz_host</a></code>. Bien que le module
-      <code class="module"><a href="./mod/mod_access_compat.html">mod_access_compat</a></code> assure la
+      <code class="module"><a href="./mod/mod_access_compat.html">mod_access_compat</a></code> soit fourni à des fins de
       compatibilité avec les anciennes configurations, les anciennes
       directives de contrôle d'accès devront être remplacées par les
       nouveaux mécanismes d'authentification.</p>
@@ -176,6 +176,15 @@ Allow from all</pre>
 </div>
 
       <p>Dans l'exemple suivant, tous les hôtes du domaine example.org
+      ont l'autorisation d'accès, tous les autres sont rejetés :</p>
+
+      <div class="example"><h3>version 2.2 :</h3><pre class="prettyprint lang-config">Order Deny,Allow
+Deny from all
+Allow from example.org</pre>
+</div>
+      <div class="example"><h3>version 2.4 :</h3><pre class="prettyprint lang-config">Require host example.org</pre>
+</div>
+    <p>Dans l'exemple suivant, tous les hôtes du domaine example.org
       ont l'autorisation d'accès, tous les autres sont rejetés :</p>
 
       <div class="example"><h3>version 2.2 :</h3><pre class="prettyprint lang-config">Order Deny,Allow
@@ -234,7 +243,7 @@ access.log - GET /server-status 200 127.0.0.1</pre>
       directives, puis migrez-les vers les nouvelles ultérieurement, soit
       effectuez une migration immédiate de toutes les anciennes directives vers
       les nouvelles.  
-      </p>
+      </p>      
     
 
     
@@ -246,7 +255,7 @@ access.log - GET /server-status 200 127.0.0.1</pre>
       certaines configurations particulières, comme décrit ci-dessous.</p>
 
       <ul>
-        <li><code class="directive">MaxRequestsPerChild</code> a été renommée en
+        <li>La directive <code class="directive">MaxRequestsPerChild</code> a été renommée en
 	<code class="directive"><a href="./mod/mpm_common.html#maxconnectionsperchild">MaxConnectionsPerChild</a></code>;
 	ce nouveau nom reflète mieux l'usage de cette directive.
 	L'ancien nom est encore supporté.</li>
@@ -425,12 +434,12 @@ access.log - GET /server-status 200 127.0.0.1</pre>
       est maintenant fournie par <code class="module"><a href="./mod/mod_authn_core.html">mod_authn_core</a></code>.  
       </li>
 
-      <li><code class="module"><a href="./mod/mod_cgid.html">mod_cgid</a></code> utilise la valeur de la directive
-      <code class="directive"><a href="./mod/core.html#timeout">Timeout</a></code> du serveur pour
-      limiter le temps d'attente entre les sorties d'un programme CGI.
-      La valeur de ce temps d'attente peut maintenant être modifiée via
-      la directive <code class="directive"><a href="./mod/mod_cgid.html#cgidscripttimeout">CGIDScriptTImeout</a></code>.
-      </li>
+      <li>Les directives RewriteLog et RewriteLogLevel ont été
+      supprimées. Leur fonctions sont maintenant assurées par la
+      directive <code class="directive"><a href="./mod/core.html#loglevel">LogLevel</a></code> qui permet de définir
+      un niveau de journalisation approprié pour le module
+      <code class="module"><a href="./mod/mod_rewrite.html">mod_rewrite</a></code>. Voir aussi la section <a href="mod/mod_rewrite.html#logging">journalisation de
+      mod_rewrite</a>.</li>
 
     </ul>
 
@@ -492,7 +501,7 @@ access.log - GET /server-status 200 127.0.0.1</pre>
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/upgrading.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/upgrading.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -502,13 +511,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/upgrading.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

@@ -141,7 +141,7 @@ extern "C" {
  * Constant to store module_index for the current file.
  * Objects with static storage duration are set to NULL if not
  * initialized explicitly. This means that if aplog_module_index
- * is not initialized using the ::APLOG_USE_MODULE or the
+ * is not initalized using the ::APLOG_USE_MODULE or the
  * ::AP_DECLARE_MODULE macro, we can safely fall back to
  * use ::APLOG_NO_MODULE. This variable will usually be optimized away.
  */
@@ -751,7 +751,7 @@ AP_DECLARE(void) ap_log_mpm_common(server_rec *s);
  * Log the current pid of the parent process
  * @param p The pool to use for processing
  * @param fname The name of the file to log to.  If the filename is not
- * absolute then it is assumed to be relative to DefaultRuntimeDir.
+ * absolute then it is assumed to be relative to ServerRoot.
  */
 AP_DECLARE(void) ap_log_pid(apr_pool_t *p, const char *fname);
 
@@ -759,15 +759,15 @@ AP_DECLARE(void) ap_log_pid(apr_pool_t *p, const char *fname);
  * Remove the pidfile.
  * @param p The pool to use for processing
  * @param fname The name of the pid file to remove.  If the filename is not
- * absolute then it is assumed to be relative to DefaultRuntimeDir.
+ * absolute then it is assumed to be relative to ServerRoot.
  */
 AP_DECLARE(void) ap_remove_pid(apr_pool_t *p, const char *fname);
 
 /**
  * Retrieve the pid from a pidfile.
  * @param p The pool to use for processing
- * @param filename The name of the file containing the pid.  If the filename
- * is not absolute then it is assumed to be relative to DefaultRuntimeDir.
+ * @param filename The name of the file containing the pid.  If the filename is not
+ * absolute then it is assumed to be relative to ServerRoot.
  * @param mypid Pointer to pid_t (valid only if return APR_SUCCESS)
  */
 AP_DECLARE(apr_status_t) ap_read_pid(apr_pool_t *p, const char *filename, pid_t *mypid);

@@ -40,9 +40,9 @@ typedef struct {
     ap_expr_info_t *fakeuser;
     ap_expr_info_t *fakepass;
     const char *use_digest_algorithm;
-    unsigned int fake_set:1,
-                 use_digest_algorithm_set:1,
-                 authoritative_set:1;
+    int fake_set:1;
+    int use_digest_algorithm_set:1;
+    int authoritative_set:1;
 } auth_basic_config_rec;
 
 static void *create_auth_basic_dir_config(apr_pool_t *p, char *d)
@@ -146,11 +146,14 @@ static const char *add_basic_fake(cmd_parms * cmd, void *config,
     const char *err;
 
     if (!strcasecmp(user, "off")) {
+
         conf->fakeuser = NULL;
         conf->fakepass = NULL;
         conf->fake_set = 1;
+
     }
     else {
+
         /* if password is unspecified, set it to the fixed string "password" to
          * be compatible with the behaviour of mod_ssl.
          */
@@ -171,10 +174,11 @@ static const char *add_basic_fake(cmd_parms * cmd, void *config,
                         &err, NULL);
         if (err) {
             return apr_psprintf(cmd->pool,
-                    "Could not parse fake password expression '%s': %s", pass,
+                    "Could not parse fake password expression '%s': %s", user,
                     err);
         }
         conf->fake_set = 1;
+
     }
 
     return NULL;
@@ -238,7 +242,7 @@ static void note_basic_auth_failure(request_rec *r)
 
 static int hook_note_basic_auth_failure(request_rec *r, const char *auth_type)
 {
-    if (ap_cstr_casecmp(auth_type, "Basic"))
+    if (strcasecmp(auth_type, "Basic"))
         return DECLINED;
 
     note_basic_auth_failure(r);
@@ -261,7 +265,7 @@ static int get_basic_auth(request_rec *r, const char **user,
         return HTTP_UNAUTHORIZED;
     }
 
-    if (ap_cstr_casecmp(ap_getword(r->pool, &auth_line, ' '), "Basic")) {
+    if (strcasecmp(ap_getword(r->pool, &auth_line, ' '), "Basic")) {
         /* Client tried to authenticate using wrong auth scheme */
         ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01614)
                       "client used wrong authentication scheme: %s", r->uri);
@@ -301,7 +305,7 @@ static int authenticate_basic_user(request_rec *r)
 
     /* Are we configured to be Basic auth? */
     current_auth = ap_auth_type(r);
-    if (!current_auth || ap_cstr_casecmp(current_auth, "Basic")) {
+    if (!current_auth || strcasecmp(current_auth, "Basic")) {
         return DECLINED;
     }
 
@@ -377,7 +381,7 @@ static int authenticate_basic_user(request_rec *r)
 
         apr_table_unset(r->notes, AUTHN_PROVIDER_NAME_NOTE);
 
-        /* Something occurred. Stop checking. */
+        /* Something occured. Stop checking. */
         if (auth_result != AUTH_USER_NOT_FOUND) {
             break;
         }
@@ -410,9 +414,6 @@ static int authenticate_basic_user(request_rec *r)
             ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(01618)
                       "user %s not found: %s", sent_user, r->uri);
             return_code = HTTP_UNAUTHORIZED;
-            break;
-        case AUTH_HANDLED:
-            return_code = r->status;
             break;
         case AUTH_GENERAL_ERROR:
         default:

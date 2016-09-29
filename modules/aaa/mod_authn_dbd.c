@@ -34,6 +34,11 @@ typedef struct {
     const char *realm;
 } authn_dbd_conf;
 
+typedef struct {
+    const char *label;
+    const char *query;
+} authn_dbd_rec;
+
 /* optional function - look it up once in post_config */
 static ap_dbd_t *(*authn_dbd_acquire_fn)(request_rec*) = NULL;
 static void (*authn_dbd_prepare_fn)(server_rec*, const char*, const char*) = NULL;
@@ -180,7 +185,7 @@ static authn_status authn_dbd_password(request_rec *r, const char *user,
     }
     AUTHN_CACHE_STORE(r, user, NULL, dbd_password);
 
-    rv = ap_password_validate(r, user, password, dbd_password);
+    rv = apr_password_validate(password, dbd_password);
 
     if (rv != APR_SUCCESS) {
         return AUTH_DENIED;

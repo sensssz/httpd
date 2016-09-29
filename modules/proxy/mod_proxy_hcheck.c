@@ -113,7 +113,7 @@ static const char *set_worker_hc_param(apr_pool_t *p,
         hc_template_t *template;
         template = (hc_template_t *)ctx->templates->elts;
         for (ival = 0; ival < ctx->templates->nelts; ival++, template++) {
-            if (!ap_cstr_casecmp(template->name, val)) {
+            if (!strcasecmp(template->name, val)) {
                 if (worker) {
                     worker->s->method = template->method;
                     worker->s->interval = template->interval;
@@ -137,7 +137,7 @@ static const char *set_worker_hc_param(apr_pool_t *p,
     else if (!strcasecmp(key, "hcmethod")) {
         proxy_hcmethods_t *method = proxy_hcmethods;
         for (; method->name; method++) {
-            if (!ap_cstr_casecmp(val, method->name)) {
+            if (!strcasecmp(val, method->name)) {
                 if (!method->implemented) {
                     return apr_psprintf(p, "Health check method %s not (yet) implemented",
                                         val);
@@ -426,8 +426,6 @@ static proxy_worker *hc_get_hcworker(sctx_t *ctx, proxy_worker *worker,
         PROXY_STRNCPY(hc->s->name,     wptr);
         PROXY_STRNCPY(hc->s->hostname, worker->s->hostname);
         PROXY_STRNCPY(hc->s->scheme,   worker->s->scheme);
-        PROXY_STRNCPY(hc->s->hcuri,    worker->s->hcuri);
-        PROXY_STRNCPY(hc->s->hcexpr,   worker->s->hcexpr);
         hc->hash.def = hc->s->hash.def = ap_proxy_hashfunc(hc->s->name, PROXY_HASHFUNC_DEFAULT);
         hc->hash.fnv = hc->s->hash.fnv = ap_proxy_hashfunc(hc->s->name, PROXY_HASHFUNC_FNV);
         hc->s->port = port;
@@ -506,10 +504,10 @@ static apr_status_t backend_cleanup(const char *proxy_function, proxy_conn_rec *
         backend->close = 1;
         ap_proxy_release_connection(proxy_function, backend, s);
         ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(03251)
-                         "Health check %s Status (%d) for %s.",
-                         ap_proxy_show_hcmethod(backend->worker->s->method),
-                         status,
-                         backend->worker->s->name);
+                     "Health check %s Status (%d) for %s.",
+                     ap_proxy_show_hcmethod(backend->worker->s->method),
+                     status,
+                     backend->worker->s->name);
     }
     if (status != OK) {
         return APR_EGENERAL;
@@ -777,7 +775,7 @@ static apr_status_t hc_check_http(sctx_t *ctx, apr_pool_t *ptemp, proxy_worker *
     return backend_cleanup("HCOH", backend, ctx->s, status);
 }
 
-static void * APR_THREAD_FUNC hc_check(apr_thread_t *thread, void *b)
+static void *hc_check(apr_thread_t *thread, void *b)
 {
     baton_t *baton = (baton_t *)b;
     sctx_t *ctx = baton->ctx;
@@ -1097,7 +1095,7 @@ static const char *hc_expr_var_fn(ap_expr_eval_ctx_t *ctx, const void *data)
 {
     char *var = (char *)data;
 
-    if (var && *var && ctx->r && ap_cstr_casecmp(var, "BODY") == 0) {
+    if (var && *var && ctx->r && strcasecmp(var, "BODY") == 0) {
         return hc_get_body(ctx->r);
     }
     return NULL;
@@ -1108,7 +1106,7 @@ static const char *hc_expr_func_fn(ap_expr_eval_ctx_t *ctx, const void *data,
 {
     char *var = (char *)arg;
 
-    if (var && *var && ctx->r && ap_cstr_casecmp(var, "BODY") == 0) {
+    if (var && *var && ctx->r && strcasecmp(var, "BODY") == 0) {
         return hc_get_body(ctx->r);
     }
     return NULL;

@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Hata Yanıtlarının Kişiselleştirilmesi - Apache HTTP Sunucusu Sürüm 2.5</title>
+<title>Hata Yanıtlarının Kişiselleştirilmesi - Apache HTTP Sunucusu Sürüm 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
-<p class="apache">Apache HTTP Sunucusu Sürüm 2.5</p>
+<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
+<p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.5</a></div><div id="page-content"><div id="preamble"><h1>Hata Yanıtlarının Kişiselleştirilmesi</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.4</a></div><div id="page-content"><div id="preamble"><h1>Hata Yanıtlarının Kişiselleştirilmesi</h1>
 <div class="toplang">
 <p><span>Mevcut Diller: </span><a href="./en/custom-error.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="./es/custom-error.html" hreflang="es" rel="alternate" title="Español">&nbsp;es&nbsp;</a> |
@@ -65,19 +65,17 @@
       bağlamlarında da kullanılabilir. <code class="directive"><a href="./mod/core.html#allowoverride">AllowOverride</a></code> yönergesine <code>FileInfo</code>
       atanarak <code>.htaccess</code> dosyalarında da kullanılabilir.</p>
 
-    <div class="example"><p><code>
-      ErrorDocument 500 "Pardon, galiba bizim betik hata verdi." <br />
-      ErrorDocument 500 /cgi-bin/hata-kurtarma<br />
-      ErrorDocument 500 http://error.example.com/server_error.html<br />
-      ErrorDocument 404 /ozuru_kabahatinden_buyuk/yok.html <br />
-      ErrorDocument 401 /Uyeler/NASIL_uye_olunur.html
-    </code></p></div>
+    <pre class="prettyprint lang-config">ErrorDocument 500 "Pardon, galiba bizim betik hata verdi."
+ErrorDocument 500 /cgi-bin/hata-kurtarma
+ErrorDocument 500 http://error.example.com/server_error.html
+ErrorDocument 404 /ozuru_kabahatinden_buyuk/yok.html
+ErrorDocument 401 /Uyeler/NASIL_uye_olunur.html</pre>
+
 
     <p><code>ErrorDocument</code> yönergesinin sözdizimi:</p>
 
-    <div class="example"><p><code>
-      ErrorDocument &lt;3-rakamlı-kod&gt; &lt;eylem&gt;
-    </code></p></div>
+    <pre class="prettyprint lang-config">ErrorDocument &lt;3-rakamlı-kod&gt; &lt;eylem&gt;</pre>
+
 
     <p><var>eylem</var> şunlardan biri olabilir:</p>
 
@@ -153,12 +151,11 @@
         "<code>Status:</code>" başlık alanına yer verilmelidir. Örneğin, bir
         Perl betiği şunları içerebilirdi:</p>
 
-      <div class="example"><p><code>
-        ... <br />
-        print  "Content-type: text/html\n"; <br />
-        printf "Status: %s durumu saptandı.\n", $ENV{"REDIRECT_STATUS"}; <br />
-        ...
-      </code></p></div>
+      <pre class="prettyprint lang-perl">...
+print  "Content-type: text/html\n";
+printf "Status: %s durumu saptandı.\n", $ENV{"REDIRECT_STATUS"};
+...</pre>
+
 
       <p>Eğer betik, <code>404&nbsp;Not&nbsp;Found</code> gibi, belli bir hata
         durumunu ele almaya adanmışsa duruma özel kod ve hata metni
@@ -182,10 +179,9 @@
 
     <p>Sunucu yapılandırma dosyanızda şöyle satırlar görebilirsiniz:</p>
 
-    <div class="example"><p><code>
-    # Multi-language error messages<br />
-    #Include conf/extra/httpd-multilang-errordoc.conf
-    </code></p></div>
+    <pre class="prettyprint lang-config"># Multi-language error messages
+#Include conf/extra/httpd-multilang-errordoc.conf</pre>
+
 
     <p>Bu <code>Include</code> satırını açıklama olmaktan çıkarırsanız
       bu özelliği etkinleştirmiş olursunuz. Böylece, istemcinin tarayıcısında
@@ -214,7 +210,7 @@
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/custom-error.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/custom-error.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -224,13 +220,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/custom-error.html'
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
-<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

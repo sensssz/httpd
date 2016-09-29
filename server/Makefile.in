@@ -14,11 +14,7 @@ LTLIBRARY_SOURCES = \
 	util_filter.c util_pcre.c util_regex.c exports.c \
 	scoreboard.c error_bucket.c protocol.c core.c request.c provider.c \
 	eoc_bucket.c eor_bucket.c core_filters.c \
-	util_expr_parse.c util_expr_scan.c util_expr_eval.c \
-	apreq_cookie.c apreq_error.c apreq_module.c \
-	apreq_module_cgi.c apreq_module_custom.c apreq_param.c \
-	apreq_parser.c apreq_parser_header.c apreq_parser_multipart.c \
-	apreq_parser_urlencoded.c apreq_util.c
+	util_expr_parse.c util_expr_scan.c util_expr_eval.c
 
 LTLIBRARY_DEPENDENCIES = test_char.h
 
@@ -27,14 +23,9 @@ TARGETS = delete-exports $(LTLIBRARY_NAME) $(CORE_IMPLIB_FILE) export_vars.h htt
 include $(top_builddir)/build/rules.mk
 include $(top_srcdir)/build/library.mk
 
-ifdef CC_FOR_BUILD
-gen_test_char: gen_test_char.c
-	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) -DCROSS_COMPILE -o $@ $<
-else
 gen_test_char_OBJECTS = gen_test_char.lo
 gen_test_char: $(gen_test_char_OBJECTS)
 	$(LINK) $(EXTRA_LDFLAGS) $(gen_test_char_OBJECTS) $(EXTRA_LIBS)
-endif
 
 test_char.h: gen_test_char
 	./gen_test_char > test_char.h
@@ -101,10 +92,8 @@ util_expr_scan.c util_expr_parse.c util_expr_parse.h: util_expr_scan.l util_expr
 	    -o $(builddir)/util_expr_parse.c $(srcdir)/util_expr_parse.y
 	flex -Pap_expr_yy -o $(builddir)/util_expr_scan.c $(srcdir)/util_expr_scan.l
 	set -e ; \
-	builddir_uc=$$(echo "$(builddir)"|tr a-z/.- A-Z___ ) ; \
 	for f in util_expr_scan.c util_expr_parse.c util_expr_parse.h ; do \
-		sed -e "s|\"$(builddir)/|\"|g" -e "s|$$builddir_uc||g" \
-			< $(builddir)/$$f > \
+		sed -e "s|\"$(builddir)/|\"|g" < $(builddir)/$$f > \
 			$(builddir)/$$f.$$$$ && \
 		mv $(builddir)/$$f.$$$$ $(builddir)/$$f ; \
 	done

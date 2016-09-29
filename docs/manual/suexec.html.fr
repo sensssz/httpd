@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Support suEXEC - Serveur Apache HTTP Version 2.5</title>
+<title>Support suEXEC - Serveur Apache HTTP Version 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.5</a></div><div id="page-content"><div id="preamble"><h1>Support suEXEC</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.4</a></div><div id="page-content"><div id="preamble"><h1>Support suEXEC</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="./en/suexec.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="./fr/suexec.html" title="Français">&nbsp;fr&nbsp;</a> |
@@ -391,21 +391,6 @@ de suEXEC</a></li>
       configuration de la compilation d'Apache) accepte votre demande
       d'utilisation de la fonctionnalité suEXEC.</dd>
 
-      <dt><code>--enable-suexec-capabilities</code></dt>
-
-      <dd><strong>Spécifique à Linux :</strong> Normalement, le binaire
-      <code>suexec</code> est installé en mode "setuid/setgid root", ce
-      qui lui permet de s'exécuter avec la totalité des privilèges de
-      l'utilisateur root. Avec cette option, le binaire
-      <code>suexec</code> sera installé avec seulement les bits
-      setuid/setgid "capability" définis, ce qui constitue un
-      sous-ensemble des privilèges de root pour les opérations de
-      suexec. Notez que dans ce mode, le binaire <code>suexec</code> ne
-      sera pas en mesure d'écrire dans un fichier journal ; il est donc
-      recommandé dans ce mode d'utiliser les options
-      <code>--with-suexec-syslog --without-suexec-logfile</code>, afin
-      d'utiliser la jounalisation syslog.</dd>
-
       <dt><code>--with-suexec-bin=<em>PATH</em></code></dt>
 
       <dd>Le chemin du binaire <code>suexec</code> doit être codé en
@@ -479,13 +464,6 @@ de suEXEC</a></li>
       journal se nomme "<code>suexec_log</code>" et se trouve dans votre
       répertoire standard des fichiers journaux défini par
       <code>--logfiledir</code></dd>
-
-      <dt><code>--with-suexec-syslog</code></dt>
-
-      <dd>Avec cette option, suexec enregistrera les messages d'erreurs
-      et d'informations dans le journal syslog. Cette option doit être
-      utilisée conjointement avec l'option
-      <code>--without-suexec-logfile</code>.</dd>
 
       <dt><code>--with-suexec-safepath=<em>PATH</em></code></dt>
 
@@ -614,15 +592,10 @@ de suEXEC</a></h2>
 
     <p>Le conteneur suEXEC va écrire ses informations de journalisation
     dans le fichier défini par l'option de compilation
-    <code>--with-suexec-logfile</code> comme indiqué plus haut,
-    ou vers syslog si l'option <code>--with-suexec-syslog</code> est
-    utilisée. Si vous
+    <code>--with-suexec-logfile</code> comme indiqué plus haut. Si vous
     pensez avoir configuré et installé correctement le conteneur,
     consultez ce journal, ainsi que le journal des erreurs du serveur
-    afin de déterminer l'endroit où vous avez fait fausse
-    route. Si vous utilisez une distribution binaire, la commande
-    <code>"suexec -V"</code> vous permet de déterminer quelles options
-    ont été utilisées pour compiler suexec.</p>
+    afin de déterminer l'endroit où vous avez fait fausse route.</p>
 
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
@@ -630,7 +603,7 @@ de suEXEC</a></h2>
     Avertissements et exemples</a></h2>
 
     <p><strong>NOTE !</strong> Cette section est peut-être incomplète.
-    Pour en consulter la dernière révision, voir la version de la <a href="http://httpd.apache.org/docs/trunk/suexec.html">Documentation en ligne</a>.</p>
+    Pour en consulter la dernière révision, voir la version de la <a href="http://httpd.apache.org/docs/2.4/suexec.html">Documentation en ligne</a>.</p>
 
     <p>Quelques points importants du conteneur peuvent
     imposer des contraintes du point de vue de la configuration du
@@ -692,7 +665,7 @@ de suEXEC</a></h2>
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/suexec.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/suexec.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -702,13 +675,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/suexec.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

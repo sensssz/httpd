@@ -60,11 +60,9 @@ BEGIN {
     filelist["httpd-default.conf"] = "httpd-default.conf.in";
     filelist["httpd-info.conf"] = "httpd-info.conf.in";
     filelist["httpd-languages.conf"] = "httpd-languages.conf.in";
-    filelist["httpd-macro.conf"] = "httpd-macro.conf.in";
     filelist["httpd-manual.conf"] = "httpd-manual.conf.in";
     filelist["httpd-mpm.conf"] = "httpd-mpm.conf.in";
     filelist["httpd-multilang-errordoc.conf"] = "httpd-multilang-errordoc.conf.in";
-    filelist["httpd-policy.conf"] = "httpd-policy.conf.in";
     filelist["httpd-ssl.conf"] = "httpd-ssl.conf.in";
     filelist["httpd-userdir.conf"] = "httpd-userdir.conf.in";
     filelist["httpd-vhosts.conf"] = "httpd-vhosts.conf.in";
@@ -97,8 +95,7 @@ BEGIN {
           print "LoadModule access_compat_module modules/mod_access_compat.so" > dstfl;
           print "LoadModule actions_module modules/mod_actions.so" > dstfl;
           print "LoadModule alias_module modules/mod_alias.so" > dstfl;
-          print "#LoadModule allowhandlers_module modules/mod_allowhandlers.so" > dstfl;
-          print "#LoadModule allowmethods_module modules/mod_allowmethods.so" > dstfl;
+          print "LoadModule allowmethods_module modules/mod_allowmethods.so" > dstfl;
           print "LoadModule asis_module modules/mod_asis.so" > dstfl;
           print "LoadModule auth_basic_module modules/mod_auth_basic.so" > dstfl;
           print "#LoadModule auth_digest_module modules/mod_auth_digest.so" > dstfl;
@@ -171,9 +168,9 @@ BEGIN {
           print "#LoadModule proxy_ftp_module modules/mod_proxy_ftp.so" > dstfl;
           print "#LoadModule proxy_html_module modules/mod_proxy_html.so" > dstfl;
           print "#LoadModule proxy_http_module modules/mod_proxy_http.so" > dstfl;
+          print "#LoadModule proxy_http2_module modules/mod_proxy_http2.so" > dstfl;
           print "#LoadModule proxy_scgi_module modules/mod_proxy_scgi.so" > dstfl;
           print "#LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so" > dstfl;
-          print "#LoadModule proxy_http2_module modules/mod_proxy_http2.so" > dstfl;
           print "#LoadModule ratelimit_module modules/mod_ratelimit.so" > dstfl;
           print "#LoadModule reflector_module modules/mod_reflector.so" > dstfl;
           print "#LoadModule remoteip_module modules/mod_remoteip.so" > dstfl;
@@ -204,19 +201,15 @@ BEGIN {
           print "#LoadModule xml2enc_module modules/mod_xml2enc.so" > dstfl;
           continue;
         }
-        if ( /^ServerRoot / ) {
-          print "Define SRVROOT \"" serverroot "\"" > dstfl;
-          print "" > dstfl;
-        }
-        gsub( /@@ServerRoot@@/,   "\${SRVROOT}" );
-        gsub( /@exp_cgidir@/,     "\${SRVROOT}" "/cgi-bin" );
-        gsub( /@exp_sysconfdir@/, "\${SRVROOT}" "/conf" );
-        gsub( /@exp_errordir@/,   "\${SRVROOT}" "/error" );
-        gsub( /@exp_htdocsdir@/,  "\${SRVROOT}" "/htdocs" );
-        gsub( /@exp_iconsdir@/,   "\${SRVROOT}" "/icons" );
-        gsub( /@exp_manualdir@/,  "\${SRVROOT}" "/manual" );
-        gsub( /@exp_runtimedir@/, "\${SRVROOT}" "/logs" );
-        if ( gsub( /@exp_logfiledir@/, "\${SRVROOT}" "/logs" ) ||
+        gsub( /@@ServerRoot@@/,   serverroot );
+        gsub( /@exp_cgidir@/,     serverroot "/cgi-bin" );
+        gsub( /@exp_sysconfdir@/, serverroot "/conf" );
+        gsub( /@exp_errordir@/,   serverroot "/error" );
+        gsub( /@exp_htdocsdir@/,  serverroot "/htdocs" );
+        gsub( /@exp_iconsdir@/,   serverroot "/icons" );
+        gsub( /@exp_manualdir@/,  serverroot "/manual" );
+        gsub( /@exp_runtimedir@/, serverroot "/logs" );
+        if ( gsub( /@exp_logfiledir@/, serverroot "/logs" ) ||
              gsub( /@rel_logfiledir@/, "logs" ) ) {
           gsub( /_log"/, ".log\"" )
         }

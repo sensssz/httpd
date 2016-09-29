@@ -180,7 +180,7 @@ typedef struct {
         status_full
     } proxy_status;             /* Status display options */
     apr_sockaddr_t *source_address;
-    apr_global_mutex_t  *mutex; /* global lock - not used */
+    apr_global_mutex_t  *mutex; /* global lock, for pool, etc */
     ap_slotmem_instance_t *bslot;  /* balancers shm data - runtime */
     ap_slotmem_provider_t *storage;
 
@@ -271,10 +271,6 @@ typedef struct {
     unsigned int inreslist:1;  /* connection in apr_reslist? */
     const char   *uds_path;    /* Unix domain socket path */
     const char   *ssl_hostname;/* Hostname (SNI) in use by SSL connection */
-    apr_bucket_brigade *tmp_bb;/* Temporary brigade created with the connection
-                                * and its scpool/bucket_alloc (NULL before),
-                                * must be left cleaned when used (locally).
-                                */
 } proxy_conn_rec;
 
 typedef struct {
@@ -344,22 +340,21 @@ PROXY_WORKER_HC_FAIL )
 #define PROXY_WORKER_DEFAULT_RETRY    60
 
 /* Some max char string sizes, for shm fields */
-#define PROXY_WORKER_MAX_SCHEME_SIZE     16
-#define PROXY_WORKER_MAX_ROUTE_SIZE      96
-#define PROXY_BALANCER_MAX_ROUTE_SIZE    64
-#define PROXY_WORKER_MAX_NAME_SIZE      256
-#define PROXY_BALANCER_MAX_NAME_SIZE     64
-#define PROXY_WORKER_MAX_HOSTNAME_SIZE   96
-#define PROXY_BALANCER_MAX_HOSTNAME_SIZE 64
-#define PROXY_BALANCER_MAX_STICKY_SIZE   64
-#define PROXY_WORKER_MAX_SECRET_SIZE     64
+#define PROXY_WORKER_MAX_SCHEME_SIZE    16
+#define PROXY_WORKER_MAX_ROUTE_SIZE     64
+#define PROXY_BALANCER_MAX_ROUTE_SIZE PROXY_WORKER_MAX_ROUTE_SIZE
+#define PROXY_WORKER_MAX_NAME_SIZE      96
+#define PROXY_BALANCER_MAX_NAME_SIZE PROXY_WORKER_MAX_NAME_SIZE
+#define PROXY_WORKER_MAX_HOSTNAME_SIZE  64
+#define PROXY_BALANCER_MAX_HOSTNAME_SIZE PROXY_WORKER_MAX_HOSTNAME_SIZE
+#define PROXY_BALANCER_MAX_STICKY_SIZE  64
 
 /* RFC-1035 mentions limits of 255 for host-names and 253 for domain-names,
  * dotted together(?) this would fit the below size (+ trailing NUL).
  */
-#define PROXY_WORKER_RFC1035_NAME_SIZE   512
+#define PROXY_WORKER_RFC1035_NAME_SIZE  512
 
-#define PROXY_MAX_PROVIDER_NAME_SIZE     16
+#define PROXY_MAX_PROVIDER_NAME_SIZE    16
 
 #define PROXY_STRNCPY(dst, src) ap_proxy_strncpy((dst), (src), (sizeof(dst)))
 
@@ -373,19 +368,14 @@ do {                             \
 (w)->s->io_buffer_size_set   = (c)->io_buffer_size_set;    \
 } while (0)
 
-#define PROXY_DO_100_CONTINUE(w, r) \
-((w)->s->ping_timeout_set \
- && (PROXYREQ_REVERSE == (r)->proxyreq) \
- && !(apr_table_get((r)->subprocess_env, "force-proxy-request-1.0")) \
- && ap_request_has_body((r)))
-
 /* use 2 hashes */
 typedef struct {
     unsigned int def;
     unsigned int fnv;
 } proxy_hashes ;
 
-/* Runtime worker status information. Shared in scoreboard */
+/* Runtime worker status informations. Shared in scoreboard */
+/* The addition of member uds_path in 2.4.7 was an incompatible API change. */
 typedef struct {
     char      name[PROXY_WORKER_MAX_NAME_SIZE];
     char      scheme[PROXY_WORKER_MAX_SCHEME_SIZE];   /* scheme to use ajp|http|https */
@@ -394,8 +384,6 @@ typedef struct {
     char      redirect[PROXY_WORKER_MAX_ROUTE_SIZE];  /* temporary balancing redirection route */
     char      flusher[PROXY_WORKER_MAX_SCHEME_SIZE];  /* flush provider used by mod_proxy_fdpass */
     char      uds_path[PROXY_WORKER_MAX_NAME_SIZE];   /* path to worker's unix domain socket if applicable */
-    char      hcuri[PROXY_WORKER_MAX_ROUTE_SIZE];     /* health check uri */
-    char      hcexpr[PROXY_WORKER_MAX_SCHEME_SIZE];   /* name of condition expr for health check */
     int             lbset;      /* load balancer cluster set */
     int             retries;    /* number of retries on this worker */
     int             lbstatus;   /* Current lbstatus */
@@ -405,18 +393,13 @@ typedef struct {
     int             hmax;       /* Hard maximum on the total number of connections */
     int             flush_wait; /* poll wait time in microseconds if flush_auto */
     int             index;      /* shm array index */
-    int             passes;     /* number of successes for check to pass */
-    int             pcount;     /* current count of passes */
-    int             fails;      /* number of failures for check to fail */
-    int             fcount;     /* current count of failures */
     proxy_hashes    hash;       /* hash of worker name */
     unsigned int    status;     /* worker status bitfield */
     enum {
         flush_off,
         flush_on,
         flush_auto
-    } flush_packets;            /* control AJP flushing */
-    hcmethod_t      method;     /* method to use for health check */
+    } flush_packets;           /* control AJP flushing */
     apr_time_t      updated;    /* timestamp of last update */
     apr_time_t      error_time; /* time of the last error */
     apr_interval_time_t ttl;    /* maximum amount of time in seconds a connection
@@ -426,7 +409,6 @@ typedef struct {
     apr_interval_time_t acquire; /* acquire timeout when the maximum number of connections is exceeded */
     apr_interval_time_t ping_timeout;
     apr_interval_time_t conn_timeout;
-    apr_interval_time_t interval;
     apr_size_t      recv_buffer_size;
     apr_size_t      io_buffer_size;
     apr_size_t      elected;    /* Number of times the worker was elected */
@@ -448,8 +430,14 @@ typedef struct {
     unsigned int     keepalive_set:1;
     unsigned int     disablereuse_set:1;
     unsigned int     was_malloced:1;
-    unsigned int     is_name_matchable:1;
-    char      secret[PROXY_WORKER_MAX_SECRET_SIZE]; /* authentication secret (e.g. AJP13) */
+    char      hcuri[PROXY_WORKER_MAX_ROUTE_SIZE];     /* health check uri */
+    char      hcexpr[PROXY_WORKER_MAX_SCHEME_SIZE];   /* name of condition expr for health check */
+    int             passes;     /* number of successes for check to pass */
+    int             pcount;     /* current count of passes */
+    int             fails;      /* number of failures for check to fail */
+    int             fcount;     /* current count of failures */
+    hcmethod_t      method;     /* method to use for health check */
+    apr_interval_time_t interval;
 } proxy_worker_shared;
 
 #define ALIGNED_PROXY_WORKER_SHARED_SIZE (APR_ALIGN_DEFAULT(sizeof(proxy_worker_shared)))
@@ -463,7 +451,6 @@ struct proxy_worker {
     proxy_balancer  *balancer;  /* which balancer am I in? */
     apr_thread_mutex_t  *tmutex; /* Thread lock for updating address cache */
     void            *context;   /* general purpose storage */
-    ap_conf_vector_t *section_config; /* <Proxy>-section wherein defined */
 };
 
 /* default to health check every 30 seconds */
@@ -500,11 +487,6 @@ typedef struct {
     unsigned int    inactive:1;
     unsigned int    forcerecovery:1;
     char      sticky_separator;                                /* separator for sessionid/route */
-    unsigned int    forcerecovery_set:1;
-    unsigned int    scolonsep_set:1;
-    unsigned int    sticky_force_set:1; 
-    unsigned int    nonce_set:1;
-    unsigned int    sticky_separator_set:1;
 } proxy_balancer_shared;
 
 #define ALIGNED_PROXY_BALANCER_SHARED_SIZE (APR_ALIGN_DEFAULT(sizeof(proxy_balancer_shared)))
@@ -525,10 +507,6 @@ struct proxy_balancer {
     void            *context;    /* general purpose storage */
     proxy_balancer_shared *s;    /* Shared data */
     int failontimeout;           /* Whether to mark a member in Err if IO timeout occurs */
-    unsigned int failontimeout_set:1;
-    unsigned int growth_set:1;
-    unsigned int lbmethod_set:1;
-    ap_conf_vector_t *section_config; /* <Proxy>-section wherein defined */
 };
 
 struct proxy_balancer_method {
@@ -578,7 +556,6 @@ struct proxy_balancer_method {
  */
 #define PROXY_DECLARE_OPTIONAL_HOOK APR_DECLARE_EXTERNAL_HOOK
 
-
 /* These 2 are in mod_proxy.c */
 extern PROXY_DECLARE_DATA proxy_hcmethods_t proxy_hcmethods[];
 extern PROXY_DECLARE_DATA proxy_wstat_t proxy_wstat_tbl[];
@@ -591,58 +568,42 @@ APR_DECLARE_OPTIONAL_FN(const char *, set_worker_hc_param,
                         (apr_pool_t *, server_rec *, proxy_worker *,
                          const char *, const char *, void *));
 
-PROXY_DECLARE_OPTIONAL_HOOK(proxy, PROXY, int, section_post_config,
-                            (apr_pool_t *p, apr_pool_t *plog,
-                             apr_pool_t *ptemp, server_rec *s,
-                             ap_conf_vector_t *section_config))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, scheme_handler, (request_rec *r,
+                          proxy_worker *worker, proxy_server_conf *conf, char *url,
+                          const char *proxyhost, apr_port_t proxyport))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, canon_handler, (request_rec *r,
+                          char *url))
 
-APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, scheme_handler,
-                          (request_rec *r, proxy_worker *worker,
-                           proxy_server_conf *conf, char *url,
-                           const char *proxyhost, apr_port_t proxyport))
-APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, canon_handler,
-                          (request_rec *r, char *url))
-
-PROXY_DECLARE_OPTIONAL_HOOK(proxy, PROXY, int, create_req,
-                            (request_rec *r, request_rec *pr))
-PROXY_DECLARE_OPTIONAL_HOOK(proxy, PROXY, int, fixups, (request_rec *r))
-
-
-/**
- * Let modules perform processing when the connection to the origin is being
- * detached from the request.
- * @param r The client request
- * @param backend The proxy representation of the backend connection
- */
-PROXY_DECLARE_OPTIONAL_HOOK(proxy, PROXY, int, detach_backend,
-                            (request_rec *r, proxy_conn_rec *backend))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, create_req, (request_rec *r, request_rec *pr))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, fixups, (request_rec *r))
 
 /**
  * pre request hook.
  * It will return the most suitable worker at the moment
- * and corresponding balancer.
+ * and coresponding balancer.
  * The url is rewritten from balancer://cluster/uri to scheme://host:port/uri
  * and then the scheme_handler is called.
  *
  */
-APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, pre_request,
-                          (proxy_worker **worker, proxy_balancer **balancer,
-                           request_rec *r, proxy_server_conf *conf, char **url))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, pre_request, (proxy_worker **worker,
+                          proxy_balancer **balancer,
+                          request_rec *r,
+                          proxy_server_conf *conf, char **url))
 /**
  * post request hook.
  * It is called after request for updating runtime balancer status.
  */
-APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, post_request,
-                          (proxy_worker *worker, proxy_balancer *balancer,
-                           request_rec *r, proxy_server_conf *conf))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, post_request, (proxy_worker *worker,
+                          proxy_balancer *balancer, request_rec *r,
+                          proxy_server_conf *conf))
 
 /**
  * request status hook
  * It is called after all proxy processing has been done.  This gives other
  * modules a chance to create default content on failure, for example
  */
-PROXY_DECLARE_OPTIONAL_HOOK(proxy, PROXY, int, request_status,
-                            (int *status, request_rec *r))
+APR_DECLARE_EXTERNAL_HOOK(proxy, PROXY, int, request_status,
+                          (int *status, request_rec *r))
 
 /* proxy_util.c */
 
@@ -655,6 +616,7 @@ PROXY_DECLARE(char *)ap_proxy_canonenc(apr_pool_t *p, const char *x, int len, en
 PROXY_DECLARE(char *)ap_proxy_canon_netloc(apr_pool_t *p, char **const urlp, char **userp,
                                            char **passwordp, char **hostp, apr_port_t *port);
 PROXY_DECLARE(int) ap_proxyerror(request_rec *r, int statuscode, const char *message);
+PROXY_DECLARE(int) ap_proxy_checkproxyblock(request_rec *r, proxy_server_conf *conf, apr_sockaddr_t *uri_addr);
 
 /** Test whether the hostname/address of the request are blocked by the ProxyBlock
  * configuration.
@@ -664,21 +626,16 @@ PROXY_DECLARE(int) ap_proxyerror(request_rec *r, int statuscode, const char *mes
  * @param addr      resolved address of hostname, or NULL if not known
  * @return OK on success, or else an errro
  */
-PROXY_DECLARE(int) ap_proxy_checkproxyblock(request_rec *r, proxy_server_conf *conf, 
-                                            const char *hostname, apr_sockaddr_t *addr);
-
+PROXY_DECLARE(int) ap_proxy_checkproxyblock2(request_rec *r, proxy_server_conf *conf, 
+                                             const char *hostname, apr_sockaddr_t *addr);
 
 PROXY_DECLARE(int) ap_proxy_pre_http_request(conn_rec *c, request_rec *r);
 /* DEPRECATED (will be replaced with ap_proxy_connect_backend */
 PROXY_DECLARE(int) ap_proxy_connect_to_backend(apr_socket_t **, const char *, apr_sockaddr_t *, const char *, proxy_server_conf *, request_rec *);
-/* DEPRECATED (will be replaced with ap_proxy_check_connection */
 PROXY_DECLARE(apr_status_t) ap_proxy_ssl_connection_cleanup(proxy_conn_rec *conn,
                                                             request_rec *r);
 PROXY_DECLARE(int) ap_proxy_ssl_enable(conn_rec *c);
 PROXY_DECLARE(int) ap_proxy_ssl_disable(conn_rec *c);
-PROXY_DECLARE(int) ap_proxy_ssl_engine(conn_rec *c,
-                                       ap_conf_vector_t *per_dir_config,
-                                       int enable);
 PROXY_DECLARE(int) ap_proxy_conn_is_https(conn_rec *c);
 PROXY_DECLARE(const char *) ap_proxy_ssl_val(apr_pool_t *p, server_rec *s, conn_rec *c, request_rec *r, const char *var);
 
@@ -737,24 +694,6 @@ PROXY_DECLARE(proxy_worker *) ap_proxy_get_worker(apr_pool_t *p,
  * @return          error message or NULL if successful (*worker is new worker)
  */
 PROXY_DECLARE(char *) ap_proxy_define_worker(apr_pool_t *p,
-                                             proxy_worker **worker,
-                                             proxy_balancer *balancer,
-                                             proxy_server_conf *conf,
-                                             const char *url,
-                                             int do_malloc);
-
-/**
- * Define and Allocate space for the ap_strcmp_match()able worker to proxy
- * configuration.
- * @param p         memory pool to allocate worker from
- * @param worker    the new worker
- * @param balancer  the balancer that the worker belongs to
- * @param conf      current proxy server configuration
- * @param url       url containing worker name (produces match pattern)
- * @param do_malloc true if shared struct should be malloced
- * @return          error message or NULL if successful (*worker is new worker)
- */
-PROXY_DECLARE(char *) ap_proxy_define_match_worker(apr_pool_t *p,
                                              proxy_worker **worker,
                                              proxy_balancer *balancer,
                                              proxy_server_conf *conf,
@@ -824,7 +763,7 @@ PROXY_DECLARE(char *) ap_proxy_update_balancer(apr_pool_t *p,
  * @param url    url containing balancer name
  * @param alias  alias/fake-path to this balancer
  * @param do_malloc true if shared struct should be malloced
- * @return       error message or NULL if successful
+ * @return       error message or NULL if successfull
  */
 PROXY_DECLARE(char *) ap_proxy_define_balancer(apr_pool_t *p,
                                                proxy_balancer **balancer,
@@ -977,28 +916,6 @@ PROXY_DECLARE(int) ap_proxy_acquire_connection(const char *proxy_function,
 PROXY_DECLARE(int) ap_proxy_release_connection(const char *proxy_function,
                                                proxy_conn_rec *conn,
                                                server_rec *s);
-
-#define PROXY_CHECK_CONN_EMPTY (1 << 0)
-/**
- * Check a connection to the backend
- * @param scheme calling proxy scheme (http, ajp, ...)
- * @param conn   acquired connection
- * @param server current server record
- * @param max_blank_lines how many blank lines to consume,
- *                        or zero for none (considered data)
- * @param flags  PROXY_CHECK_* bitmask
- * @return APR_SUCCESS: connection established,
- *         APR_ENOTEMPTY: connection established with data,
- *         APR_ENOSOCKET: not connected,
- *         APR_EINVAL: worker in error state (unusable),
- *         other: connection closed/aborted (remotely)
- */
-PROXY_DECLARE(apr_status_t) ap_proxy_check_connection(const char *scheme,
-                                                      proxy_conn_rec *conn,
-                                                      server_rec *server,
-                                                      unsigned max_blank_lines,
-                                                      int flags);
-
 /**
  * Make a connection to the backend
  * @param proxy_function calling proxy scheme (http, ajp, ...)
@@ -1028,7 +945,7 @@ PROXY_DECLARE(apr_status_t) ap_proxy_connect_uds(apr_socket_t *sock,
  * Make a connection record for backend connection
  * @param proxy_function calling proxy scheme (http, ajp, ...)
  * @param conn    acquired connection
- * @param c       client connection record (unused, deprecated)
+ * @param c       client connection record
  * @param s       current server record
  * @return        OK or HTTP_XXX error
  * @note The function will return immediately if conn->connection
@@ -1038,18 +955,6 @@ PROXY_DECLARE(int) ap_proxy_connection_create(const char *proxy_function,
                                               proxy_conn_rec *conn,
                                               conn_rec *c, server_rec *s);
 
-/**
- * Make a connection record for backend connection, using request dir config
- * @param proxy_function calling proxy scheme (http, ajp, ...)
- * @param conn    acquired connection
- * @param r       current request record
- * @return        OK or HTTP_XXX error
- * @note The function will return immediately if conn->connection
- * is already set,
- */
-PROXY_DECLARE(int) ap_proxy_connection_create_ex(const char *proxy_function,
-                                                 proxy_conn_rec *conn,
-                                                 request_rec *r);
 /**
  * Determine if proxy connection can potentially be reused at the
  * end of this request.
@@ -1066,7 +971,6 @@ PROXY_DECLARE(int) ap_proxy_connection_reusable(proxy_conn_rec *conn);
  * status HTTP_BAD_GATEWAY and an EOS bucket up the filter chain.
  * @param r       current request record of client request
  * @param brigade The brigade that is sent through the output filter chain
- * @deprecated To be removed in v2.6.
  */
 PROXY_DECLARE(void) ap_proxy_backend_broke(request_rec *r,
                                            apr_bucket_brigade *brigade);
@@ -1174,7 +1078,6 @@ PROXY_DECLARE(int) ap_proxy_pass_brigade(apr_bucket_alloc_t *bucket_alloc,
  */
 APR_DECLARE_OPTIONAL_FN(int, ap_proxy_clear_connection,
         (request_rec *r, apr_table_t *headers));
-
 
 /**
  * @param socket        socket to test

@@ -498,7 +498,6 @@ static const char lazy_eval_sentinel = '\0';
 
 /* The following is a shrinking transformation, therefore safe. */
 
-/* Note: this function is deprecated in favour of apr_unescape_entity() in APR */
 static void decodehtml(char *s)
 {
     int val, i, j;
@@ -1589,17 +1588,17 @@ static int parse_expr(include_ctx_t *ctx, const char *expr, int *was_error)
 /* same as above, but use common ap_expr syntax / API */
 static int parse_ap_expr(include_ctx_t *ctx, const char *expr, int *was_error)
 {
-    ap_expr_info_t *expr_info = apr_pcalloc(ctx->pool, sizeof (*expr_info));
+    ap_expr_info_t expr_info;
     const char *err;
     int ret;
     backref_t *re = ctx->intern->re;
     ap_expr_eval_ctx_t *eval_ctx = ctx->intern->expr_eval_ctx;
 
-    expr_info->filename = ctx->r->filename;
-    expr_info->line_number = 0;
-    expr_info->module_index = APLOG_MODULE_INDEX;
-    expr_info->flags = AP_EXPR_FLAG_RESTRICTED;
-    err = ap_expr_parse(ctx->r->pool, ctx->r->pool, expr_info, expr,
+    expr_info.filename = ctx->r->filename;
+    expr_info.line_number = 0;
+    expr_info.module_index = APLOG_MODULE_INDEX;
+    expr_info.flags = AP_EXPR_FLAG_RESTRICTED;
+    err = ap_expr_parse(ctx->r->pool, ctx->r->pool, &expr_info, expr,
                         include_expr_lookup);
     if (err) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, ctx->r, APLOGNO(01337)
@@ -1635,7 +1634,7 @@ static int parse_ap_expr(include_ctx_t *ctx, const char *expr, int *was_error)
         eval_ctx->re_source = &re->source;
     }
 
-    eval_ctx->info = expr_info;
+    eval_ctx->info = &expr_info;
     ret = ap_expr_exec_ctx(eval_ctx);
     if (ret < 0) {
         ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, ctx->r, APLOGNO(01338)
@@ -1967,25 +1966,25 @@ static apr_status_t handle_echo(include_ctx_t *ctx, ap_filter_t *f,
                 token = apr_strtok(d, ", \t", &last);
 
                 while (token) {
-                    if (!ap_cstr_casecmp(token, "none")) {
+                    if (!strcasecmp(token, "none")) {
                         /* do nothing */
                     }
-                    else if (!ap_cstr_casecmp(token, "url")) {
+                    else if (!strcasecmp(token, "url")) {
                         char *buf = apr_pstrdup(ctx->pool, echo_text);
                         ap_unescape_url(buf);
                         echo_text = buf;
                     }
-                    else if (!ap_cstr_casecmp(token, "urlencoded")) {
+                    else if (!strcasecmp(token, "urlencoded")) {
                         char *buf = apr_pstrdup(ctx->pool, echo_text);
                         ap_unescape_urlencoded(buf);
                         echo_text = buf;
                     }
-                    else if (!ap_cstr_casecmp(token, "entity")) {
+                    else if (!strcasecmp(token, "entity")) {
                         char *buf = apr_pstrdup(ctx->pool, echo_text);
                         decodehtml(buf);
                         echo_text = buf;
                     }
-                    else if (!ap_cstr_casecmp(token, "base64")) {
+                    else if (!strcasecmp(token, "base64")) {
                         echo_text = ap_pbase64decode(ctx->dpool, echo_text);
                     }
                     else {
@@ -2003,19 +2002,19 @@ static apr_status_t handle_echo(include_ctx_t *ctx, ap_filter_t *f,
                 token = apr_strtok(e, ", \t", &last);
 
                 while (token) {
-                    if (!ap_cstr_casecmp(token, "none")) {
+                    if (!strcasecmp(token, "none")) {
                         /* do nothing */
                     }
-                    else if (!ap_cstr_casecmp(token, "url")) {
+                    else if (!strcasecmp(token, "url")) {
                         echo_text = ap_escape_uri(ctx->dpool, echo_text);
                     }
-                    else if (!ap_cstr_casecmp(token, "urlencoded")) {
+                    else if (!strcasecmp(token, "urlencoded")) {
                         echo_text = ap_escape_urlencoded(ctx->dpool, echo_text);
                     }
-                    else if (!ap_cstr_casecmp(token, "entity")) {
+                    else if (!strcasecmp(token, "entity")) {
                         echo_text = ap_escape_html2(ctx->dpool, echo_text, 0);
                     }
-                    else if (!ap_cstr_casecmp(token, "base64")) {
+                    else if (!strcasecmp(token, "base64")) {
                         char *buf;
                         buf = ap_pbase64encode(ctx->dpool, (char *)echo_text);
                         echo_text = buf;
@@ -2605,25 +2604,25 @@ static apr_status_t handle_set(include_ctx_t *ctx, ap_filter_t *f,
                 token = apr_strtok(d, ", \t", &last);
 
                 while (token) {
-                    if (!ap_cstr_casecmp(token, "none")) {
+                    if (!strcasecmp(token, "none")) {
                         /* do nothing */
                     }
-                    else if (!ap_cstr_casecmp(token, "url")) {
+                    else if (!strcasecmp(token, "url")) {
                         char *buf = apr_pstrdup(ctx->pool, parsed_string);
                         ap_unescape_url(buf);
                         parsed_string = buf;
                     }
-                    else if (!ap_cstr_casecmp(token, "urlencoded")) {
+                    else if (!strcasecmp(token, "urlencoded")) {
                         char *buf = apr_pstrdup(ctx->pool, parsed_string);
                         ap_unescape_urlencoded(buf);
                         parsed_string = buf;
                     }
-                    else if (!ap_cstr_casecmp(token, "entity")) {
+                    else if (!strcasecmp(token, "entity")) {
                         char *buf = apr_pstrdup(ctx->pool, parsed_string);
                         decodehtml(buf);
                         parsed_string = buf;
                     }
-                    else if (!ap_cstr_casecmp(token, "base64")) {
+                    else if (!strcasecmp(token, "base64")) {
                         parsed_string = ap_pbase64decode(ctx->dpool, parsed_string);
                     }
                     else {
@@ -2641,19 +2640,19 @@ static apr_status_t handle_set(include_ctx_t *ctx, ap_filter_t *f,
                 token = apr_strtok(e, ", \t", &last);
 
                 while (token) {
-                    if (!ap_cstr_casecmp(token, "none")) {
+                    if (!strcasecmp(token, "none")) {
                         /* do nothing */
                     }
-                    else if (!ap_cstr_casecmp(token, "url")) {
+                    else if (!strcasecmp(token, "url")) {
                         parsed_string = ap_escape_uri(ctx->dpool, parsed_string);
                     }
-                    else if (!ap_cstr_casecmp(token, "urlencoded")) {
+                    else if (!strcasecmp(token, "urlencoded")) {
                         parsed_string = ap_escape_urlencoded(ctx->dpool, parsed_string);
                     }
-                    else if (!ap_cstr_casecmp(token, "entity")) {
+                    else if (!strcasecmp(token, "entity")) {
                         parsed_string = ap_escape_html2(ctx->dpool, parsed_string, 0);
                     }
-                    else if (!ap_cstr_casecmp(token, "base64")) {
+                    else if (!strcasecmp(token, "base64")) {
                         char *buf;
                         buf = ap_pbase64encode(ctx->dpool, (char *)parsed_string);
                         parsed_string = buf;

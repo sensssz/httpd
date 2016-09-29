@@ -66,7 +66,7 @@ static const char *set_keep_alive_timeout(cmd_parms *cmd, void *dummy,
      * set for the main server, because if no http_module directive is used
      * for a vhost, it will inherit the http_srv_cfg from the main server.
      * However keep_alive_timeout_set helps determine whether the vhost should
-     * use its own configured timeout or the one from the vhost declared first
+     * use its own configured timeout or the one from the vhost delared first
      * on the same IP:port (ie. c->base_server, and the legacy behaviour).
      */
     if (cmd->server->is_virtual) {
@@ -254,7 +254,6 @@ static int ap_process_http_connection(conn_rec *c)
 
 static int http_create_request(request_rec *r)
 {
-    /* FIXME: we must only add these filters if we are an HTTP request */
     if (!r->main && !r->prev) {
         ap_add_output_filter_handle(ap_byterange_filter_handle,
                                     NULL, r, r->connection);
@@ -263,8 +262,6 @@ static int http_create_request(request_rec *r)
         ap_add_output_filter_handle(ap_http_header_filter_handle,
                                     NULL, r, r->connection);
         ap_add_output_filter_handle(ap_http_outerror_filter_handle,
-                                    NULL, r, r->connection);
-        ap_add_output_filter_handle(ap_request_core_filter_handle,
                                     NULL, r, r->connection);
     }
 

@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>How-To / Tutoriels - Serveur Apache HTTP Version 2.5</title>
+<title>How-To / Tutoriels - Serveur Apache HTTP Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page" class="no-sidebar"><div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="../"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a></div><div id="page-content"><div id="preamble"><h1>How-To / Tutoriels</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a></div><div id="page-content"><div id="preamble"><h1>How-To / Tutoriels</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="../en/howto/" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/howto/" title="Français">&nbsp;fr&nbsp;</a> |
@@ -40,8 +40,8 @@
       <dt>Authentification et autorisation</dt>
       <dd>
         <p>L'authentification représente tout processus par lequel vous
-	vérifiez si quelqu'un correspond bien à l'identité qu'il
-	déclare posséder. L'autorisation représente tout processus
+	vérifiez si quelqu'un correspond bien à la personne qu'il
+	prétend être. L'autorisation représente tout processus
 	permettant de savoir si une personne est autorisée à aller là où
 	elle veut aller, ou à obtenir les informations qu'elle demande.</p>
 
@@ -64,8 +64,8 @@
    <dl>
       <dt>Contenu dynamique avec CGI</dt>
       <dd>
-        <p>L'Interface Passerelle Commune CGI (Common Gateway Interface)
-	définit pour le serveur web une méthode d'interaction avec des
+        <p>L'interface CGI (Common Gateway Interface)
+	fournit au serveur web une méthode d'interaction avec des
 	programmes externes générateurs de contenu, souvent nommés
 	programmes CGI ou scripts CGI. Il s'agit d'une méthode
 	simple permettant d'ajouter du contenu
@@ -105,8 +105,7 @@
       </dd>
     </dl>
 
-
-    <dl>    
+    <dl>
       <dt>Introduction au Inclusions côté Serveur (Server Side Includes
       ou SSI)</dt>
       <dd>
@@ -124,8 +123,8 @@
     <dl>
       <dt>Répertoires web de l'utilisateur</dt>
       <dd>
-        <p>Sur les systèmes multi-utilisateurs, vous pouvez laisser
-	chaque utilisateur disposer d'un site web dans son répertoire home
+        <p>Sur les systèmes multi-utilisateurs, vous pouvez permettre à
+	chaque utilisateur d'avoir un site web dans son répertoire home
 	via la directive <code class="directive"><a href="../mod/mod_userdir.html#userdir">UserDir</a></code>. Les visiteurs de l'URL
 	<code>http://example.com/~nom-utilisateur/</code> vont recevoir
 	du contenu situé dans le répertoire home de l'utilisateur
@@ -135,7 +134,6 @@
         <p>Voir <a href="public_html.html">Répertoires web des utilisateurs (<code>public_html</code>)</a></p>
       </dd>
     </dl>
-
     <dl>
       <dt>Mandataires inverses</dt>
       <dd>
@@ -160,7 +158,7 @@
 <a href="../zh-cn/howto/" hreflang="zh-cn" rel="alternate" title="Simplified Chinese">&nbsp;zh-cn&nbsp;</a></p>
 </div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

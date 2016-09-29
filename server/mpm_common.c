@@ -68,15 +68,9 @@
     APR_HOOK_LINK(mpm) \
     APR_HOOK_LINK(mpm_query) \
     APR_HOOK_LINK(mpm_register_timed_callback) \
-    APR_HOOK_LINK(mpm_register_poll_callback) \
-    APR_HOOK_LINK(mpm_register_poll_callback_timeout) \
-    APR_HOOK_LINK(mpm_unregister_poll_callback) \
     APR_HOOK_LINK(mpm_get_name) \
-    APR_HOOK_LINK(mpm_resume_suspended) \
     APR_HOOK_LINK(end_generation) \
     APR_HOOK_LINK(child_status) \
-    APR_HOOK_LINK(output_pending) \
-    APR_HOOK_LINK(input_pending) \
     APR_HOOK_LINK(suspend_connection) \
     APR_HOOK_LINK(resume_connection)
 
@@ -97,7 +91,6 @@ AP_IMPLEMENT_HOOK_RUN_ALL(int, monitor,
 AP_IMPLEMENT_HOOK_RUN_ALL(int, drop_privileges,
                           (apr_pool_t * pchild, server_rec * s),
                           (pchild, s), OK, DECLINED)
-
 AP_IMPLEMENT_HOOK_RUN_FIRST(int, mpm,
                             (apr_pool_t *pconf, apr_pool_t *plog, server_rec *s),
                             (pconf, plog, s), DECLINED)
@@ -107,23 +100,6 @@ AP_IMPLEMENT_HOOK_RUN_FIRST(int, mpm_query,
 AP_IMPLEMENT_HOOK_RUN_FIRST(apr_status_t, mpm_register_timed_callback,
                             (apr_time_t t, ap_mpm_callback_fn_t *cbfn, void *baton),
                             (t, cbfn, baton), APR_ENOTIMPL)
-AP_IMPLEMENT_HOOK_RUN_FIRST(apr_status_t, mpm_resume_suspended,
-                            (conn_rec *c),
-                            (c), APR_ENOTIMPL)
-AP_IMPLEMENT_HOOK_RUN_FIRST(apr_status_t, mpm_register_poll_callback,
-                            (apr_array_header_t *pds, ap_mpm_callback_fn_t *cbfn, void *baton),
-                            (pds, cbfn, baton), APR_ENOTIMPL)
-AP_IMPLEMENT_HOOK_RUN_FIRST(apr_status_t, mpm_register_poll_callback_timeout,
-                            (apr_array_header_t *pds, ap_mpm_callback_fn_t *cbfn, ap_mpm_callback_fn_t *tofn, void *baton, apr_time_t timeout),
-                            (pds, cbfn, tofn, baton, timeout), APR_ENOTIMPL)
-AP_IMPLEMENT_HOOK_RUN_FIRST(apr_status_t, mpm_unregister_poll_callback,
-                            (apr_array_header_t *pds),
-                            (pds), APR_ENOTIMPL)
-AP_IMPLEMENT_HOOK_RUN_FIRST(int, output_pending,
-                            (conn_rec *c), (c), DECLINED)
-AP_IMPLEMENT_HOOK_RUN_FIRST(int, input_pending,
-                            (conn_rec *c), (c), DECLINED)
-
 AP_IMPLEMENT_HOOK_VOID(end_generation,
                        (server_rec *s, ap_generation_t gen),
                        (s, gen))
@@ -334,7 +310,7 @@ const char *ap_mpm_set_pidfile(cmd_parms *cmd, void *dummy,
 void ap_mpm_dump_pidfile(apr_pool_t *p, apr_file_t *out)
 {
     apr_file_printf(out, "PidFile: \"%s\"\n",
-                    ap_runtime_dir_relative(p, ap_pid_fname));
+                    ap_server_root_relative(p, ap_pid_fname));
 }
 
 const char *ap_mpm_set_max_requests(cmd_parms *cmd, void *dummy,
@@ -557,35 +533,9 @@ void ap_core_child_status(server_rec *s, pid_t pid,
                  pid, gen, slot, status_msg);
 }
 
-AP_DECLARE(apr_status_t) ap_mpm_resume_suspended(conn_rec *c)
-{
-    return ap_run_mpm_resume_suspended(c);
-}
-
-AP_DECLARE(apr_status_t) ap_mpm_register_timed_callback(apr_time_t t,
-        ap_mpm_callback_fn_t *cbfn, void *baton)
+AP_DECLARE(apr_status_t) ap_mpm_register_timed_callback(apr_time_t t, ap_mpm_callback_fn_t *cbfn, void *baton)
 {
     return ap_run_mpm_register_timed_callback(t, cbfn, baton);
-}
-
-AP_DECLARE(apr_status_t) ap_mpm_register_poll_callback(apr_array_header_t *pfds,
-        ap_mpm_callback_fn_t *cbfn, void *baton)
-{
-    return ap_run_mpm_register_poll_callback(pfds, cbfn, baton);
-}
-
-AP_DECLARE(apr_status_t) ap_mpm_register_poll_callback_timeout(
-        apr_array_header_t *pfds, ap_mpm_callback_fn_t *cbfn,
-        ap_mpm_callback_fn_t *tofn, void *baton, apr_time_t timeout)
-{
-    return ap_run_mpm_register_poll_callback_timeout(pfds, cbfn, tofn, baton,
-            timeout);
-}
-
-AP_DECLARE(apr_status_t) ap_mpm_unregister_poll_callback(
-        apr_array_header_t *pfds)
-{
-    return ap_run_mpm_unregister_poll_callback(pfds);
 }
 
 AP_DECLARE(const char *)ap_show_mpm(void)

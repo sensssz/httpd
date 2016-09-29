@@ -57,7 +57,6 @@
 #include "apr_atomic.h"
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
-
 #include "apr_version.h"
 
 #include <stdlib.h>
@@ -96,16 +95,10 @@
 #include "http_vhost.h"
 #include "unixd.h"
 #include "apr_skiplist.h"
-#include "util_time.h"
 
 #include <signal.h>
 #include <limits.h>             /* for INT_MAX */
 
-
-#if HAVE_SERF
-#include "mod_serf.h"
-#include "serf.h"
-#endif
 
 /* Limit on the total --- clients will be locked out if more servers than
  * this are needed.  It is intended solely to keep the server from crashing
@@ -167,16 +160,15 @@
 #endif
 #define WORKER_FACTOR_SCALE   16  /* scale factor to allow fractional values */
 static unsigned int worker_factor = DEFAULT_WORKER_FACTOR * WORKER_FACTOR_SCALE;
-    /* AsyncRequestWorkerFactor * 16 */
 
-static int threads_per_child = 0;           /* ThreadsPerChild */
-static int ap_daemons_to_start = 0;         /* StartServers */
-static int min_spare_threads = 0;           /* MinSpareThreads */
-static int max_spare_threads = 0;           /* MaxSpareThreads */
+static int threads_per_child = 0;   /* Worker threads per child */
+static int ap_daemons_to_start = 0;
+static int min_spare_threads = 0;
+static int max_spare_threads = 0;
 static int ap_daemons_limit = 0;
-static int max_workers = 0;                 /* MaxRequestWorkers */
-static int server_limit = 0;                /* ServerLimit */
-static int thread_limit = 0;                /* ThreadLimit */
+static int max_workers = 0;
+static int server_limit = 0;
+static int thread_limit = 0;
 static int had_healthy_child = 0;
 static int dying = 0;
 static int workers_may_exit = 0;
@@ -189,8 +181,6 @@ static apr_uint32_t connection_count = 0;   /* Number of open connections */
 static apr_uint32_t lingering_count = 0;    /* Number of connections in lingering close */
 static apr_uint32_t suspended_count = 0;    /* Number of suspended connections */
 static apr_uint32_t clogged_count = 0;      /* Number of threads processing ssl conns */
-static apr_uint32_t threads_shutdown = 0;   /* Number of threads that have shutdown
-                                               early during graceful termination */
 static int resource_shortage = 0;
 static fd_queue_t *worker_queue;
 static fd_queue_info_t *worker_queue_info;
@@ -233,10 +223,9 @@ APR_RING_HEAD(timeout_head_t, event_conn_state_t);
 
 struct timeout_queue {
     struct timeout_head_t head;
+    int count, *total;
     apr_interval_time_t timeout;
-    apr_uint32_t count;         /* for this queue */
-    apr_uint32_t *total;        /* for all chained/related queues */
-    struct timeout_queue *next; /* chaining */
+    struct timeout_queue *next;
 };
 /*
  * Several timeout queues that use different timeouts, so that we always can
@@ -257,35 +246,33 @@ static apr_pollfd_t *listener_pollfd;
  * Macros for accessing struct timeout_queue.
  * For TO_QUEUE_APPEND and TO_QUEUE_REMOVE, timeout_mutex must be held.
  */
-static void TO_QUEUE_APPEND(struct timeout_queue *q, event_conn_state_t *el)
-{
-    APR_RING_INSERT_TAIL(&q->head, el, event_conn_state_t, timeout_list);
-    apr_atomic_inc32(q->total);
-    ++q->count;
-}
+#define TO_QUEUE_APPEND(q, el)                                                \
+    do {                                                                      \
+        APR_RING_INSERT_TAIL(&(q)->head, el, event_conn_state_t,              \
+                             timeout_list);                                   \
+        ++*(q)->total;                                                        \
+        ++(q)->count;                                                         \
+    } while (0)
 
-static void TO_QUEUE_REMOVE(struct timeout_queue *q, event_conn_state_t *el)
-{
-    APR_RING_REMOVE(el, timeout_list);
-    apr_atomic_dec32(q->total);
-    --q->count;
-}
+#define TO_QUEUE_REMOVE(q, el)                                                \
+    do {                                                                      \
+        APR_RING_REMOVE(el, timeout_list);                                    \
+        --*(q)->total;                                                        \
+        --(q)->count;                                                         \
+    } while (0)
 
-static struct timeout_queue *TO_QUEUE_MAKE(apr_pool_t *p, apr_time_t t,
-                                           struct timeout_queue *ref)
-{
-    struct timeout_queue *q;
-                                           
-    q = apr_pcalloc(p, sizeof *q);
-    APR_RING_INIT(&q->head, event_conn_state_t, timeout_list);
-    q->total = (ref) ? ref->total : apr_pcalloc(p, sizeof *q->total);
-    q->timeout = t;
+#define TO_QUEUE_INIT(q, p, t, v)                                             \
+    do {                                                                      \
+        struct timeout_queue *b = (v);                                        \
+        (q) = apr_palloc((p), sizeof *(q));                                   \
+        APR_RING_INIT(&(q)->head, event_conn_state_t, timeout_list);          \
+        (q)->total = (b) ? (b)->total : apr_pcalloc((p), sizeof *(q)->total); \
+        (q)->count = 0;                                                       \
+        (q)->timeout = (t);                                                   \
+        (q)->next = NULL;                                                     \
+    } while (0)
 
-    return q;
-}
-
-#define TO_QUEUE_ELEM_INIT(el) \
-    APR_RING_ELEM_INIT((el), timeout_list)
+#define TO_QUEUE_ELEM_INIT(el) APR_RING_ELEM_INIT(el, timeout_list)
 
 /*
  * The pollset for sockets that are in any of the timeout queues. Currently
@@ -298,20 +285,12 @@ static struct timeout_queue *TO_QUEUE_MAKE(apr_pool_t *p, apr_time_t t,
  */
 static apr_pollset_t *event_pollset;
 
-#if HAVE_SERF
-typedef struct {
-    apr_pollset_t *pollset;
-    apr_pool_t *pool;
-} s_baton_t;
-
-static serf_context_t *g_serf;
-#endif
-
 /* The structure used to pass unique initialization info to each thread */
 typedef struct
 {
-    int pslot;  /* process slot */
-    int tslot;  /* worker slot of the thread */
+    int pid;
+    int tid;
+    int sd;
 } proc_info;
 
 /* Structure used to pass information to the thread responsible for
@@ -329,10 +308,6 @@ typedef enum
 {
     PT_CSD,
     PT_ACCEPT
-#if HAVE_SERF
-    , PT_SERF
-#endif
-    , PT_USER
 } poll_type_e;
 
 typedef struct
@@ -340,15 +315,6 @@ typedef struct
     poll_type_e type;
     void *baton;
 } listener_poll_type;
-
-typedef struct
-{
-    ap_mpm_callback_fn_t *cbfunc;
-    void *user_baton;
-    apr_array_header_t *pfds;
-    timer_event_t *cancel_event; /* If a timeout was requested, a pointer to the timer event */
-    unsigned int signaled :1;
-} socket_callback_baton_t;
 
 /* data retained by event across load/unload of the module
  * allocated on first call to pre-config hook; located on
@@ -381,14 +347,14 @@ typedef struct event_retained_data {
 #endif
     int hold_off_on_exponential_spawning;
     /*
-     * Current number of listeners buckets and maximum reached across
+     * Current number of listeners buckets and maximum reached accross
      * restarts (to size retained data according to dynamic num_buckets,
      * eg. idle_spawn_rate).
      */
     int num_buckets, max_buckets;
 } event_retained_data;
 static event_retained_data *retained;
-
+ 
 typedef struct event_child_bucket {
     ap_pod_t *pod;
     ap_listen_rec *listeners;
@@ -557,9 +523,6 @@ static int event_query(int query_code, int *result, apr_status_t *rv)
     case AP_MPMQ_IS_ASYNC:
         *result = 1;
         break;
-    case AP_MPMQ_HAS_SERF:
-        *result = 1;
-        break;
     case AP_MPMQ_HARD_LIMIT_DAEMONS:
         *result = server_limit;
         break;
@@ -593,12 +556,6 @@ static int event_query(int query_code, int *result, apr_status_t *rv)
     case AP_MPMQ_GENERATION:
         *result = retained->my_generation;
         break;
-    case AP_MPMQ_CAN_SUSPEND:
-        *result = 1;
-        break;
-    case AP_MPMQ_CAN_POLL:
-        *result = 1;
-        break;
     default:
         *rv = APR_ENOTIMPL;
         break;
@@ -626,6 +583,27 @@ static void event_note_child_started(int slot, pid_t pid)
     ap_run_child_status(ap_server_conf,
                         ap_scoreboard_image->parent[slot].pid,
                         retained->my_generation, slot, MPM_CHILD_STARTED);
+}
+
+static void event_note_child_lost_slot(int slot, pid_t newpid)
+{
+    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf, APLOGNO(00458)
+                 "pid %" APR_PID_T_FMT " taking over scoreboard slot from "
+                 "%" APR_PID_T_FMT "%s",
+                 newpid,
+                 ap_scoreboard_image->parent[slot].pid,
+                 ap_scoreboard_image->parent[slot].quiescing ?
+                 " (quiescing)" : "");
+    ap_run_child_status(ap_server_conf,
+                        ap_scoreboard_image->parent[slot].pid,
+                        ap_scoreboard_image->parent[slot].generation,
+                        slot, MPM_CHILD_LOST_SLOT);
+    /* Don't forget about this exiting child process, or we
+     * won't be able to kill it if it doesn't exit by the
+     * time the server is shut down.
+     */
+    ap_register_extra_mpm_process(ap_scoreboard_image->parent[slot].pid,
+                                  ap_scoreboard_image->parent[slot].generation);
 }
 
 static const char *event_get_name(void)
@@ -873,14 +851,14 @@ static int start_lingering_close_common(event_conn_state_t *cs, int in_worker)
     else {
         cs->c->sbh = NULL;
     }
+    apr_thread_mutex_lock(timeout_mutex);
+    TO_QUEUE_APPEND(q, cs);
     cs->pfd.reqevents = (
             cs->pub.sense == CONN_SENSE_WANT_WRITE ? APR_POLLOUT :
                     APR_POLLIN) | APR_POLLHUP | APR_POLLERR;
     cs->pub.sense = CONN_SENSE_DEFAULT;
-    apr_thread_mutex_lock(timeout_mutex);
-    TO_QUEUE_APPEND(q, cs);
-    apr_thread_mutex_unlock(timeout_mutex);
     rv = apr_pollset_add(event_pollset, &cs->pfd);
+    apr_thread_mutex_unlock(timeout_mutex);
     if (rv != APR_SUCCESS && !APR_STATUS_IS_EEXIST(rv)) {
         ap_log_error(APLOG_MARK, APLOG_ERR, rv, ap_server_conf, APLOGNO(03092)
                      "start_lingering_close: apr_pollset_add failure");
@@ -933,8 +911,6 @@ static int start_lingering_close_nonblocking(event_conn_state_t *cs)
         || apr_socket_shutdown(csd, APR_SHUTDOWN_WRITE) != APR_SUCCESS) {
         apr_socket_close(csd);
         ap_push_pool(worker_queue_info, cs->p);
-        if (dying)
-            ap_queue_interrupt_one(worker_queue);
         return 0;
     }
     return start_lingering_close_common(cs, 0);
@@ -958,8 +934,6 @@ static int stop_lingering_close(event_conn_state_t *cs)
         AP_DEBUG_ASSERT(0);
     }
     ap_push_pool(worker_queue_info, cs->p);
-    if (dying)
-        ap_queue_interrupt_one(worker_queue);
     return 0;
 }
 
@@ -1138,47 +1112,40 @@ read_request:
     }
 
     if (cs->pub.state == CONN_STATE_WRITE_COMPLETION) {
-        int not_complete_yet;
-
+        ap_filter_t *output_filter = c->output_filters;
+        apr_status_t rv;
         ap_update_child_status(sbh, SERVER_BUSY_WRITE, NULL);
-
-        not_complete_yet = ap_run_output_pending(c);
-
-        if (not_complete_yet > OK) {
+        while (output_filter->next != NULL) {
+            output_filter = output_filter->next;
+        }
+        rv = output_filter->frec->filter_func.out_func(output_filter, NULL);
+        if (rv != APR_SUCCESS) {
+            ap_log_cerror(APLOG_MARK, APLOG_DEBUG, rv, c, APLOGNO(00470)
+                          "network write failure in core output filter");
             cs->pub.state = CONN_STATE_LINGER;
         }
-        else if (not_complete_yet == OK) {
+        else if (c->data_in_output_filters) {
             /* Still in WRITE_COMPLETION_STATE:
              * Set a write timeout for this connection, and let the
              * event thread poll for writeability.
              */
             cs->queue_timestamp = apr_time_now();
             notify_suspend(cs);
+            apr_thread_mutex_lock(timeout_mutex);
+            TO_QUEUE_APPEND(cs->sc->wc_q, cs);
             cs->pfd.reqevents = (
                     cs->pub.sense == CONN_SENSE_WANT_READ ? APR_POLLIN :
                             APR_POLLOUT) | APR_POLLHUP | APR_POLLERR;
             cs->pub.sense = CONN_SENSE_DEFAULT;
-            apr_thread_mutex_lock(timeout_mutex);
-            TO_QUEUE_APPEND(cs->sc->wc_q, cs);
-            apr_thread_mutex_unlock(timeout_mutex);
             rc = apr_pollset_add(event_pollset, &cs->pfd);
-            if (rc != APR_SUCCESS) {
-                ap_log_error(APLOG_MARK, APLOG_ERR, rc, ap_server_conf, APLOGNO(03465)
-                             "process_socket: apr_pollset_add failure for "
-                             "write completion");
-                apr_thread_mutex_lock(timeout_mutex);
-                TO_QUEUE_REMOVE(cs->sc->wc_q, cs);
-                apr_thread_mutex_unlock(timeout_mutex);
-                apr_socket_close(cs->pfd.desc.s);
-                ap_push_pool(worker_queue_info, cs->p);
-            }
+            apr_thread_mutex_unlock(timeout_mutex);
             return;
         }
         else if (c->keepalive != AP_CONN_KEEPALIVE || c->aborted ||
             listener_may_exit) {
             cs->pub.state = CONN_STATE_LINGER;
         }
-        else if (c->data_in_input_filters || ap_run_input_pending(c) == OK) {
+        else if (c->data_in_input_filters) {
             cs->pub.state = CONN_STATE_READ_REQUEST_LINE;
             goto read_request;
         }
@@ -1191,8 +1158,6 @@ read_request:
         start_lingering_close_blocking(cs);
     }
     else if (cs->pub.state == CONN_STATE_CHECK_REQUEST_LINE_READABLE) {
-        ap_update_child_status(sbh, SERVER_BUSY_KEEPALIVE, NULL);
-
         /* It greatly simplifies the logic to use a single timeout value per q
          * because the new element can just be added to the end of the list and
          * it will stay sorted in expiration time sequence.  If brand new
@@ -1203,60 +1168,24 @@ read_request:
          */
         cs->queue_timestamp = apr_time_now();
         notify_suspend(cs);
+        apr_thread_mutex_lock(timeout_mutex);
+        TO_QUEUE_APPEND(cs->sc->ka_q, cs);
 
         /* Add work to pollset. */
         cs->pfd.reqevents = APR_POLLIN;
-        apr_thread_mutex_lock(timeout_mutex);
-        TO_QUEUE_APPEND(cs->sc->ka_q, cs);
+        rc = apr_pollset_add(event_pollset, &cs->pfd);
         apr_thread_mutex_unlock(timeout_mutex);
 
-        rc = apr_pollset_add(event_pollset, &cs->pfd);
         if (rc != APR_SUCCESS) {
             ap_log_error(APLOG_MARK, APLOG_ERR, rc, ap_server_conf, APLOGNO(03093)
-                         "process_socket: apr_pollset_add failure for "
-                         "keep alive");
-            apr_thread_mutex_lock(timeout_mutex);
-            TO_QUEUE_REMOVE(cs->sc->ka_q, cs);
-            apr_thread_mutex_unlock(timeout_mutex);
-            apr_socket_close(cs->pfd.desc.s);
-            ap_push_pool(worker_queue_info, cs->p);
-            return;
+                         "process_socket: apr_pollset_add failure");
+            AP_DEBUG_ASSERT(rc == APR_SUCCESS);
         }
     }
     else if (cs->pub.state == CONN_STATE_SUSPENDED) {
-        cs->c->suspended_baton = cs;
         apr_atomic_inc32(&suspended_count);
         notify_suspend(cs);
     }
-}
-
-/* Put a SUSPENDED connection back into a queue. */
-static apr_status_t event_resume_suspended (conn_rec *c)
-{
-    event_conn_state_t* cs = (event_conn_state_t*) c->suspended_baton;
-    if (cs == NULL) {
-        ap_log_cerror (APLOG_MARK, LOG_WARNING, 0, c, APLOGNO(02615)
-                "event_resume_suspended: suspended_baton is NULL");
-        return APR_EGENERAL;
-    } else if (!cs->suspended) {
-        ap_log_cerror (APLOG_MARK, LOG_WARNING, 0, c, APLOGNO(02616)
-                "event_resume_suspended: Thread isn't suspended");
-        return APR_EGENERAL;
-    }
-    apr_atomic_dec32(&suspended_count);
-    c->suspended_baton = NULL;
-
-    cs->queue_timestamp = apr_time_now();
-    cs->pfd.reqevents = (
-            cs->pub.sense == CONN_SENSE_WANT_READ ? APR_POLLIN :
-                    APR_POLLOUT) | APR_POLLHUP | APR_POLLERR;
-    cs->pub.sense = CONN_SENSE_DEFAULT;
-    apr_thread_mutex_lock(timeout_mutex);
-    TO_QUEUE_APPEND(cs->sc->wc_q, cs);
-    apr_thread_mutex_unlock(timeout_mutex);
-    apr_pollset_add(event_pollset, &cs->pfd);
-
-    return OK;
 }
 
 /* conns_this_child has gone to zero or below.  See if the admin coded
@@ -1290,9 +1219,6 @@ static void close_listeners(int process_slot, int *closed)
         }
         /* wake up the main thread */
         kill(ap_my_pid, SIGTERM);
-
-        ap_free_idle_pools(worker_queue_info);
-        ap_queue_interrupt_all(worker_queue);
     }
 }
 
@@ -1317,36 +1243,8 @@ static void dummy_signal_handler(int sig)
 }
 
 
-#if HAVE_SERF
-static apr_status_t s_socket_add(void *user_baton,
-                                 apr_pollfd_t *pfd,
-                                 void *serf_baton)
-{
-    s_baton_t *s = (s_baton_t*)user_baton;
-    /* XXXXX: recycle listener_poll_types */
-    listener_poll_type *pt = ap_malloc(sizeof(*pt));
-    pt->type = PT_SERF;
-    pt->baton = serf_baton;
-    pfd->client_data = pt;
-    return apr_pollset_add(s->pollset, pfd);
-}
-
-static apr_status_t s_socket_remove(void *user_baton,
-                                    apr_pollfd_t *pfd,
-                                    void *serf_baton)
-{
-    s_baton_t *s = (s_baton_t*)user_baton;
-    listener_poll_type *pt = pfd->client_data;
-    free(pt);
-    return apr_pollset_remove(s->pollset, pfd);
-}
-#endif
-
 static apr_status_t init_pollset(apr_pool_t *p)
 {
-#if HAVE_SERF
-    s_baton_t *baton = NULL;
-#endif
     ap_listen_rec *lr;
     listener_poll_type *pt;
     int i = 0;
@@ -1371,21 +1269,6 @@ static apr_status_t init_pollset(apr_pool_t *p)
 
         lr->accept_func = ap_unixd_accept;
     }
-
-#if HAVE_SERF
-    baton = apr_pcalloc(p, sizeof(*baton));
-    baton->pollset = event_pollset;
-    /* TODO: subpools, threads, reuse, etc.  -- currently use malloc() inside :( */
-    baton->pool = p;
-
-    g_serf = serf_context_create_ex(baton,
-                                    s_socket_add,
-                                    s_socket_remove, p);
-
-    ap_register_provider(p, "mpm_serf",
-                         "instance", "0", g_serf);
-
-#endif
 
     return APR_SUCCESS;
 }
@@ -1488,15 +1371,12 @@ static int timer_comp(void *a, void *b)
 
 static apr_thread_mutex_t *g_timer_skiplist_mtx;
 
-static timer_event_t * event_get_timer_event(apr_time_t t,
-                                             ap_mpm_callback_fn_t *cbfn,
-                                             void *baton,
-                                             int insert, 
-                                             apr_array_header_t *remove)
+static apr_status_t event_register_timed_callback(apr_time_t t,
+                                                  ap_mpm_callback_fn_t *cbfn,
+                                                  void *baton)
 {
     timer_event_t *te;
     /* oh yeah, and make locking smarter/fine grained. */
-
     apr_thread_mutex_lock(g_timer_skiplist_mtx);
 
     if (!APR_RING_EMPTY(&timer_free_ring, timer_event_t, link)) {
@@ -1510,110 +1390,17 @@ static timer_event_t * event_get_timer_event(apr_time_t t,
 
     te->cbfunc = cbfn;
     te->baton = baton;
-    te->canceled = 0;
-    te->when = t;
-    te->remove = remove;
+    /* XXXXX: optimize */
+    te->when = t + apr_time_now();
 
-    if (insert) { 
-        /* Okay, add sorted by when.. */
-        apr_skiplist_insert(timer_skiplist, te);
-    }
+    /* Okay, add sorted by when.. */
+    apr_skiplist_insert(timer_skiplist, te);
+
     apr_thread_mutex_unlock(g_timer_skiplist_mtx);
 
-    return te;
-}
-
-static apr_status_t event_register_timed_callback_ex(apr_time_t t,
-                                                  ap_mpm_callback_fn_t *cbfn,
-                                                  void *baton, 
-                                                  apr_array_header_t *remove)
-{
-    event_get_timer_event(t + apr_time_now(), cbfn, baton, 1, remove);
     return APR_SUCCESS;
 }
 
-static apr_status_t event_register_timed_callback(apr_time_t t,
-                                                  ap_mpm_callback_fn_t *cbfn,
-                                                  void *baton)
-{
-    event_register_timed_callback_ex(t, cbfn, baton, NULL);
-    return APR_SUCCESS;
-}
-
-static apr_status_t event_cleanup_poll_callback(void *data)
-{
-    apr_status_t final_rc = APR_SUCCESS;
-    apr_array_header_t *pfds = data;
-    int i;
-
-    for (i = 0; i < pfds->nelts; i++) {
-        apr_pollfd_t *pfd = (apr_pollfd_t *)pfds->elts + i;
-        if (pfd->client_data) {
-            apr_status_t rc;
-            rc = apr_pollset_remove(event_pollset, pfd);
-            if (rc != APR_SUCCESS && !APR_STATUS_IS_NOTFOUND(rc)) {
-                final_rc = rc;
-            }
-        }
-    }
-
-    return final_rc;
-}
-
-static apr_status_t event_register_poll_callback_ex(apr_array_header_t *pfds,
-                                                  ap_mpm_callback_fn_t *cbfn,
-                                                  ap_mpm_callback_fn_t *tofn,
-                                                  void *baton,
-                                                  apr_time_t timeout)
-{
-    socket_callback_baton_t *scb = apr_pcalloc(pfds->pool, sizeof(*scb));
-    listener_poll_type *pt = apr_palloc(pfds->pool, sizeof(*pt));
-    apr_status_t rc, final_rc= APR_SUCCESS;
-    int i;
-
-    pt->type = PT_USER;
-    pt->baton = scb;
-
-    scb->cbfunc = cbfn;
-    scb->user_baton = baton;
-    scb->pfds = pfds;
-
-    apr_pool_pre_cleanup_register(pfds->pool, pfds, event_cleanup_poll_callback);
-
-    for (i = 0; i < pfds->nelts; i++) {
-        apr_pollfd_t *pfd = (apr_pollfd_t *)pfds->elts + i;
-        pfd->reqevents = (pfd->reqevents) | APR_POLLERR | APR_POLLHUP;
-        pfd->client_data = pt;
-    }
-
-    if (timeout > 0) { 
-        /* XXX:  This cancel timer event count fire before the pollset is updated */
-        scb->cancel_event = event_get_timer_event(timeout + apr_time_now(), tofn, baton, 1, pfds);
-    }
-    for (i = 0; i < pfds->nelts; i++) {
-        apr_pollfd_t *pfd = (apr_pollfd_t *)pfds->elts + i;
-        rc = apr_pollset_add(event_pollset, pfd);
-        if (rc != APR_SUCCESS) {
-            final_rc = rc;
-        }
-    }
-    return final_rc;
-}
-
-static apr_status_t event_register_poll_callback(apr_array_header_t *pfds,
-                                                 ap_mpm_callback_fn_t *cbfn,
-                                                 void *baton)
-{
-    return event_register_poll_callback_ex(pfds,
-                                           cbfn,
-                                           NULL, /* no timeout function */
-                                           baton,
-                                           0     /* no timeout */);
-}
-static apr_status_t event_unregister_poll_callback(apr_array_header_t *pfds)
-{
-    return apr_pool_cleanup_run(pfds->pool, pfds, event_cleanup_poll_callback);
-}
 
 /*
  * Close socket and clean up if remote closed its end while we were in
@@ -1640,20 +1427,18 @@ static void process_lingering_close(event_conn_state_t *cs, const apr_pollfd_t *
         return;
     }
 
+    apr_thread_mutex_lock(timeout_mutex);
     rv = apr_pollset_remove(event_pollset, pfd);
     AP_DEBUG_ASSERT(rv == APR_SUCCESS);
 
     rv = apr_socket_close(csd);
     AP_DEBUG_ASSERT(rv == APR_SUCCESS);
 
-    apr_thread_mutex_lock(timeout_mutex);
     TO_QUEUE_REMOVE(q, cs);
     apr_thread_mutex_unlock(timeout_mutex);
     TO_QUEUE_ELEM_INIT(cs);
 
     ap_push_pool(worker_queue_info, cs->p);
-    if (dying)
-        ap_queue_interrupt_one(worker_queue);
 }
 
 /* call 'func' for all elements of 'q' with timeout less than 'timeout_time'.
@@ -1664,13 +1449,13 @@ static void process_timeout_queue(struct timeout_queue *q,
                                   apr_time_t timeout_time,
                                   int (*func)(event_conn_state_t *))
 {
-    apr_uint32_t total = 0, count;
+    int total = 0, count;
     event_conn_state_t *first, *cs, *last;
     struct timeout_head_t trash;
     struct timeout_queue *qp;
     apr_status_t rv;
 
-    if (!apr_atomic_read32(q->total)) {
+    if (!*q->total) {
         return;
     }
 
@@ -1708,14 +1493,14 @@ static void process_timeout_queue(struct timeout_queue *q,
         APR_RING_UNSPLICE(first, last, timeout_list);
         APR_RING_SPLICE_TAIL(&trash, first, last, event_conn_state_t,
                              timeout_list);
-        AP_DEBUG_ASSERT(apr_atomic_read32(q->total) >= count);
-        apr_atomic_sub32(q->total, count);
         qp->count -= count;
         total += count;
     }
     if (!total)
         return;
 
+    AP_DEBUG_ASSERT(*q->total >= total);
+    *q->total -= total;
     apr_thread_mutex_unlock(timeout_mutex);
     first = APR_RING_FIRST(&trash);
     do {
@@ -1729,14 +1514,22 @@ static void process_timeout_queue(struct timeout_queue *q,
 
 static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
 {
+    timer_event_t *ep;
+    timer_event_t *te;
     apr_status_t rc;
     proc_info *ti = dummy;
-    int process_slot = ti->pslot;
-    struct process_score *ps = ap_get_scoreboard_process(process_slot);
+    int process_slot = ti->pid;
     apr_pool_t *tpool = apr_thread_pool_get(thd);
-    apr_time_t timeout_time = 0, last_log;
-    int closed = 0, listeners_disabled = 0;
+    void *csd = NULL;
+    apr_pool_t *ptrans;         /* Pool for per-transaction stuff */
+    ap_listen_rec *lr;
     int have_idle_worker = 0;
+    const apr_pollfd_t *out_pfd;
+    apr_int32_t num = 0;
+    apr_interval_time_t timeout_interval;
+    apr_time_t timeout_time = 0, now, last_log;
+    listener_poll_type *pt;
+    int closed = 0, listeners_disabled = 0;
 
     last_log = apr_time_now();
     free(ti);
@@ -1752,7 +1545,6 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
     rc = init_pollset(tpool);
     if (rc != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_ERR, rc, ap_server_conf,
-                     APLOGNO(03266)
                      "failed to initialize pollset, "
                      "attempting to shutdown process gracefully");
         signal_threads(ST_GRACEFUL);
@@ -1766,15 +1558,7 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
     apr_signal(LISTENER_SIGNAL, dummy_signal_handler);
 
     for (;;) {
-        timer_event_t *te;
-        const apr_pollfd_t *out_pfd;
-        apr_int32_t num = 0;
-        apr_uint32_t c_count, l_count, i_count;
-        apr_interval_time_t timeout_interval;
-        apr_time_t now;
         int workers_were_busy = 0;
-        int keepalives;
-
         if (listener_may_exit) {
             close_listeners(process_slot, &closed);
             if (terminate_mode == ST_UNGRACEFUL
@@ -1785,8 +1569,8 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
         if (conns_this_child <= 0)
             check_infinite_requests();
 
+        now = apr_time_now();
         if (APLOGtrace6(ap_server_conf)) {
-            now = apr_time_now();
             /* trace log status every second */
             if (now - last_log > apr_time_from_msec(1000)) {
                 last_log = now;
@@ -1796,28 +1580,14 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                              "keep-alive: %d lingering: %d suspended: %u)",
                              apr_atomic_read32(&connection_count),
                              apr_atomic_read32(&clogged_count),
-                             apr_atomic_read32(write_completion_q->total),
-                             apr_atomic_read32(keepalive_q->total),
+                             *write_completion_q->total,
+                             *keepalive_q->total,
                              apr_atomic_read32(&lingering_count),
                              apr_atomic_read32(&suspended_count));
-                if (dying) {
-                    ap_log_error(APLOG_MARK, APLOG_TRACE6, 0, ap_server_conf,
-                                 "%u/%u workers shutdown",
-                                 apr_atomic_read32(&threads_shutdown),
-                                 threads_per_child);
-                }
                 apr_thread_mutex_unlock(timeout_mutex);
             }
         }
 
-#if HAVE_SERF
-        rc = serf_context_prerun(g_serf);
-        if (rc != APR_SUCCESS) {
-            /* TOOD: what should do here? ugh. */
-        }
-#endif
-
-        now = apr_time_now();
         apr_thread_mutex_lock(g_timer_skiplist_mtx);
         te = apr_skiplist_peek(timer_skiplist);
         if (te) {
@@ -1831,29 +1601,6 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
         else {
             timeout_interval = apr_time_from_msec(100);
         }
-        while (te) {
-            if (te->when < now + EVENT_FUDGE_FACTOR) {
-                apr_skiplist_pop(timer_skiplist, NULL);
-                if (!te->canceled) { 
-                    if (te->remove) {
-                        int i;
-                        for (i = 0; i < te->remove->nelts; i++) {
-                            apr_pollfd_t *pfd = (apr_pollfd_t *)te->remove->elts + i;
-                            apr_pollset_remove(event_pollset, pfd);
-                        }
-                    }
-                    push_timer2worker(te);
-                }
-                else {
-                    APR_RING_INSERT_TAIL(&timer_free_ring, te, timer_event_t,
-                                         link);
-                }
-            }
-            else {
-                break;
-            }
-            te = apr_skiplist_peek(timer_skiplist);
-        }
         apr_thread_mutex_unlock(g_timer_skiplist_mtx);
 
         rc = apr_pollset_poll(event_pollset, timeout_interval, &num, &out_pfd);
@@ -1863,7 +1610,6 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
             }
             if (!APR_STATUS_IS_TIMEUP(rc)) {
                 ap_log_error(APLOG_MARK, APLOG_CRIT, rc, ap_server_conf,
-                             APLOGNO(03267)
                              "apr_pollset_poll failed.  Attempting to "
                              "shutdown process gracefully");
                 signal_threads(ST_GRACEFUL);
@@ -1877,8 +1623,23 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                 break;
         }
 
+        now = apr_time_now();
+        apr_thread_mutex_lock(g_timer_skiplist_mtx);
+        ep = apr_skiplist_peek(timer_skiplist);
+        while (ep) {
+            if (ep->when < now + EVENT_FUDGE_FACTOR) {
+                apr_skiplist_pop(timer_skiplist, NULL);
+                push_timer2worker(ep);
+            }
+            else {
+                break;
+            }
+            ep = apr_skiplist_peek(timer_skiplist);
+        }
+        apr_thread_mutex_unlock(g_timer_skiplist_mtx);
+
         while (num) {
-            listener_poll_type *pt = (listener_poll_type *) out_pfd->client_data;
+            pt = (listener_poll_type *) out_pfd->client_data;
             if (pt->type == PT_CSD) {
                 /* one of the sockets is readable */
                 event_conn_state_t *cs = (event_conn_state_t *) pt->baton;
@@ -1897,6 +1658,7 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                                &workers_were_busy);
                     apr_thread_mutex_lock(timeout_mutex);
                     TO_QUEUE_REMOVE(remove_from_q, cs);
+                    rc = apr_pollset_remove(event_pollset, &cs->pfd);
                     apr_thread_mutex_unlock(timeout_mutex);
 
                     /*
@@ -1905,7 +1667,6 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                      * therefore, we can accept _SUCCESS or _NOTFOUND,
                      * and we still want to keep going
                      */
-                    rc = apr_pollset_remove(event_pollset, &cs->pfd);
                     if (rc != APR_SUCCESS && !APR_STATUS_IS_NOTFOUND(rc)) {
                         ap_log_error(APLOG_MARK, APLOG_ERR, rc, ap_server_conf,
                                      APLOGNO(03094) "pollset remove failed");
@@ -1951,21 +1712,18 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                         disable_listensocks(process_slot);
                     listeners_disabled = 1;
                     ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf,
-                                 APLOGNO(03268)
                                  "All workers busy, not accepting new conns "
                                  "in this process");
                 }
-                else if ((c_count = apr_atomic_read32(&connection_count))
-                             > (l_count = apr_atomic_read32(&lingering_count))
-                         && (c_count - l_count
-                                > ap_queue_info_get_idlers(worker_queue_info)
-                                  * worker_factor / WORKER_FACTOR_SCALE
-                                  + threads_per_child))
+                else if (  (int)apr_atomic_read32(&connection_count)
+                           - (int)apr_atomic_read32(&lingering_count)
+                         > threads_per_child
+                           + ap_queue_info_get_idlers(worker_queue_info) *
+                             worker_factor / WORKER_FACTOR_SCALE)
                 {
                     if (!listeners_disabled)
                         disable_listensocks(process_slot);
                     ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf,
-                                 APLOGNO(03269)
                                  "Too many open connections (%u), "
                                  "not accepting new conns in this process",
                                  apr_atomic_read32(&connection_count));
@@ -1979,9 +1737,7 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                     enable_listensocks(process_slot);
                 }
                 if (!listeners_disabled) {
-                    void *csd = NULL;
-                    ap_listen_rec *lr = (ap_listen_rec *) pt->baton;
-                    apr_pool_t *ptrans;         /* Pool for per-transaction stuff */
+                    lr = (ap_listen_rec *) pt->baton;
                     ap_pop_pool(&ptrans, worker_queue_info);
 
                     if (ptrans == NULL) {
@@ -2039,40 +1795,6 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
                     }
                 }
             }               /* if:else on pt->type */
-#if HAVE_SERF
-            else if (pt->type == PT_SERF) {
-                /* send socket to serf. */
-                /* XXXX: this doesn't require get_worker() */
-                serf_event_trigger(g_serf, pt->baton, out_pfd);
-            }
-
-#endif
-            else if (pt->type == PT_USER) {
-                /* masquerade as a timer event that is firing */
-                int i = 0;
-                socket_callback_baton_t *baton = (socket_callback_baton_t *) pt->baton;
-                if (baton->cancel_event) {
-                    baton->cancel_event->canceled = 1;
-                }
-
-                /* We only signal once per N sockets with this baton */
-                if (!(baton->signaled)) { 
-                    baton->signaled = 1;
-                    te = event_get_timer_event(-1 /* fake timer */, 
-                                               baton->cbfunc, 
-                                               baton->user_baton, 
-                                               0, /* don't insert it */
-                                               NULL /* no associated socket callback */);
-                    /* remove all sockets in my set */
-                    for (i = 0; i < baton->pfds->nelts; i++) {
-                        apr_pollfd_t *pfd = (apr_pollfd_t *)baton->pfds->elts + i;
-                        apr_pollset_remove(event_pollset, pfd);
-                        pfd->client_data = NULL;
-                    }
-
-                    push_timer2worker(te);
-                }
-            }
             out_pfd++;
             num--;
         }                   /* while for processing poll */
@@ -2086,6 +1808,7 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
          * will exceed now + TIMEOUT_FUDGE_FACTOR, can't happen otherwise).
          */
         if (now > timeout_time || now + TIMEOUT_FUDGE_FACTOR < timeout_time ) {
+            struct process_score *ps;
             timeout_time = now + TIMEOUT_FUDGE_FACTOR;
 
             /* handle timed out sockets */
@@ -2095,15 +1818,11 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
             /* If all workers are busy, we kill older keep-alive connections so that they
              * may connect to another process.
              */
-            if ((workers_were_busy || dying)
-                     && (keepalives = apr_atomic_read32(keepalive_q->total))) {
-                /* If all workers are busy, we kill older keep-alive connections so
-                 * that they may connect to another process.
-                 */
+            if (workers_were_busy && *keepalive_q->total) {
                 ap_log_error(APLOG_MARK, APLOG_TRACE1, 0, ap_server_conf,
-                             "All workers are %s, will close %d keep-alive "
-                             "connections", dying ? "dying" : "busy",
-                             keepalives);
+                             "All workers are busy, will close %d keep-alive "
+                             "connections",
+                             *keepalive_q->total);
                 process_timeout_queue(keepalive_q, 0,
                                       start_lingering_close_nonblocking);
             }
@@ -2115,27 +1834,24 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
             process_timeout_queue(write_completion_q, timeout_time,
                                   start_lingering_close_nonblocking);
             /* Step 3: (normal) lingering close completion timeouts */
-            process_timeout_queue(linger_q, timeout_time,
-                                  stop_lingering_close);
+            process_timeout_queue(linger_q, timeout_time, stop_lingering_close);
             /* Step 4: (short) lingering close completion timeouts */
-            process_timeout_queue(short_linger_q, timeout_time,
-                                  stop_lingering_close);
+            process_timeout_queue(short_linger_q, timeout_time, stop_lingering_close);
 
+            ps = ap_get_scoreboard_process(process_slot);
+            ps->write_completion = *write_completion_q->total;
+            ps->keep_alive = *keepalive_q->total;
             apr_thread_mutex_unlock(timeout_mutex);
 
-            ps->keep_alive = apr_atomic_read32(keepalive_q->total);
-            ps->write_completion = apr_atomic_read32(write_completion_q->total);
             ps->connections = apr_atomic_read32(&connection_count);
             ps->suspended = apr_atomic_read32(&suspended_count);
             ps->lingering_close = apr_atomic_read32(&lingering_count);
         }
         if (listeners_disabled && !workers_were_busy
-            && ((c_count = apr_atomic_read32(&connection_count))
-                    >= (l_count = apr_atomic_read32(&lingering_count))
-                && (i_count = ap_queue_info_get_idlers(worker_queue_info)) > 0
-                && (c_count - l_count
-                        < (i_count - 1) * worker_factor / WORKER_FACTOR_SCALE
-                          + threads_per_child)))
+            && (int)apr_atomic_read32(&connection_count)
+               - (int)apr_atomic_read32(&lingering_count)
+               < ((int)ap_queue_info_get_idlers(worker_queue_info) - 1)
+                 * worker_factor / WORKER_FACTOR_SCALE + threads_per_child)
         {
             listeners_disabled = 0;
             enable_listensocks(process_slot);
@@ -2153,34 +1869,6 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t * thd, void *dummy)
     return NULL;
 }
 
-/*
- * During graceful shutdown, if there are more running worker threads than
- * open connections, exit one worker thread.
- *
- * return 1 if thread should exit, 0 if it should continue running.
- */
-static int worker_thread_should_exit_early(void)
-{
-    for (;;) {
-        apr_uint32_t conns = apr_atomic_read32(&connection_count);
-        apr_uint32_t dead = apr_atomic_read32(&threads_shutdown);
-        apr_uint32_t newdead;
-
-        AP_DEBUG_ASSERT(dead <= threads_per_child);
-        if (conns >= threads_per_child - dead)
-            return 0;
-
-        newdead = dead + 1;
-        if (apr_atomic_cas32(&threads_shutdown, newdead, dead) == dead) {
-            /*
-             * No other thread has exited in the mean time, safe to exit
-             * this one.
-             */
-            return 1;
-        }
-    }
-}
-
 /* XXX For ungraceful termination/restart, we definitely don't want to
  *     wait for active connections to finish but we may want to wait
  *     for idle workers to get out of the queue code and release mutexes,
@@ -2191,10 +1879,14 @@ static int worker_thread_should_exit_early(void)
 static void *APR_THREAD_FUNC worker_thread(apr_thread_t * thd, void *dummy)
 {
     proc_info *ti = dummy;
-    int process_slot = ti->pslot;
-    int thread_slot = ti->tslot;
+    int process_slot = ti->pid;
+    int thread_slot = ti->tid;
+    apr_socket_t *csd = NULL;
+    event_conn_state_t *cs;
+    apr_pool_t *ptrans;         /* Pool for per-transaction stuff */
     apr_status_t rv;
     int is_idle = 0;
+    timer_event_t *te = NULL;
 
     free(ti);
 
@@ -2205,16 +1897,10 @@ static void *APR_THREAD_FUNC worker_thread(apr_thread_t * thd, void *dummy)
                                         SERVER_STARTING, NULL);
 
     while (!workers_may_exit) {
-        apr_socket_t *csd = NULL;
-        event_conn_state_t *cs;
-        timer_event_t *te = NULL;
-        apr_pool_t *ptrans;         /* Pool for per-transaction stuff */
-
         if (!is_idle) {
             rv = ap_queue_info_set_idle(worker_queue_info, NULL);
             if (rv != APR_SUCCESS) {
                 ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf,
-                             APLOGNO(03270)
                              "ap_queue_info_set_idle failed. Attempting to "
                              "shutdown process gracefully.");
                 signal_threads(ST_GRACEFUL);
@@ -2230,10 +1916,8 @@ static void *APR_THREAD_FUNC worker_thread(apr_thread_t * thd, void *dummy)
         if (workers_may_exit) {
             break;
         }
-        if (dying && worker_thread_should_exit_early()) {
-            break;
-        }
 
+        te = NULL;
         rv = ap_queue_pop_something(worker_queue, &csd, &cs, &ptrans, &te);
 
         if (rv != APR_SUCCESS) {
@@ -2266,6 +1950,7 @@ static void *APR_THREAD_FUNC worker_thread(apr_thread_t * thd, void *dummy)
         }
         if (te != NULL) {
             te->cbfunc(te->baton);
+
             {
                 apr_thread_mutex_lock(g_timer_skiplist_mtx);
                 APR_RING_INSERT_TAIL(&timer_free_ring, te, timer_event_t, link);
@@ -2308,8 +1993,9 @@ static void create_listener_thread(thread_starter * ts)
     apr_status_t rv;
 
     my_info = (proc_info *) ap_malloc(sizeof(proc_info));
-    my_info->pslot = my_child_num;
-    my_info->tslot = -1;      /* listener thread doesn't have a thread slot */
+    my_info->pid = my_child_num;
+    my_info->tid = -1;          /* listener thread doesn't have a thread slot */
+    my_info->sd = 0;
     rv = apr_thread_create(&ts->listener, thread_attr, listener_thread,
                            my_info, pchild);
     if (rv != APR_SUCCESS) {
@@ -2379,7 +2065,7 @@ static void *APR_THREAD_FUNC start_threads(apr_thread_t * thd, void *dummy)
     }
 
     /* Create the main pollset */
-    for (i = 0; i < sizeof(good_methods) / sizeof(good_methods[0]); i++) {
+    for (i = 0; i < sizeof(good_methods) / sizeof(void*); i++) {
         rv = apr_pollset_create_ex(&event_pollset,
                             threads_per_child*2, /* XXX don't we need more, to handle
                                                 * connections in K-A or lingering
@@ -2417,13 +2103,14 @@ static void *APR_THREAD_FUNC start_threads(apr_thread_t * thd, void *dummy)
             int status =
                 ap_scoreboard_image->servers[my_child_num][i].status;
 
-            if (status != SERVER_DEAD) {
+            if (status != SERVER_GRACEFUL && status != SERVER_DEAD) {
                 continue;
             }
 
             my_info = (proc_info *) ap_malloc(sizeof(proc_info));
-            my_info->pslot = my_child_num;
-            my_info->tslot = i;
+            my_info->pid = my_child_num;
+            my_info->tid = i;
+            my_info->sd = 0;
 
             /* We are creating threads right now */
             ap_update_child_status_from_indexes(my_child_num, i,
@@ -2459,7 +2146,6 @@ static void *APR_THREAD_FUNC start_threads(apr_thread_t * thd, void *dummy)
         if (loops % 120 == 0) { /* every couple of minutes */
             if (prev_threads_created == threads_created) {
                 ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf,
-                             APLOGNO(03271)
                              "child %" APR_PID_T_FMT " isn't taking over "
                              "slots very quickly (%d of %d)",
                              ap_my_pid, threads_created,
@@ -2553,7 +2239,6 @@ static void child_main(int child_num_arg, int child_bucket)
     thread_starter *ts;
     apr_threadattr_t *thread_attr;
     apr_thread_t *start_thread_id;
-    apr_pool_t *pskip;
     int i;
 
     mpm_state = AP_MPMQ_STARTING;       /* for benefit of any hooks that run as this
@@ -2580,8 +2265,7 @@ static void child_main(int child_num_arg, int child_bucket)
 
     apr_thread_mutex_create(&g_timer_skiplist_mtx, APR_THREAD_MUTEX_DEFAULT, pchild);
     APR_RING_INIT(&timer_free_ring, timer_event_t, link);
-    apr_pool_create(&pskip, pchild);
-    apr_skiplist_init(&timer_skiplist, pskip);
+    apr_skiplist_init(&timer_skiplist, pchild);
     apr_skiplist_set_compare(timer_skiplist, timer_comp, timer_comp);
     ap_run_child_init(pchild, ap_server_conf);
 
@@ -2727,15 +2411,6 @@ static int make_child(server_rec * s, int slot, int bucket)
         retained->max_daemons_limit = slot + 1;
     }
 
-    if (ap_scoreboard_image->parent[slot].pid != 0) {
-        /* XXX replace with assert or remove ? */
-        ap_log_error(APLOG_MARK, APLOG_ERR, 0, ap_server_conf, APLOGNO(03455)
-                 "BUG: Scoreboard slot %d should be empty but is "
-                 "in use by pid %" APR_PID_T_FMT,
-                 slot, ap_scoreboard_image->parent[slot].pid);
-        return -1;
-    }
-
     if (one_process) {
         my_bucket = &all_buckets[0];
 
@@ -2789,6 +2464,13 @@ static int make_child(server_rec * s, int slot, int bucket)
         return -1;
     }
 
+    if (ap_scoreboard_image->parent[slot].pid != 0) {
+        /* This new child process is squatting on the scoreboard
+         * entry owned by an exiting child process, which cannot
+         * exit until all active requests complete.
+         */
+        event_note_child_lost_slot(slot, pid);
+    }
     ap_scoreboard_image->parent[slot].quiescing = 0;
     ap_scoreboard_image->parent[slot].not_accepting = 0;
     ap_scoreboard_image->parent[slot].bucket = bucket;
@@ -2815,14 +2497,22 @@ static void startup_children(int number_to_start)
 static void perform_idle_server_maintenance(int child_bucket, int num_buckets)
 {
     int i, j;
-    int idle_thread_count = 0;
+    int idle_thread_count;
     worker_score *ws;
     process_score *ps;
-    int free_length = 0;
+    int free_length;
+    int totally_free_length = 0;
     int free_slots[MAX_SPAWN_RATE];
-    int last_non_dead = -1;
-    int total_non_dead = 0;
+    int last_non_dead;
+    int total_non_dead;
     int active_thread_count = 0;
+
+    /* initialize the free_list */
+    free_length = 0;
+
+    idle_thread_count = 0;
+    last_non_dead = -1;
+    total_non_dead = 0;
 
     for (i = 0; i < ap_daemons_limit; ++i) {
         /* Initialization to satisfy the compiler. It doesn't know
@@ -2834,7 +2524,7 @@ static void perform_idle_server_maintenance(int child_bucket, int num_buckets)
         int child_threads_active = 0;
 
         if (i >= retained->max_daemons_limit &&
-            free_length == retained->idle_spawn_rate[child_bucket]) {
+            totally_free_length == retained->idle_spawn_rate[child_bucket]) {
             /* short cut if all active processes have been examined and
              * enough empty scoreboard slots have been found
              */
@@ -2873,9 +2563,28 @@ static void perform_idle_server_maintenance(int child_bucket, int num_buckets)
             }
         }
         active_thread_count += child_threads_active;
-        if (!ps->pid && free_length < retained->idle_spawn_rate[child_bucket])
-        {
-            free_slots[free_length++] = i;
+        if (any_dead_threads
+            && totally_free_length < retained->idle_spawn_rate[child_bucket]
+            && free_length < MAX_SPAWN_RATE / num_buckets
+            && (!ps->pid      /* no process in the slot */
+                  || ps->quiescing)) {  /* or at least one is going away */
+            if (all_dead_threads) {
+                /* great! we prefer these, because the new process can
+                 * start more threads sooner.  So prioritize this slot
+                 * by putting it ahead of any slots with active threads.
+                 *
+                 * first, make room by moving a slot that's potentially still
+                 * in use to the end of the array
+                 */
+                free_slots[free_length] = free_slots[totally_free_length];
+                free_slots[totally_free_length++] = i;
+            }
+            else {
+                /* slot is still in use - back of the bus
+                 */
+                free_slots[free_length] = i;
+            }
+            ++free_length;
         }
         else if (child_threads_active == threads_per_child) {
             had_healthy_child = 1;
@@ -2922,7 +2631,7 @@ static void perform_idle_server_maintenance(int child_bucket, int num_buckets)
         /* terminate the free list */
         if (free_length == 0) { /* scoreboard is full, can't fork */
 
-            if (active_thread_count >= max_workers) {
+            if (active_thread_count >= ap_daemons_limit * threads_per_child) {
                 if (!retained->maxclients_reported) {
                     /* only report this condition once */
                     ap_log_error(APLOG_MARK, APLOG_ERR, 0, ap_server_conf, APLOGNO(00484)
@@ -2973,6 +2682,7 @@ static void perform_idle_server_maintenance(int child_bucket, int num_buckets)
 
 static void server_main_loop(int remaining_children_to_start, int num_buckets)
 {
+    ap_generation_t old_gen;
     int child_slot;
     apr_exit_why_e exitwhy;
     int status, processed_status;
@@ -3036,12 +2746,24 @@ static void server_main_loop(int remaining_children_to_start, int num_buckets)
                     --remaining_children_to_start;
                 }
             }
+            else if (ap_unregister_extra_mpm_process(pid.pid, &old_gen) == 1) {
+
+                event_note_child_killed(-1, /* already out of the scoreboard */
+                                        pid.pid, old_gen);
+                if (processed_status == APEXIT_CHILDSICK
+                    && old_gen == retained->my_generation) {
+                    /* resource shortage, minimize the fork rate */
+                    for (i = 0; i < num_buckets; i++) {
+                        retained->idle_spawn_rate[i] = 1;
+                    }
+                }
 #if APR_HAS_OTHER_CHILD
+            }
             else if (apr_proc_other_child_alert(&pid, APR_OC_REASON_DEATH,
                                                 status) == 0) {
                 /* handled */
-            }
 #endif
+            }
             else if (retained->is_graceful) {
                 /* Great, we've probably just lost a slot in the
                  * scoreboard.  Somehow we don't know about this child.
@@ -3108,7 +2830,7 @@ static int event_run(apr_pool_t * _pconf, apr_pool_t * plog, server_rec * s)
     if (ap_daemons_to_start < num_buckets)
         ap_daemons_to_start = num_buckets;
     /* We want to create as much children at a time as the number of buckets,
-     * so to optimally accept connections (evenly distributed across buckets).
+     * so to optimally accept connections (evenly distributed accross buckets).
      * Thus min_spare_threads should at least maintain num_buckets children,
      * and max_spare_threads allow num_buckets more children w/o triggering
      * immediately (e.g. num_buckets idle threads margin, one per bucket).
@@ -3355,7 +3077,7 @@ static int event_open_logs(apr_pool_t * p, apr_pool_t * plog,
 
     if ((num_listensocks = ap_setup_listeners(ap_server_conf)) < 1) {
         ap_log_error(APLOG_MARK, APLOG_ALERT | level_flags, 0,
-                     (startup ? NULL : s), APLOGNO(03272)
+                     (startup ? NULL : s),
                      "no listening sockets available, shutting down");
         return !OK;
     }
@@ -3370,7 +3092,7 @@ static int event_open_logs(apr_pool_t * p, apr_pool_t * plog,
     if ((rv = ap_duplicate_listeners(pconf, ap_server_conf,
                                      &listen_buckets, &num_buckets))) {
         ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                     (startup ? NULL : s), APLOGNO(03273)
+                     (startup ? NULL : s),
                      "could not duplicate listeners");
         return !OK;
     }
@@ -3380,7 +3102,7 @@ static int event_open_logs(apr_pool_t * p, apr_pool_t * plog,
         if (!one_process && /* no POD in one_process mode */
                 (rv = ap_mpm_podx_open(pconf, &all_buckets[i].pod))) {
             ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                         (startup ? NULL : s), APLOGNO(03274)
+                         (startup ? NULL : s),
                          "could not open pipe-of-death");
             return !OK;
         }
@@ -3519,10 +3241,10 @@ static int event_post_config(apr_pool_t *pconf, apr_pool_t *plog,
     wc.hash = apr_hash_make(ptemp);
     ka.hash = apr_hash_make(ptemp);
 
-    linger_q = TO_QUEUE_MAKE(pconf, apr_time_from_sec(MAX_SECS_TO_LINGER),
-                             NULL);
-    short_linger_q = TO_QUEUE_MAKE(pconf, apr_time_from_sec(SECONDS_TO_LINGER),
-                                   NULL);
+    TO_QUEUE_INIT(linger_q, pconf,
+                  apr_time_from_sec(MAX_SECS_TO_LINGER), NULL);
+    TO_QUEUE_INIT(short_linger_q, pconf,
+                  apr_time_from_sec(SECONDS_TO_LINGER), NULL);
 
     for (; s; s = s->next) {
         event_srv_cfg *sc = apr_pcalloc(pconf, sizeof *sc);
@@ -3530,11 +3252,11 @@ static int event_post_config(apr_pool_t *pconf, apr_pool_t *plog,
         ap_set_module_config(s->module_config, &mpm_event_module, sc);
         if (!wc.tail) {
             /* The main server uses the global queues */
-            wc.q = TO_QUEUE_MAKE(pconf, s->timeout, NULL);
+            TO_QUEUE_INIT(wc.q, pconf, s->timeout, NULL);
             apr_hash_set(wc.hash, &s->timeout, sizeof s->timeout, wc.q);
             wc.tail = write_completion_q = wc.q;
 
-            ka.q = TO_QUEUE_MAKE(pconf, s->keep_alive_timeout, NULL);
+            TO_QUEUE_INIT(ka.q, pconf, s->keep_alive_timeout, NULL);
             apr_hash_set(ka.hash, &s->keep_alive_timeout,
                          sizeof s->keep_alive_timeout, ka.q);
             ka.tail = keepalive_q = ka.q;
@@ -3544,7 +3266,7 @@ static int event_post_config(apr_pool_t *pconf, apr_pool_t *plog,
              * or their own queue(s) if there isn't */
             wc.q = apr_hash_get(wc.hash, &s->timeout, sizeof s->timeout);
             if (!wc.q) {
-                wc.q = TO_QUEUE_MAKE(pconf, s->timeout, wc.tail);
+                TO_QUEUE_INIT(wc.q, pconf, s->timeout, wc.tail);
                 apr_hash_set(wc.hash, &s->timeout, sizeof s->timeout, wc.q);
                 wc.tail = wc.tail->next = wc.q;
             }
@@ -3552,7 +3274,7 @@ static int event_post_config(apr_pool_t *pconf, apr_pool_t *plog,
             ka.q = apr_hash_get(ka.hash, &s->keep_alive_timeout,
                                 sizeof s->keep_alive_timeout);
             if (!ka.q) {
-                ka.q = TO_QUEUE_MAKE(pconf, s->keep_alive_timeout, ka.tail);
+                TO_QUEUE_INIT(ka.q, pconf, s->keep_alive_timeout, ka.tail);
                 apr_hash_set(ka.hash, &s->keep_alive_timeout,
                              sizeof s->keep_alive_timeout, ka.q);
                 ka.tail = ka.tail->next = ka.q;
@@ -3788,7 +3510,6 @@ static void event_hooks(apr_pool_t * p)
      */
     static const char *const aszSucc[] = { "core.c", NULL };
     one_process = 0;
-    ap_force_set_tz(p);
 
     ap_hook_open_logs(event_open_logs, NULL, aszSucc, APR_HOOK_REALLY_FIRST);
     /* we need to set the MPM state before other pre-config hooks use MPM query
@@ -3801,16 +3522,9 @@ static void event_hooks(apr_pool_t * p)
     ap_hook_mpm_query(event_query, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_mpm_register_timed_callback(event_register_timed_callback, NULL, NULL,
                                         APR_HOOK_MIDDLE);
-    ap_hook_mpm_register_poll_callback(event_register_poll_callback, NULL, NULL,
-                                        APR_HOOK_MIDDLE);
-    ap_hook_mpm_register_poll_callback_timeout(event_register_poll_callback_ex, NULL, NULL,
-                                        APR_HOOK_MIDDLE);
-    ap_hook_mpm_unregister_poll_callback(event_unregister_poll_callback, NULL, NULL,
-                                        APR_HOOK_MIDDLE);
     ap_hook_pre_read_request(event_pre_read_request, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_post_read_request(event_post_read_request, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_mpm_get_name(event_get_name, NULL, NULL, APR_HOOK_MIDDLE);
-    ap_hook_mpm_resume_suspended(event_resume_suspended, NULL, NULL, APR_HOOK_MIDDLE);
 
     ap_hook_pre_connection(event_pre_connection, NULL, NULL, APR_HOOK_REALLY_FIRST);
     ap_hook_protocol_switch(event_protocol_switch, NULL, NULL, APR_HOOK_REALLY_FIRST);

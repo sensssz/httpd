@@ -20,22 +20,24 @@
  *
  * @defgroup APACHE_CORE_MMN Module Magic Number
  * @ingroup  APACHE_CORE
-
- * #MODULE_MAGIC_NUMBER_MAJOR\n
- * Major API changes that could cause compatibility problems for older modules
- * such as structure size changes.  No binary compatibility is possible across
- * a change in the major version.
- *
- * #MODULE_MAGIC_NUMBER_MINOR\n
- * Minor API changes that do not cause binary compatibility problems.
- * Should be reset to 0 when upgrading MODULE_MAGIC_NUMBER_MAJOR.
- *
- * See the #AP_MODULE_MAGIC_AT_LEAST macro below for an example.
  * @{
  */
 
 #ifndef APACHE_AP_MMN_H
 #define APACHE_AP_MMN_H
+
+/*
+ * MODULE_MAGIC_NUMBER_MAJOR
+ * Major API changes that could cause compatibility problems for older modules
+ * such as structure size changes.  No binary compatibility is possible across
+ * a change in the major version.
+ *
+ * MODULE_MAGIC_NUMBER_MINOR
+ * Minor API changes that do not cause binary compatibility problems.
+ * Should be reset to 0 when upgrading MODULE_MAGIC_NUMBER_MAJOR.
+ *
+ * See the AP_MODULE_MAGIC_AT_LEAST macro below for an example.
+ */
 
 /*
  * 20010224   (2.0.13-dev) MODULE_MAGIC_COOKIE reset to "AP20"
@@ -363,17 +365,16 @@
  * 20111025.1 (2.3.15-dev) Add ap_escape_urlencoded(), ap_escape_urlencoded_buffer()
  *                         and ap_unescape_urlencoded().
  * 20111025.2 (2.3.15-dev) Add ap_lua_ssl_val to mod_lua
- * 20111118.0 (2.5.0-dev)  Add conn_rec to error_log hook
- * 20111118.1 (2.5.0-dev)  Add reclvl to ap_expr_eval_ctx_t
- * 20111120.0 (2.5.0-dev)  Remove parts of conn_state_t that are private to the MPM
- * 20111121.0 (2.5.0-dev)  Pass ap_errorlog_info struct to error_log hook,
+ * 20111025.3 (2.4.0-dev)  Add reclvl to ap_expr_eval_ctx_t
+ * 20111122.0 (2.4.0-dev)  Remove parts of conn_state_t that are private to the MPM
+ * 20111123.0 (2.4.0-dev)  Pass ap_errorlog_info struct to error_log hook,
  *                         add pool to ap_errorlog_info.
- * 20111125.0 (2.5.0-dev)  c->remote_ip becomes c->peer_ip and r->client_ip,
+ * 20111130.0 (2.4.0-dev)  c->remote_ip becomes c->peer_ip and r->client_ip,
  *                         c->remote_addr becomes c->peer_addr and r->client_addr
- * 20111201.0 (2.5.0-dev)  Add invalidate_entity() to the cache provider.
- * 20111202.0 (2.5.0-dev)  Use apr_status_t across mod_session API.
- * 20111202.1 (2.5.0-dev)  add APLOGNO()
- * 20111203.0 (2.5.0-dev)  Optional ap_proxy_retry_worker(), remove
+ * 20111201.0 (2.4.0-dev)  Add invalidate_entity() to the cache provider.
+ * 20111202.0 (2.4.0-dev)  Use apr_status_t across mod_session API.
+ * 20111202.1 (2.4.0-dev)  add APLOGNO()
+ * 20111203.0 (2.4.0-dev)  Optional ap_proxy_retry_worker(), remove
  *                         ap_proxy_string_read(), ap_cache_liststr(),
  *                         ap_proxy_buckets_lifetime_transform(),
  *                         ap_proxy_date_canon(), ap_proxy_is_ipaddr(),
@@ -382,178 +383,108 @@
  *                         ap_proxy_sec2hex(), ap_proxy_make_fake_req(),
  *                         ap_proxy_strmatch_path, ap_proxy_strmatch_domain,
  *                         ap_proxy_table_unmerge(), proxy_lb_workers.
- * 20111203.1 (2.5.0-dev)  Add ap_list_provider_groups()
- * 20120109.0 (2.5.0-dev)  Changes sizeof(overrides_t) in core config.
- * 20120111.0 (2.5.0-dev)  Remove sb_type from global_score.
- * 20120123.0 (2.5.0-dev)  Make core_output_filter_ctx_t and core_ctx_t
- *                         private, add ap_create_core_ctx(),
- *                         ap_core_ctx_get_bb(), move core_net rec definition
- *                         to http_core.h
- * 20120201.0 (2.5.0-dev)  Bump MODULE_MAGIC_COOKIE to "AP25"!
- * 20120204.0 (2.5.0-dev)  Remove ap_create_core_ctx(), ap_core_ctx_get_bb();
+ * 20120109.0 (2.4.1-dev)  Changes sizeof(overrides_t) in core config.
+ * 20120109.1 (2.4.1-dev)  remove sb_type in global_score.
+ * 20120109.2 (2.4.1-dev)  Make core_output_filter_ctx_t and core_ctx_t
+ *                         private;
+ *                         move core_net rec definition to http_core.h;
  *                         add insert_network_bucket hook, AP_DECLINED
- * 20120211.0 (2.5.0-dev)  Change re_nsub in ap_regex_t from apr_size_t to int.
- * 20120211.1 (2.5.0-dev)  Add ap_palloc_debug, ap_pcalloc_debug
- * 20120211.2 (2.5.0-dev)  Add ap_runtime_dir_relative
- * 20120211.3 (2.5.0-dev)  Add forcerecovery to proxy_balancer_shared struct
- * 20120211.4 (2.5.0-dev)  Add missing HTTP status codes registered with IANA.
- * 20120724.0 (2.5.0-dev)  Add hostname argument to ap_proxy_checkproxyblock.
- * 20120724.1 (2.5.0-dev)  Add post_perdir_config hook.
- * 20120724.2 (2.5.0-dev)  Add fgrab slotmem function to struct
- * 20120724.3 (2.5.0-dev)  Add bal_persist, inherit to proxy_server_conf
- * 20120724.4 (2.5.0-dev)  Add dirwalk_stat hook.
- * 20120724.5 (2.5.0-dev)  Add ap_get_sload() and ap_get_loadavg().
- * 20120724.6 (2.5.0-dev)  Add sticky_separator to proxy_balancer_shared struct.
- * 20120724.7 (2.5.0-dev)  Add min_http_version/max_http_version to
- *                         core_server_config
- * 20120724.8 (2.5.0-dev)  Add conn_log_level to core_server_config
- * 20120724.9 (2.5.0-dev)  Add ap_bin2hex()
- * 20121222.0 (2.5.0-dev)  Remove min_http_version/max_http_version from
- *                         core_server_config again, add http09_enable
- * 20121222.1 (2.5.0-dev)  Add http_conformance to core_server_config,
- *                         add ap_has_cntrl()
- * 20121222.2 (2.5.0-dev)  Add ap_password_validate()
- * 20121222.3 (2.5.0-dev)  Add ppinherit to proxy_server_conf
- * 20121222.4 (2.5.0-dev)  Add uds_path to proxy_conn_rec
- * 20121222.5 (2.5.0-dev)  Add "r" and "must_rebind" to util_ldap_connection_t
- * 20121222.6 (2.5.0-dev)  Add ap_proxy_create_hdrbrgd() and
- *                         ap_proxy_pass_brigade()
- * 20121222.7 (2.5.0-dev)  Add ap_remove_input|output_filter_byhandle()
- * 20121222.8 (2.5.0-dev)  Add dav_join_error()
- * 20121222.9 (2.5.0-dev)  Add conn_sense_e
- * 20121222.10 (2.5.0-dev) Add cache_control_t.invalidated
- * 20121222.11 (2.5.0-dev) Add ap_find_etag_weak(), ap_find_etag_strong()
- * 20121222.12 (2.5.0-dev) Add ap_condition_e, ap_condition_if_match(),
+ * 20120211.0 (2.4.1-dev)  Change re_nsub in ap_regex_t from apr_size_t to int.
+ * 20120211.1 (2.4.2-dev)  Add AP_HAVE_C99
+ * 20120211.2 (2.4.2-dev)  Add ap_runtime_dir_relative
+ * 20120211.3 (2.4.2-dev)  Add forcerecovery to proxy_balancer_shared struct
+ * 20120211.4 (2.4.3-dev)  Add ap_list_provider_groups()
+ * 20120211.5 (2.4.3-dev)  Add missing HTTP status codes registered with IANA.
+ * 20120211.6 (2.4.3-dev)  Add ap_proxy_checkproxyblock2.
+ * 20120211.7 (2.4.3-dev)  Add ap_get_loadavg()
+ * 20120211.8 (2.4.3-dev)  Add sticky_separator to proxy_balancer_shared struct.
+ * 20120211.9 (2.4.4-dev)  Add fgrab() to ap_slotmem_provider_t.
+ * 20120211.10 (2.4.4-dev) Add in bal_persist field to proxy_server_conf
+ * 20120211.11 (2.4.4-dev) Add ap_bin2hex()
+ * 20120211.12 (2.4.5-dev) Add ap_remove_input|output_filter_byhandle()
+ * 20120211.13 (2.4.5-dev) Add ap_get_exec_line
+ * 20120211.14 (2.4.5-dev) Add ppinherit and inherit to proxy_server_conf
+ * 20120211.15 (2.4.5-dev) Add dav_join_error()
+ * 20120211.16 (2.4.5-dev) Add cache_control_t.invalidated
+ * 20120211.17 (2.4.5-dev) Add ap_find_etag_weak(), ap_find_etag_strong()
+ * 20120211.18 (2.4.5-dev) Add ap_condition_e, ap_condition_if_match(),
  *                         ap_condition_if_unmodified_since(),
  *                         ap_condition_if_none_match(),
  *                         ap_condition_if_modified_since(),
  *                         ap_condition_if_range()
- * 20121222.13 (2.5.0-dev) Add ap_proxy_clear_connection()
- * 20121222.14 (2.5.0-dev) Add ap_map_http_request_error()
- * 20121222.15 (2.5.0-dev) Add allow/decode_encoded_slashes_set to core_dir_config
- * 20121222.16 (2.5.0-dev) AP_DEFAULT_HANDLER_NAME/AP_IS_DEFAULT_HANDLER_NAME
- * 20130702.0 (2.5.0-dev)  Remove pre_htaccess hook, add open_htaccess hook.
- * 20130702.1 (2.5.0-dev)  Restore AUTH_HANDLED to mod_auth.h
- * 20130702.2 (2.5.0-dev)  Add ap_log_data(), ap_log_rdata(), etc.
- * 20130702.3 (2.5.0-dev)  Add util_fcgi.h, FastCGI protocol support
- * 20130903.0 (2.5.0-dev)  Changes sizeof(worker_score) in scoreboard 
- * 20130924.0 (2.5.0-dev)  Add ap_errorlog_provider
- * 20130924.1 (2.5.0-dev)  Add ap_proxy_connection_reusable()
- * 20131112.0 (2.5.0-dev)  Add parse_errorlog_arg to ap_errorlog_provider
- * 20131112.1 (2.5.0-dev)  Add suspend_connection and resume_connection hooks
- * 20131112.2 (2.5.0-dev)  Add ap_regname
- * 20131230.0 (2.5.0-dev)  cl_head_zero & expect_strict added to server_config
- * 20131230.1 (2.5.0-dev)  REWRITE_REDIRECT_HANDLER_NAME in mod_rewrite.h
- * 20131230.2 (2.5.0-dev)  Prefix REWRITE_REDIRECT_HANDLER_NAME in mod_rewrite.h
- * 20140207.0 (2.5.0-dev)  Support for slaved connections in core.c
- * 20140207.1 (2.5.0-dev)  Add SSL reusable SNI to mod_proxy.h's proxy_conn_rec
- * 20140207.2 (2.5.0-dev)  Add proxy detach_backend hook
- * 20140207.3 (2.5.0-dev)  Add mod_ssl_openssl.h and OpenSSL-specific hooks
- * 20140207.4 (2.5.0-dev)  add ap_mpm_register_socket_callback_timeout
- * 20140207.5 (2.5.0-dev)  Add ap_mpm_resume_suspended(), AP_MPMQ_CAN_SUSPEND to
- *                         ap_mpm_query(), and suspended_baton to conn_rec
- * 20140207.6 (2.5.0-dev)  Added ap_log_mpm_common().
- * 20140207.7 (2.5.0-dev)  Added ap_force_set_tz().
- * 20140207.8 (2.5.0-dev)  Added ap_shutdown_conn().
- * 20140611.0 (2.5.0-dev)  Add ap_mpm_socket_callback_fn_t.
-                           Changes 3rd argument's type of
-                           ap_mpm_register_socket_callback and 
-                           ap_mpm_register_socket_callback_timeout.
- * 20140611.1 (2.5.0-dev)  Add ap_proxy_connect_uds().
- * 20140627.0 (2.5.0-dev)  Revert 20140611.0 change.
- * 20140627.1 (2.5.0-dev)  add last_backend_conn to util_ldap_connection_t
- * 20140627.2 (2.5.0-dev)  Added is_name_matchable to proxy_worker_shared.
-                           Added ap_proxy_define_match_worker().
- * 20140627.3 (2.5.0-dev)  Add ap_copy_scoreboard_worker()
- * 20140627.4 (2.5.0-dev)  Added ap_parse_token_list_strict() to httpd.h.
- * 20140627.5 (2.5.0-dev)  Add r->trailers_{in,out}
- * 20140627.6 (2.5.0-dev)  Added ap_pcre_version_string(), AP_REG_PCRE_COMPILED
- *                         and AP_REG_PCRE_LOADED to ap_regex.h.
- * 20140627.7 (2.5.0-dev)  Add listener bucket in scoreboard.h's process_score.
- * 20140627.8 (2.5.0-dev)  Add ap_set_listencbratio(), ap_close_listeners_ex(),
- *                         ap_duplicate_listeners(), ap_num_listen_buckets and
- *                         ap_have_so_reuseport to ap_listen.h.
- * 20140627.9 (2.5.0-dev)  Add cgi_pass_auth and AP_CGI_PASS_AUTH_* to 
- *                         core_dir_config
- * 20140627.10 (2.5.0-dev) Add ap_proxy_de_socketfy to mod_proxy.h
- * 20150121.0 (2.5.0-dev)  Revert field addition from core_dir_config; r1653666
- * 20150121.1 (2.5.0-dev)  Add cmd_parms_struct.parent to http_config.h
- * 20150121.2 (2.5.0-dev)  Add response_code_exprs to http_core.h
- * 20150222.0 (2.5.0-dev)  ssl pre_handshake hook now indicates proxy|client
- * 20150222.1 (2.5.0-dev)  Add keep_alive_timeout_set to server_rec
- * 20150222.2 (2.5.0-dev)  Add response code 418 as per RFC2324/RFC7168
- * 20150222.3 (2.5.0-dev)  Add ap_some_authn_required, ap_force_authn hook.
- *                         Deprecate broken ap_some_auth_required.
- * 20150222.4 (2.5.0-dev)  Add protocols and protocols_honor_order to
- *                         core_server_config. Add hooks protocol_propose
- *                         protocol_switch and protocol_get. Add
- *                         ap_select_protocol(), ap_switch_protocol(),
- *                         ap_get_protocol(). Add HTTP_MISDIRECTED_REQUEST.
- * 20150222.5 (2.5.0-dev)  Add ap_request_core_filter(),
- *                         ap_filter_setaside_brigade(),
- *                         ap_filter_reinstate_brigade() and
- *                         ap_filter_should_yield(). Add empty and filters to
- *                         conn_rec.
- * 20150222.6 (2.5.0-dev)  Add async_filter to conn_rec.
- * 20150222.7 (2.5.0-dev)  Add ap_casecmpstr[n]();
- * 20150222.8 (2.5.0-dev)  Add ap_getword_conf2[_nc]();
- * 20150222.9 (2.5.0-dev)  Add expr_handler to core_dir_config.
- * 20150222.10 (2.5.0-dev) Add new ap_update_child_status...() methods,
- *                         add protocol to worker_score in scoreboard.h,
- *                         Add pre_close connection hook and 
- *                         ap_prep_lingering_close().
- * 20150222.11 (2.5.0-dev) Split useragent_host from the conn_rec into
- *                         the request_rec, with ap_get_useragent_host()
- * 20150222.12 (2.5.0-dev) Add complete_connection hook,
- *                         ap_filter_complete_connection().
- * 20150222.13 (2.5.0-dev) Add ap_create_request().
- * 20160312.0 (2.5.0-dev)  Rename complete_connection to output_pending,
- *                         add ap_filter_input_pending(),
- *                         ap_filter_prepare_brigade(), ap_filter_direction_e
- * 20160312.1 (2.5.0-dev)  Add cgi_var_rules to core_dir_config.
- * 20160315.0 (2.5.0-dev)  Rename ap_mpm_register_socket_callback,
- *                         ap_mpm_register_socket_callback_timeout and
- *                         ap_mpm_unregister_socket_callback to
- *                         ap_mpm_register_poll_callback,
- *                         ap_mpm_register_poll_callback_timeout and
- *                         ap_mpm_unregister_poll_callback. Add
- *                         AP_MPMQ_CAN_POLL.
- * 20160315.1 (2.5.0-dev)  Add AP_IMPLEMENT_OPTIONAL_HOOK_RUN_FIRST.
- * 20160315.2 (2.5.0-dev)  Add optional proxy_{hook,run}_section_post_config(),
- *                         ap_proxy_connection_create_ex() and section_config
- *                         to struct proxy_{worker,balancer} in mod_proxy.h,
- *                         and optional ssl_engine_set() to mod_ssl.h.
- * 20160315.3 (2.5.0-dev)  Add childtags to dav_error.
- * 20160608.1 (2.5.0-dev)  Rename ap_casecmpstr[n]() to ap_cstr_casecmp[n]()
- * 20160608.2 (2.5.0-dev)  Add dav_get_provider_name.
- * 20160608.3 (2.5.0-dev)  Add dav_begin_multistatus, dav_send_one_response,
- *                         dav_finish_multistatus, dav_send_multistatus,
- *                         dav_handle_err, dav_failed_proppatch,
- *                         dav_success_proppatch.
- * 20160608.4 (2.5.0-dev)  Add dav_acl_provider, dav_acl_provider_register
- *                         dav_get_acl_providers.
- * 20160608.5 (2.5.0-dev)  Add ap_proxy_check_backend(), and tmp_bb to
- *                         struct proxy_conn_rec.
- * 20160608.6 (2.5.0-dev)  Add ap_scan_http_field_content, ap_scan_http_token
- *                         and ap_get_http_token
- * 20160608.7 (2.5.0-dev)  Add ap_check_pipeline().
- * 20160608.8 (2.5.0-dev)  Rename ap_proxy_check_backend() to
- *                         ap_proxy_check_connection().
- * 20160608.9 (2.5.0-dev)  Renamed AP_HTTP_CONFORMANCE_LIBERAL to 
- *                         AP_HTTP_CONFORMANCE_UNSAFE, and
- *                         eliminated AP_HTTP_CONFORMANCE_LOGONLY
- * 20160617.1 (2.5.0-dev)  Added http_whitespace and http_methods to
- *                         core_server_config
- * 20160629.1 (2.5.0-dev)  Dropped http_whitespace from core_server_config
- * 20160629.2 (2.5.0-dev)  Replaced fold w/multiple flags for ap_[r]getline()
+ * 20120211.19 (2.4.5-dev) Add post_perdir_config hook.
+ * 20120211.20 (2.4.5-dev) Add dirwalk_stat hook.
+ * 20120211.21 (2.4.5-dev) Add in ap_proxy_create_hdrbrgd() and
+ *                         ap_proxy_pass_brigade()
+ * 20120211.22 (2.4.5-dev) No longer prevent usage of strtoul()
+ * 20120211.23 (2.4.5-dev) Add ap_proxy_clear_connection()
+ * 20120211.24 (2.4.7-dev) add open_htaccess hook.
+ * 20120211.25 (2.4.7-dev) Add conn_sense_e
+ * 20120211.26 (2.4.7-dev) Add util_fcgi.h, FastCGI protocol support
+ * 20120211.27 (2.4.7-dev) Add ap_podx_restart_t and ap_mpm_podx_*
+ * 20120211.28 (2.4.7-dev) Add ap_regname
+ * 20120211.29 (2.4.7-dev) Add uds_path to proxy_conn_rec and proxy_worker_shared.
+ *                         The change to proxy_worker_shared is an
+ *                         unintended API break, especially for balancer
+ *                         lbmethod modules.
+ * 20120211.30 (2.4.7-dev) REWRITE_REDIRECT_HANDLER_NAME in mod_rewrite.h
+ * 20120211.31 (2.4.7-dev) Add ap_proxy_port_of_scheme()
+ * 20120211.32 (2.4.10-dev) Add SSL reusable SNI to mod_proxy.h's proxy_conn_rec
+ * 20120211.33 (2.4.10-dev) Add suspend_connection and resume_connection hooks
+ * 20120211.34 (2.4.10-dev) AP_DEFAULT_HANDLER_NAME/AP_IS_DEFAULT_HANDLER_NAME
+ * 20120211.35 (2.4.10-dev) Add "r", "must_rebind", and last_backend_conn
+                            to util_ldap_connection_t
+ * 20120211.36 (2.4.10-dev) Add ap_copy_scoreboard_worker()
+ * 20120211.37 (2.4.11-dev) Add r->trailers_{in,out}
+ * 20120211.38 (2.4.11-dev) Added ap_shutdown_conn().
+ * 20120211.39 (2.4.11-dev) Add ap_proxy_connect_uds().
+ * 20120211.40 (2.4.11-dev) Add ap_log_data(), ap_log_rdata(), etc.
+ * 20120211.41 (2.4.11-dev) Add ap_proxy_de_socketfy to mod_proxy.h
+ * 20120211.42 (2.4.13-dev) Add response_code_exprs to http_core.h
+ * 20120211.43 (2.4.13-dev) Add keep_alive_timeout_set to server_rec
+ * 20120211.44 (2.4.13-dev) Add cgi_pass_auth and AP_CGI_PASS_AUTH_* to
+ *                          core_dir_config
+ * 20120211.45 (2.4.13-dev) Add ap_proxy_connection_reusable()
+ * 20120211.46 (2.4.13-dev) Add ap_map_http_request_error()
+ * 20120211.47 (2.4.13-dev) Add ap_some_authn_required, ap_force_authn hook.
+ *                          Deprecate broken ap_some_auth_required.
+ * 20120211.48 (2.4.17-dev) Added ap_log_mpm_common().
+ * 20120211.49 (2.4.17-dev) Add listener bucket in scoreboard.h's process_score.
+ * 20120211.50 (2.4.17-dev) Add ap_set_listencbratio(), ap_close_listeners_ex(),
+ *                          ap_duplicate_listeners(), ap_num_listen_buckets and
+ *                          ap_have_so_reuseport to ap_listen.h.
+ * 20120211.51 (2.4.17-dev) Add protocols and protocols_honor_order to
+ *                          core_server_config. Add hooks protocol_propose
+ *                          protocol_switch and protocol_get. Add
+ *                          ap_select_protocol(), ap_switch_protocol(),
+ *                          ap_get_protocol(). Add HTTP_MISDIRECTED_REQUEST.
+ *                          Added ap_parse_token_list_strict() to httpd.h
+ * 20120211.52 (2.4.17-dev) Add master conn_rec* member in conn_rec.
+ * 20120211.53 (2.4.19-dev) Add expr_handler to core_dir_config.
+ * 20120211.54 (2.4.19-dev) Add ap_proxy_buckets_lifetime_transform and
+ *                          ap_proxy_transfer_between_connections to
+ *                          mod_proxy.h
+ * 20120211.55 (2.4.19-dev) Add new ap_update_child_status...() methods,
+ *                          add protocol to worker_score in scoreboard.h,
+ *                          Add pre_close connection hook and
+ *                          ap_prep_lingering_close().
+ * 20120211.56 (2.4.19-dev) Split useragent_host from the conn_rec into
+ *                          the request_rec, with ap_get_useragent_host()
+ * 20120211.57 (2.4.19-dev) Add mod_ssl_openssl.h and OpenSSL-specific hooks
+ * 20120211.58 (2.4.21-dev) Add cgi_var_rules to core_dir_config.
+ * 20120211.59 (2.4.21-dev) Add ap_getword_conf2[_nc](),
+ *                          ap_proxy_is_socket_connected() and
+ *                          extended proxy_worker_shared.
+ * 20120211.60 (2.4.21-dev) Add dav_get_provider_name.
+ * 20120211.61 (2.4.21-dev) Add ap_cstr_casecmp[n]() - placeholder of apr_ fns
  */
 
-#define MODULE_MAGIC_COOKIE 0x41503235UL /* "AP25" */
+#define MODULE_MAGIC_COOKIE 0x41503234UL /* "AP24" */
 
 #ifndef MODULE_MAGIC_NUMBER_MAJOR
-#define MODULE_MAGIC_NUMBER_MAJOR 20160629
+#define MODULE_MAGIC_NUMBER_MAJOR 20120211
 #endif
-#define MODULE_MAGIC_NUMBER_MINOR 2                 /* 0...n */
+#define MODULE_MAGIC_NUMBER_MINOR 61                   /* 0...n */
 
 /**
  * Determine if the server's current MODULE_MAGIC_NUMBER is at least a
@@ -571,17 +502,17 @@
  * #endif
  * \endcode
  *
- * @param   major   The major module magic number.
- * @param   minor   The minor module magic number.
+ * @param major The major module magic number
+ * @param minor The minor module magic number
+ * @def AP_MODULE_MAGIC_AT_LEAST(int major, int minor)
  */
 #define AP_MODULE_MAGIC_AT_LEAST(major,minor)           \
     ((major) < MODULE_MAGIC_NUMBER_MAJOR                \
      || ((major) == MODULE_MAGIC_NUMBER_MAJOR           \
          && (minor) <= MODULE_MAGIC_NUMBER_MINOR))
 
-/** @deprecated Present for backwards compatibility. */
+/** @deprecated present for backwards compatibility */
 #define MODULE_MAGIC_NUMBER MODULE_MAGIC_NUMBER_MAJOR
-/** @deprecated Use AP_MODULE_MAGIC_AT_LEAST. */
 #define MODULE_MAGIC_AT_LEAST old_broken_macro_we_hope_you_are_not_using
 
 #endif /* !APACHE_AP_MMN_H */

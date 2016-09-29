@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title> Mise en correspondance des URLs avec le système de fichiers - Serveur Apache HTTP Version 2.5</title>
+<title> Mise en correspondance des URLs avec le système de fichiers - Serveur Apache HTTP Version 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.5</a></div><div id="page-content"><div id="preamble"><h1> Mise en correspondance des URLs avec le système de fichiers</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="./">Version 2.4</a></div><div id="page-content"><div id="preamble"><h1> Mise en correspondance des URLs avec le système de fichiers</h1>
 <div class="toplang">
 <p><span>Langues Disponibles: </span><a href="./en/urlmapping.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="./fr/urlmapping.html" title="Français">&nbsp;fr&nbsp;</a> |
@@ -190,7 +190,7 @@ l'arborescence DocumentRoot</a></h2>
     <code>/home/user/public_html/file.html</code>, utilisez la directive
     <code>AliasMatch</code> suivante :</p>
 
-<pre class="prettyprint lang-config">AliasMatch "^/upages/([a-zA-Z0-9]+)(/(.*))?$" "/home/$1/public_html/$3"</pre>
+<pre class="prettyprint lang-config">AliasMatch "^/upages/([a-zA-Z0-9]+)(/(.*))?$"   "/home/$1/public_html/$3"</pre>
 
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
@@ -225,13 +225,13 @@ l'arborescence DocumentRoot</a></h2>
     laisser toutes les autres requêtes inchangées, utilisez la
     configuration suivante :</p>
 
-<pre class="prettyprint lang-config">RedirectMatch permanent "^/$" "http://www.example.com/startpage.html"</pre>
+<pre class="prettyprint lang-config">RedirectMatch permanent "^/$"    "http://www.example.com/startpage.html"</pre>
 
 
     <p>De même, pour rediriger temporairement toutes les pages d'un site
     vers une page particulière d'un autre site, utilisez ce qui suit :</p>
 
-<pre class="prettyprint lang-config">RedirectMatch temp ".*" "http://othersite.example.com/startpage.html"</pre>
+<pre class="prettyprint lang-config">RedirectMatch temp ".*"  "http://othersite.example.com/startpage.html"</pre>
 
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
@@ -251,7 +251,7 @@ dans le répertoire
 <code>/bar/</code> sur <code>internal.example.com</code>
 et les renvoie au client comme s'ils appartenaient au serveur local.</p>
 
-<pre class="prettyprint lang-config">ProxyPass        "/foo/" "http://internal.example.com/bar/"
+<pre class="prettyprint lang-config">ProxyPass "/foo/" "http://internal.example.com/bar/"
 ProxyPassReverse "/foo/" "http://internal.example.com/bar/"
 ProxyPassReverseCookieDomain internal.example.com public.example.com
 ProxyPassReverseCookiePath "/foo/" "/bar/"</pre>
@@ -274,7 +274,7 @@ du serveur mandataire et effectuer sa requête directement sur
 d'utres contenus) situés dans la page au moment où elle est envoyée au
 client en utilisant le module <code class="module"><a href="./mod/mod_substitute.html">mod_substitute</a></code>.</p>
 
-<pre class="prettyprint lang-config">Substitute s/internal\.example\.com/www.example.com/i</pre>
+<pre class="prettyprint lang-config">Substitute "s/internal\.example\.com/www.example.com/i"</pre>
 
 
 <p>Le module <code class="module"><a href="./mod/mod_proxy_html.html">mod_proxy_html</a></code> rend possible une réécriture plus
@@ -378,7 +378,7 @@ URLs</a></h2>
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/urlmapping.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/urlmapping.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -388,13 +388,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/urlmapping.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modules</a> | <a href="./mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">Glossaire</a> | <a href="./sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

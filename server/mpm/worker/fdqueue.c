@@ -23,7 +23,7 @@ typedef struct recycled_pool {
 } recycled_pool;
 
 struct fd_queue_info_t {
-    volatile apr_uint32_t idlers;
+    apr_uint32_t idlers;
     apr_thread_mutex_t *idlers_mutex;
     apr_thread_cond_t *wait_for_idler;
     int terminated;
@@ -83,6 +83,7 @@ apr_status_t ap_queue_info_set_idle(fd_queue_info_t *queue_info,
                                     apr_pool_t *pool_to_recycle)
 {
     apr_status_t rv;
+    int prev_idlers;
 
     /* If we have been given a pool to recycle, atomically link
      * it into the queue_info's list of recycled pools
@@ -106,9 +107,18 @@ apr_status_t ap_queue_info_set_idle(fd_queue_info_t *queue_info,
         }
     }
 
-    /* If this thread makes the idle worker count nonzero,
+    /* Atomically increment the count of idle workers */
+    for (;;) {
+        prev_idlers = queue_info->idlers;
+        if (apr_atomic_cas32(&(queue_info->idlers), prev_idlers + 1,
+                             prev_idlers) == prev_idlers) {
+            break;
+        }
+    }
+
+    /* If this thread just made the idle worker count nonzero,
      * wake up the listener. */
-    if (apr_atomic_inc32(&queue_info->idlers) == 0) {
+    if (prev_idlers == 0) {
         rv = apr_thread_mutex_lock(queue_info->idlers_mutex);
         if (rv != APR_SUCCESS) {
             return rv;
@@ -372,7 +382,18 @@ apr_status_t ap_queue_pop(fd_queue_t *queue, apr_socket_t **sd, apr_pool_t **p)
     return rv;
 }
 
-static apr_status_t queue_interrupt_all(fd_queue_t *queue, int term)
+apr_status_t ap_queue_interrupt_all(fd_queue_t *queue)
+{
+    apr_status_t rv;
+
+    if ((rv = apr_thread_mutex_lock(queue->one_big_mutex)) != APR_SUCCESS) {
+        return rv;
+    }
+    apr_thread_cond_broadcast(queue->not_empty);
+    return apr_thread_mutex_unlock(queue->one_big_mutex);
+}
+
+apr_status_t ap_queue_term(fd_queue_t *queue)
 {
     apr_status_t rv;
 
@@ -383,19 +404,9 @@ static apr_status_t queue_interrupt_all(fd_queue_t *queue, int term)
      * we could end up setting it and waking everybody up just after a
      * would-be popper checks it but right before they block
      */
-    if (term) {
-        queue->terminated = 1;
+    queue->terminated = 1;
+    if ((rv = apr_thread_mutex_unlock(queue->one_big_mutex)) != APR_SUCCESS) {
+        return rv;
     }
-    apr_thread_cond_broadcast(queue->not_empty);
-    return apr_thread_mutex_unlock(queue->one_big_mutex);
-}
-
-apr_status_t ap_queue_interrupt_all(fd_queue_t *queue)
-{
-    return queue_interrupt_all(queue, 0);
-}
-
-apr_status_t ap_queue_term(fd_queue_t *queue)
-{
-    return queue_interrupt_all(queue, 1);
+    return ap_queue_interrupt_all(queue);
 }

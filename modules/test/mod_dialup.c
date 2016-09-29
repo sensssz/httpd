@@ -105,7 +105,6 @@ dialup_callback(void *baton)
 {
     int status;
     dialup_baton_t *db = (dialup_baton_t *)baton;
-    conn_rec *c = db->r->connection;
 
     apr_thread_mutex_lock(db->r->invoke_mtx);
 
@@ -128,8 +127,6 @@ dialup_callback(void *baton)
     }
 
     apr_thread_mutex_unlock(db->r->invoke_mtx);
-
-    ap_mpm_resume_suspended(c);
 }
 
 static int
@@ -142,19 +139,12 @@ dialup_handler(request_rec *r)
     apr_file_t *fd;
     dialup_baton_t *db;
     apr_bucket *e;
-    int mpm_can_suspend = 0;
+
 
     /* See core.c, default handler for all of the cases we just decline. */
     if (r->method_number != M_GET ||
         r->finfo.filetype == APR_NOFILE ||
         r->finfo.filetype == APR_DIR) {
-        return DECLINED;
-    }
-
-    rv = ap_mpm_query(AP_MPMQ_CAN_SUSPEND, &mpm_can_suspend);
-    if (!mpm_can_suspend) {
-        ap_log_rerror (APLOG_MARK, APLOG_NOTICE, rv, r, APLOGNO(02637)
-                "dialup: MPM doesn't support suspending");
         return DECLINED;
     }
 

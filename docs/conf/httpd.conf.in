@@ -1,9 +1,9 @@
 #
 # This is the main Apache HTTP server configuration file.  It contains the
 # configuration directives that give the server its instructions.
-# See <URL:http://httpd.apache.org/docs/trunk/> for detailed information.
+# See <URL:http://httpd.apache.org/docs/2.4/> for detailed information.
 # In particular, see 
-# <URL:http://httpd.apache.org/docs/trunk/mod/directives.html>
+# <URL:http://httpd.apache.org/docs/2.4/mod/directives.html>
 # for a discussion of each configuration directive.
 #
 # Do NOT simply read the instructions in here without understanding
@@ -129,10 +129,8 @@ ServerAdmin you@example.com
 # documents. By default, all requests are taken from this directory, but
 # symbolic links and aliases may be used to point to other locations.
 #
-
-Define DOCROOT "@exp_htdocsdir@"
-DocumentRoot "${DOCROOT}"
-<Directory "${DOCROOT}">
+DocumentRoot "@exp_htdocsdir@"
+<Directory "@exp_htdocsdir@">
     #
     # Possible values for the Options directive are "None", "All",
     # or any combination of:
@@ -142,7 +140,7 @@ DocumentRoot "${DOCROOT}"
     # doesn't give it to you.
     #
     # The Options directive is both complicated and important.  Please see
-    # http://httpd.apache.org/docs/trunk/mod/core.html#options
+    # http://httpd.apache.org/docs/2.4/mod/core.html#options
     # for more information.
     #
     Options Indexes FollowSymLinks
@@ -270,15 +268,6 @@ LogLevel warn
     Require all granted
 </Directory>
 
-<IfModule headers_module>
-    #
-    # Avoid passing HTTP_PROXY environment to CGI's on this or any proxied
-    # backend servers which have lingering "httpoxy" defects.
-    # 'Proxy' request header is undefined by the IETF, not listed by IANA
-    #
-    RequestHeader unset Proxy early
-</IfModule>
-
 <IfModule mime_module>
     #
     # TypesConfig points to the file containing the list of mappings from
@@ -400,12 +389,6 @@ LogLevel warn
 
 # Various default settings
 #Include @rel_sysconfdir@/extra/httpd-default.conf
-
-# Policy enforcement
-#Include @rel_sysconfdir@/extra/httpd-policy.conf
-
-# Configuration macros
-#Included @rel_sysconfdir@/extra/httpd-macro.conf
 
 # Configure mod_proxy_html to understand HTML4/XHTML1
 <IfModule proxy_html_module>

@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_dav - Serveur Apache HTTP Version 2.5</title>
+<title>mod_dav - Serveur Apache HTTP Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Module Apache mod_dav</h1>
 <div class="toplang">
@@ -81,7 +81,7 @@ documents via le web (<a href="http://www.webdav.org/">WebDAV</a>)</td></tr>
     verrous DAV via une directive <code class="directive"><a href="../mod/mod_dav_fs.html#davlockdb">DavLockDB</a></code> dans la section globale de
     votre fichier <code>httpd.conf</code> :</p>
 
-    <pre class="prettyprint lang-config">DavLockDB "/usr/local/apache2/var/DavLock"</pre>
+    <pre class="prettyprint lang-config">DavLockDB /usr/local/apache2/var/DavLock</pre>
 
 
     <p>Le répertoire contenant le fichier de la base de données des
@@ -105,7 +105,7 @@ documents via le web (<a href="http://www.webdav.org/">WebDAV</a>)</td></tr>
     Dav On
 
     AuthType Basic
-    AuthName "DAV"
+    AuthName DAV
     AuthUserFile "user.passwd"
 
     &lt;LimitExcept GET POST OPTIONS&gt;
@@ -197,7 +197,7 @@ ForceType text/plain
 <tr><th><a href="directive-dict.html#Status">Statut:</a></th><td>Extension</td></tr>
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_dav</td></tr>
 </table>
-    <p>La directive <code class="directive">Dav</code> active les
+    <p>La directive <code class="directive">Dav</code> permet d'activer les
     méthodes HTTP WebDAV pour le conteneur condidéré :</p>
 
     <pre class="prettyprint lang-config">&lt;Location "/foo"&gt;
@@ -230,8 +230,8 @@ Infinity</td></tr>
 <tr><th><a href="directive-dict.html#Status">Statut:</a></th><td>Extension</td></tr>
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_dav</td></tr>
 </table>
-    <p>La directive <code class="directive">DavDepthInfinity</code>
-    autorise le traitement des requêtes <code>PROPFIND</code>
+    <p>La directive <code class="directive">DavDepthInfinity</code> permet
+    d'autoriser le traitement des requêtes <code>PROPFIND</code>
     contenant l'en-tête Depth: Infinity. Par défaut, ce type de requête
     n'est pas autorisé, car il peut favoriser les attaques de type Déni
     de service.</p>
@@ -251,11 +251,11 @@ verrou sur une ressource DAV</td></tr>
     <p>Lorsqu'un client demande le verrouillage d'une ressource DAV, il
     peut aussi spécifier une durée au bout de laquelle le verrou sera
     automatiquement supprimé par le serveur. Cette valeur ne constitue
-    qu'une requête, et le serveur peut l'ignorer ou informer le client
+    qu'une demande, et le serveur peut l'ignorer ou informer le client
     qu'il va utiliser une valeur arbitraire.</p>
 
-    <p>La directive <code class="directive">DavMinTimeout</code>
-    spécifie, en secondes, la durée minimale de verrouillage à renvoyer
+    <p>La directive <code class="directive">DavMinTimeout</code> permet de
+    spécifier, en secondes, la durée minimale de verrouillage à renvoyer
     au client. Les Répertoires Web de Microsoft présentent une durée par
     défaut de 120 secondes ; la directive
     <code class="directive">DavMinTimeout</code> permet de définir une valeur
@@ -278,7 +278,7 @@ verrou sur une ressource DAV</td></tr>
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_dav.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_dav.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -288,13 +288,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_dav.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

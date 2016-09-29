@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Site Map - Apache HTTP サーバ バージョン 2.5</title>
+<title>Site Map - Apache HTTP サーバ バージョン 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page">
 <div id="page-header">
-<p class="menu"><a href="./mod/">モジュール</a> | <a href="./mod/quickreference.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">用語</a> | <a href="./sitemap.html">サイトマップ</a></p>
-<p class="apache">Apache HTTP サーバ バージョン 2.5</p>
+<p class="menu"><a href="./mod/">モジュール</a> | <a href="./mod/directives.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">用語</a> | <a href="./sitemap.html">サイトマップ</a></p>
+<p class="apache">Apache HTTP サーバ バージョン 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP サーバ</a> &gt; <a href="http://httpd.apache.org/docs/">ドキュメンテーション</a> &gt; <a href="./">バージョン 2.5</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP サーバ</a> &gt; <a href="http://httpd.apache.org/docs/">ドキュメンテーション</a> &gt; <a href="./">バージョン 2.4</a></div>
 <div id="page-content"><div id="preamble"><h1>Site Map</h1>
 <div class="toplang">
 <p><span>翻訳済み言語: </span><a href="./de/sitemap.html" hreflang="de" rel="alternate" title="Deutsch">&nbsp;de&nbsp;</a> |
@@ -40,13 +40,14 @@
         </div>
 
 <p>このページは現時点で利用可能な
-<a href="./">Apache HTTP サーババージョン 2.5 のドキュメンテーション</a>
+<a href="./">Apache HTTP サーババージョン 2.4 のドキュメンテーション</a>
 の一覧です。</p>
 </div>
 <div id="quickview"><ul id="toc">
 <li><img alt="" src="./images/down.gif" /> <a href="#release">リリースのメモ</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#using">Apache HTTP サーバの使用</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#vhosts">Apache バーチャルホストドキュメント</a></li>
+<li><img alt="" src="./images/down.gif" /> <a href="#faq">Apache サーバのよくある質問</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#ssl">Apache の SSL/TLS 暗号化</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#howto">ガイド、チュートリアル、ハウツー</a></li>
 <li><img alt="" src="./images/down.gif" /> <a href="#platform">プラットフォーム固有の情報</a></li>
@@ -87,7 +88,7 @@
 <li><a href="filter.html">フィルタ</a></li>
 <li><a href="suexec.html">suEXEC サポート</a></li>
 <li><a href="misc/perf-tuning.html">性能に関するヒント</a></li>
-<li><a href="rewrite/">URL リライトガイド</a></li>
+<li><a href="misc/rewriteguide.html">URL リライトガイド</a></li>
 </ul>
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section"><h2><a name="vhosts" id="vhosts">Apache バーチャルホストドキュメント</a></h2>
@@ -99,6 +100,13 @@
 <li><a href="vhosts/details.html">バーチャルホストのマッチングの詳しい説明</a></li>
 <li><a href="vhosts/fd-limits.html">ファイル記述子の限界</a></li>
 <li><a href="dns-caveats.html">DNS と Apache とに関係する問題</a></li>
+</ul>
+</div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
+<div class="section"><h2><a name="faq" id="faq">Apache サーバのよくある質問</a></h2>
+<ul><li><a href="faq/">概略</a></li>
+<li><a href="faq/background.html">背景の説明</a></li>
+<li><a href="faq/support.html">サポート</a></li>
+<li><a href="faq/error.html">エラーメッセージ</a></li>
 </ul>
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section"><h2><a name="ssl" id="ssl">Apache の SSL/TLS 暗号化</a></h2>
@@ -125,6 +133,7 @@
 のコンパイル</a></li>
 <li><a href="platform/netware.html">Novell NetWare で Apache を使う</a></li>
 <li><a href="platform/perf-hp.html">HPUX で高性能ウェブサーバを実行する</a></li>
+<li><a href="platform/ebcdic.html">EBCDIC 版 Apache</a></li>
 </ul>
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section"><h2><a name="programs" id="programs">Apache HTTP サーバとサポートプログラム</a></h2>
@@ -164,7 +173,6 @@
 </ul><ul><li><a href="mod/mod_access_compat.html">Apache モジュール mod_access_compat</a></li>
 <li><a href="mod/mod_actions.html">Apache モジュール mod_actions</a></li>
 <li><a href="mod/mod_alias.html">Apache モジュール mod_alias</a></li>
-<li><a href="mod/mod_allowhandlers.html">Apache モジュール mod_allowhandlers</a></li>
 <li><a href="mod/mod_allowmethods.html">Apache モジュール mod_allowmethods</a></li>
 <li><a href="mod/mod_asis.html">Apache モジュール mod_asis</a></li>
 <li><a href="mod/mod_auth_basic.html">Apache モジュール mod_auth_basic</a></li>
@@ -194,7 +202,6 @@
 <li><a href="mod/mod_cgi.html">Apache モジュール mod_cgi</a></li>
 <li><a href="mod/mod_cgid.html">Apache モジュール mod_cgid</a></li>
 <li><a href="mod/mod_charset_lite.html">Apache モジュール mod_charset_lite</a></li>
-<li><a href="mod/mod_crypto.html">Apache モジュール mod_crypto</a></li>
 <li><a href="mod/mod_data.html">Apache モジュール mod_data</a></li>
 <li><a href="mod/mod_dav.html">Apache モジュール mod_dav</a></li>
 <li><a href="mod/mod_dav_fs.html">Apache モジュール mod_dav_fs</a></li>
@@ -211,7 +218,6 @@
 <li><a href="mod/mod_ext_filter.html">Apache モジュール mod_ext_filter</a></li>
 <li><a href="mod/mod_file_cache.html">Apache モジュール mod_file_cache</a></li>
 <li><a href="mod/mod_filter.html">Apache モジュール mod_filter</a></li>
-<li><a href="mod/mod_firehose.html">Apache モジュール mod_firehose</a></li>
 <li><a href="mod/mod_headers.html">Apache モジュール mod_headers</a></li>
 <li><a href="mod/mod_heartbeat.html">Apache モジュール mod_heartbeat</a></li>
 <li><a href="mod/mod_heartmonitor.html">Apache モジュール mod_heartmonitor</a></li>
@@ -221,7 +227,6 @@
 <li><a href="mod/mod_include.html">Apache モジュール mod_include</a></li>
 <li><a href="mod/mod_info.html">Apache モジュール mod_info</a></li>
 <li><a href="mod/mod_isapi.html">Apache モジュール mod_isapi</a></li>
-<li><a href="mod/mod_journald.html">Apache モジュール mod_journald</a></li>
 <li><a href="mod/mod_lbmethod_bybusyness.html">Apache モジュール mod_lbmethod_bybusyness</a></li>
 <li><a href="mod/mod_lbmethod_byrequests.html">Apache モジュール mod_lbmethod_byrequests</a></li>
 <li><a href="mod/mod_lbmethod_bytraffic.html">Apache モジュール mod_lbmethod_bytraffic</a></li>
@@ -237,7 +242,6 @@
 <li><a href="mod/mod_mime_magic.html">Apache モジュール mod_mime_magic</a></li>
 <li><a href="mod/mod_negotiation.html">Apache モジュール mod_negotiation</a></li>
 <li><a href="mod/mod_nw_ssl.html">Apache モジュール mod_nw_ssl</a></li>
-<li><a href="mod/mod_policy.html">Apache モジュール mod_policy</a></li>
 <li><a href="mod/mod_privileges.html">Apache モジュール mod_privileges</a></li>
 <li><a href="mod/mod_proxy.html">Apache モジュール mod_proxy</a></li>
 <li><a href="mod/mod_proxy_ajp.html">Apache モジュール mod_proxy_ajp</a></li>
@@ -274,12 +278,9 @@
 <li><a href="mod/mod_socache_shmcb.html">Apache モジュール mod_socache_shmcb</a></li>
 <li><a href="mod/mod_speling.html">Apache モジュール mod_speling</a></li>
 <li><a href="mod/mod_ssl.html">Apache モジュール mod_ssl</a></li>
-<li><a href="mod/mod_ssl_ct.html">Apache モジュール mod_ssl_ct</a></li>
 <li><a href="mod/mod_status.html">Apache モジュール mod_status</a></li>
 <li><a href="mod/mod_substitute.html">Apache モジュール mod_substitute</a></li>
 <li><a href="mod/mod_suexec.html">Apache モジュール mod_suexec</a></li>
-<li><a href="mod/mod_syslog.html">Apache モジュール mod_syslog</a></li>
-<li><a href="mod/mod_systemd.html">Apache モジュール mod_systemd</a></li>
 <li><a href="mod/mod_unique_id.html">Apache モジュール mod_unique_id</a></li>
 <li><a href="mod/mod_unixd.html">Apache モジュール mod_unixd</a></li>
 <li><a href="mod/mod_userdir.html">Apache モジュール mod_userdir</a></li>
@@ -322,7 +323,7 @@
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">コメント</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/sitemap.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/sitemap.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -332,13 +333,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/sitemap.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />この文書は <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> のライセンスで提供されています。.</p>
-<p class="menu"><a href="./mod/">モジュール</a> | <a href="./mod/quickreference.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">用語</a> | <a href="./sitemap.html">サイトマップ</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">モジュール</a> | <a href="./mod/directives.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="./glossary.html">用語</a> | <a href="./sitemap.html">サイトマップ</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

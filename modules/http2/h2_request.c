@@ -30,7 +30,6 @@
 #include <scoreboard.h>
 
 #include "h2_private.h"
-#include "h2_config.h"
 #include "h2_push.h"
 #include "h2_request.h"
 #include "h2_util.h"
@@ -43,39 +42,15 @@ static apr_status_t inspect_clen(h2_request *req, const char *s)
     return (s == end)? APR_EINVAL : APR_SUCCESS;
 }
 
-typedef struct {
-    apr_table_t *headers;
-    apr_pool_t *pool;
-} h1_ctx;
-
-static int set_h1_header(void *ctx, const char *key, const char *value)
+apr_status_t h2_request_rwrite(h2_request *req, apr_pool_t *pool, 
+                               request_rec *r)
 {
-    h1_ctx *x = ctx;
-    size_t klen = strlen(key);
-    if (!h2_req_ignore_header(key, klen)) {
-        h2_headers_add_h1(x->headers, x->pool, key, klen, value, strlen(value));
-    }
-    return 1;
-}
-
-apr_status_t h2_request_rcreate(h2_request **preq, apr_pool_t *pool, 
-                                int stream_id, int initiated_on,
-                                request_rec *r)
-{
-    h2_request *req;
-    const char *scheme, *authority, *path;
-    h1_ctx x;
+    apr_status_t status;
+    const char *scheme, *authority;
     
-    *preq = NULL;
     scheme = apr_pstrdup(pool, r->parsed_uri.scheme? r->parsed_uri.scheme
               : ap_http_scheme(r));
     authority = apr_pstrdup(pool, r->hostname);
-    path = apr_uri_unparse(pool, &r->parsed_uri, APR_URI_UNP_OMITSITEPART);
-    
-    if (!r->method || !scheme || !r->hostname || !path) {
-        return APR_EINVAL;
-    }
-
     if (!ap_strchr_c(authority, ':') && r->server && r->server->port) {
         apr_port_t defport = apr_uri_port_of_scheme(scheme);
         if (defport != r->server->port) {
@@ -85,25 +60,11 @@ apr_status_t h2_request_rcreate(h2_request **preq, apr_pool_t *pool,
         }
     }
     
-    req = apr_pcalloc(pool, sizeof(*req));
-    req->id = stream_id;
-    req->initiated_on = initiated_on;
-    req->method    = apr_pstrdup(pool, r->method);
-    req->scheme    = scheme;
-    req->authority = authority;
-    req->path      = path;
-    req->headers   = apr_table_make(pool, 10);
-    if (r->server) {
-        req->serialize = h2_config_geti(h2_config_sget(r->server), 
-                                        H2_CONF_SER_HEADERS);
-    }
-
-    x.pool = pool;
-    x.headers = req->headers;
-    apr_table_do(set_h1_header, &x, r->headers_in, NULL);
-    
-    *preq = req;
-    return APR_SUCCESS;
+    status = h2_req_make(req, pool, apr_pstrdup(pool, r->method), scheme, 
+                         authority, apr_uri_unparse(pool, &r->parsed_uri, 
+                                                    APR_URI_UNP_OMITSITEPART),
+                         r->headers_in);
+    return status;
 }
 
 apr_status_t h2_request_add_header(h2_request *req, apr_pool_t *pool, 
@@ -165,6 +126,11 @@ apr_status_t h2_request_end_headers(h2_request *req, apr_pool_t *pool,
 {
     const char *s;
     
+    if (req->eoh) {
+        /* already done */
+        return APR_SUCCESS;
+    }
+
     /* rfc7540, ch. 8.1.2.3:
      * - if we have :authority, it overrides any Host header 
      * - :authority MUST be ommited when converting h1->h2, so we
@@ -189,13 +155,11 @@ apr_status_t h2_request_end_headers(h2_request *req, apr_pool_t *pool,
                           req->id, s);
             return APR_EINVAL;
         }
-        req->body = 1;
     }
     else {
         /* no content-length given */
         req->content_length = -1;
-        req->body = !eos;
-        if (req->body) {
+        if (!eos) {
             /* We have not seen a content-length and have no eos,
              * simulate a chunked encoding for our HTTP/1.1 infrastructure,
              * in case we have "H2SerializeHeaders on" here
@@ -211,6 +175,7 @@ apr_status_t h2_request_end_headers(h2_request *req, apr_pool_t *pool,
         }
     }
 
+    req->eoh = 1;
     h2_push_policy_determine(req, pool, push);
     
     /* In the presence of trailers, force behaviour of chunked encoding */
@@ -279,17 +244,61 @@ h2_request *h2_request_clone(apr_pool_t *p, const h2_request *src)
     return dst;
 }
 
-request_rec *h2_request_create_rec(const h2_request *req, conn_rec *c)
+request_rec *h2_request_create_rec(const h2_request *req, conn_rec *conn)
 {
+    request_rec *r;
+    apr_pool_t *p;
     int access_status = HTTP_OK;    
-    const char *expect;
-    const char *rpath;
-
-    request_rec *r = ap_create_request(c);
-
-    r->headers_in = apr_table_clone(r->pool, req->headers);
-
-    ap_run_pre_read_request(r, c);
+    
+    apr_pool_create(&p, conn->pool);
+    apr_pool_tag(p, "request");
+    r = apr_pcalloc(p, sizeof(request_rec));
+    AP_READ_REQUEST_ENTRY((intptr_t)r, (uintptr_t)conn);
+    r->pool            = p;
+    r->connection      = conn;
+    r->server          = conn->base_server;
+    
+    r->user            = NULL;
+    r->ap_auth_type    = NULL;
+    
+    r->allowed_methods = ap_make_method_list(p, 2);
+    
+    r->headers_in      = apr_table_clone(r->pool, req->headers);
+    r->trailers_in     = apr_table_make(r->pool, 5);
+    r->subprocess_env  = apr_table_make(r->pool, 25);
+    r->headers_out     = apr_table_make(r->pool, 12);
+    r->err_headers_out = apr_table_make(r->pool, 5);
+    r->trailers_out    = apr_table_make(r->pool, 5);
+    r->notes           = apr_table_make(r->pool, 5);
+    
+    r->request_config  = ap_create_request_config(r->pool);
+    /* Must be set before we run create request hook */
+    
+    r->proto_output_filters = conn->output_filters;
+    r->output_filters  = r->proto_output_filters;
+    r->proto_input_filters = conn->input_filters;
+    r->input_filters   = r->proto_input_filters;
+    ap_run_create_request(r);
+    r->per_dir_config  = r->server->lookup_defaults;
+    
+    r->sent_bodyct     = 0;                      /* bytect isn't for body */
+    
+    r->read_length     = 0;
+    r->read_body       = REQUEST_NO_BODY;
+    
+    r->status          = HTTP_OK;  /* Until further notice */
+    r->header_only     = 0;
+    r->the_request     = NULL;
+    
+    /* Begin by presuming any module can make its own path_info assumptions,
+     * until some module interjects and changes the value.
+     */
+    r->used_path_info = AP_REQ_DEFAULT_PATH_INFO;
+    
+    r->useragent_addr = conn->client_addr;
+    r->useragent_ip = conn->client_ip;
+    
+    ap_run_pre_read_request(r, conn);
     
     /* Time to populate r with the data we have. */
     r->request_time = req->request_time;
@@ -300,13 +309,12 @@ request_rec *h2_request_create_rec(const h2_request *req, conn_rec *c)
         r->header_only = 1;
     }
 
-    rpath = (req->path ? req->path : "");
-    ap_parse_uri(r, rpath);
+    ap_parse_uri(r, req->path);
     r->protocol = "HTTP/2.0";
     r->proto_num = HTTP_VERSION(2, 0);
 
     r->the_request = apr_psprintf(r->pool, "%s %s %s", 
-                                  r->method, rpath, r->protocol);
+                                  r->method, req->path, r->protocol);
     
     /* update what we think the virtual host is based on the headers we've
      * now read. may update status.
@@ -318,18 +326,6 @@ request_rec *h2_request_create_rec(const h2_request *req, conn_rec *c)
     
     /* we may have switched to another server */
     r->per_dir_config = r->server->lookup_defaults;
-    
-    if (r && ((expect = apr_table_get(r->headers_in, "Expect")) != NULL)
-        && (expect[0] != '\0')) {
-        if (ap_cstr_casecmp(expect, "100-continue") == 0) {
-            r->expecting_100 = 1;
-            ap_add_input_filter("H2_CONTINUE", NULL, r, c);
-        }
-        else {
-            r->status = HTTP_EXPECTATION_FAILED;
-            ap_send_error_response(r, 0);
-        }
-    }
     
     /*
      * Add the HTTP_IN filter here to ensure that ap_discard_request_body
@@ -345,16 +341,16 @@ request_rec *h2_request_create_rec(const h2_request *req, conn_rec *c)
         /* Request check post hooks failed. An example of this would be a
          * request for a vhost where h2 is disabled --> 421.
          */
-        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(03367)
+        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, conn, APLOGNO()
                       "h2_request(%d): access_status=%d, request_create failed",
                       req->id, access_status);
         ap_die(access_status, r);
-        ap_update_child_status(c->sbh, SERVER_BUSY_LOG, r);
+        ap_update_child_status(conn->sbh, SERVER_BUSY_LOG, r);
         ap_run_log_transaction(r);
         r = NULL;
         goto traceout;
     }
-
+    
     AP_READ_REQUEST_SUCCESS((uintptr_t)r, (char *)r->method, 
                             (char *)r->uri, (char *)r->server->defn_name, 
                             r->status);

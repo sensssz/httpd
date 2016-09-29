@@ -22,6 +22,8 @@
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
 
+#define WANT_BASENAME_MATCH
+
 #include "httpd.h"
 #include "http_core.h"
 #include "http_config.h"
@@ -57,8 +59,7 @@ module AP_MODULE_DECLARE_DATA speling_module;
 
 typedef struct {
     int enabled;
-    int check_case_only;
-    int check_basename_match;
+    int case_only;
 } spconfig;
 
 /*
@@ -75,8 +76,7 @@ static void *mkconfig(apr_pool_t *p)
     spconfig *cfg = apr_pcalloc(p, sizeof(spconfig));
 
     cfg->enabled = 0;
-    cfg->check_case_only = 0;
-    cfg->check_basename_match = 0;
+    cfg->case_only = 0;
     return cfg;
 }
 
@@ -107,11 +107,8 @@ static const command_rec speling_cmds[] =
                   (void*)APR_OFFSETOF(spconfig, enabled), OR_OPTIONS,
                  "whether or not to fix miscapitalized/misspelled requests"),
     AP_INIT_FLAG("CheckCaseOnly", ap_set_flag_slot,
-                  (void*)APR_OFFSETOF(spconfig, check_case_only), OR_OPTIONS,
+                  (void*)APR_OFFSETOF(spconfig, case_only), OR_OPTIONS,
                  "whether or not to fix only miscapitalized requests"),
-    AP_INIT_FLAG("CheckBasenameMatch", ap_set_flag_slot,
-                  (void*)APR_OFFSETOF(spconfig, check_basename_match), OR_OPTIONS,
-                 "whether or not to fix files with the same base name"),
     { NULL }
 };
 
@@ -305,7 +302,7 @@ static int check_speling(request_rec *r)
          * simple typing errors are checked next (like, e.g.,
          * missing/extra/transposed char)
          */
-        else if ((cfg->check_case_only == 0)
+        else if ((cfg->case_only == 0)
                  && ((q = spdist(bad, dirent.name)) != SP_VERYDIFFERENT)) {
             misspelled_file *sp_new;
 
@@ -319,14 +316,22 @@ static int check_speling(request_rec *r)
          * requests.  It is of questionable use to continue looking for
          * files with the same base name, but potentially of totally wrong
          * type (index.html <-> index.db).
+         * I would propose to not set the WANT_BASENAME_MATCH define.
+         *      08-Aug-1997 <Martin.Kraemer@Mch.SNI.De>
          *
-         * If you're using MultiViews, and have a file named foobar.html,
-         * which you refer to as "foobar", and someone tried to access
-         * "Foobar", without CheckBasenameMatch, mod_speling won't find it,
-         * because it won't find anything matching that spelling.
-         * With the extension-munging, it would locate "foobar.html".
+         * However, Alexei replied giving some reasons to add it anyway:
+         * > Oh, by the way, I remembered why having the
+         * > extension-stripping-and-matching stuff is a good idea:
+         * >
+         * > If you're using MultiViews, and have a file named foobar.html,
+         * > which you refer to as "foobar", and someone tried to access
+         * > "Foobar", mod_speling won't find it, because it won't find
+         * > anything matching that spelling. With the extension-munging,
+         * > it would locate "foobar.html". Not perfect, but I ran into
+         * > that problem when I first wrote the module.
          */
-        else if (cfg->check_basename_match == 1) {
+        else {
+#ifdef WANT_BASENAME_MATCH
             /*
              * Okay... we didn't find anything. Now we take out the hard-core
              * power tools. There are several cases here. Someone might have
@@ -351,6 +356,7 @@ static int check_speling(request_rec *r)
                 sp_new->name = apr_pstrdup(r->pool, dirent.name);
                 sp_new->quality = SP_VERYDIFFERENT;
             }
+#endif
         }
     }
     apr_dir_close(dir);

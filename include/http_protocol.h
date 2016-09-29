@@ -54,13 +54,6 @@ AP_DECLARE_DATA extern ap_filter_rec_t *ap_old_write_func;
  */
 
 /**
- * Read an empty request and set reasonable defaults.
- * @param c The current connection
- * @return The new request_rec
- */
-AP_DECLARE(request_rec *) ap_create_request(conn_rec *c);
-
-/**
  * Read a request and fill in the fields.
  * @param c The current connection
  * @return The new request_rec
@@ -589,22 +582,17 @@ AP_DECLARE(int) ap_get_basic_auth_pw(request_rec *r, const char **pw);
  */
 AP_CORE_DECLARE(void) ap_parse_uri(request_rec *r, const char *uri);
 
-#define AP_GETLINE_FOLD 1 /* Whether to merge continuation lines */
-#define AP_GETLINE_CRLF 2 /*Whether line ends must be in the form CR LF */
-
 /**
  * Get the next line of input for the request
  * @param s The buffer into which to read the line
  * @param n The size of the buffer
  * @param r The request
- * @param flags Bit flag of multiple parsing options
- *              AP_GETLINE_FOLD Whether to merge continuation lines
- *              AP_GETLINE_CRLF Whether line ends must be in the form CR LF
+ * @param fold Whether to merge continuation lines
  * @return The length of the line, if successful
  *         n, if the line is too big to fit in the buffer
  *         -1 for miscellaneous errors
  */
-AP_DECLARE(int) ap_getline(char *s, int n, request_rec *r, int flags);
+AP_DECLARE(int) ap_getline(char *s, int n, request_rec *r, int fold);
 
 /**
  * Get the next line of input for the request
@@ -622,9 +610,7 @@ AP_DECLARE(int) ap_getline(char *s, int n, request_rec *r, int flags);
  * @param n The size of the buffer
  * @param read The length of the line.
  * @param r The request
- * @param flags Bit flag of multiple parsing options
- *              AP_GETLINE_FOLD Whether to merge continuation lines
- *              AP_GETLINE_CRLF Whether line ends must be in the form CR LF
+ * @param fold Whether to merge continuation lines
  * @param bb Working brigade to use when reading buckets
  * @return APR_SUCCESS, if successful
  *         APR_ENOSPC, if the line is too big to fit in the buffer
@@ -633,7 +619,7 @@ AP_DECLARE(int) ap_getline(char *s, int n, request_rec *r, int flags);
 #if APR_CHARSET_EBCDIC
 AP_DECLARE(apr_status_t) ap_rgetline(char **s, apr_size_t n,
                                      apr_size_t *read,
-                                     request_rec *r, int flags,
+                                     request_rec *r, int fold,
                                      apr_bucket_brigade *bb);
 #else /* ASCII box */
 #define ap_rgetline(s, n, read, r, fold, bb) \
@@ -643,7 +629,7 @@ AP_DECLARE(apr_status_t) ap_rgetline(char **s, apr_size_t n,
 /** @see ap_rgetline */
 AP_DECLARE(apr_status_t) ap_rgetline_core(char **s, apr_size_t n,
                                           apr_size_t *read,
-                                          request_rec *r, int flags,
+                                          request_rec *r, int fold,
                                           apr_bucket_brigade *bb);
 
 /**
@@ -750,6 +736,10 @@ AP_DECLARE_HOOK(apr_port_t,default_port,(const request_rec *r))
  *               NULL to indicated that the hooks are free to propose 
  * @param proposals The list of protocol identifiers proposed by the hooks
  * @return OK or DECLINED
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE_HOOK(int,protocol_propose,(conn_rec *c, request_rec *r,
                                       server_rec *s,
@@ -776,9 +766,13 @@ AP_DECLARE_HOOK(int,protocol_propose,(conn_rec *c, request_rec *r,
  * @param c The current connection
  * @param r The current request or NULL
  * @param s The server/virtual host selected
- * @param choices A list of protocol identifiers, normally the client's wishes
+ * @param choices A list of protocol identifiers, normally the clients whishes
  * @param proposals the list of protocol identifiers proposed by the hooks
  * @return OK or DECLINED
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE_HOOK(int,protocol_switch,(conn_rec *c, request_rec *r,
                                      server_rec *s,
@@ -794,6 +788,10 @@ AP_DECLARE_HOOK(int,protocol_switch,(conn_rec *c, request_rec *r,
  *
  * @param c The current connection
  * @return The identifier of the protocol in place or NULL
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE_HOOK(const char *,protocol_get,(const conn_rec *c))
 
@@ -812,6 +810,10 @@ AP_DECLARE_HOOK(const char *,protocol_get,(const conn_rec *c))
  * @param report_all include also protocols less preferred than the current one
  * @param pupgrades on return, possible protocols to upgrade to in descending order 
  *                 of preference. Maybe NULL if none are available.    
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE(apr_status_t) ap_get_protocol_upgrades(conn_rec *c, request_rec *r, 
                                                   server_rec *s, int report_all, 
@@ -829,8 +831,12 @@ AP_DECLARE(apr_status_t) ap_get_protocol_upgrades(conn_rec *c, request_rec *r,
  * @param c The current connection
  * @param r The current request or NULL
  * @param s The server/virtual host selected
- * @param choices A list of protocol identifiers, normally the client's wishes
+ * @param choices A list of protocol identifiers, normally the clients whishes
  * @return The selected protocol or NULL if no protocol could be agreed upon
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE(const char *) ap_select_protocol(conn_rec *c, request_rec *r, 
                                             server_rec *s,
@@ -849,6 +855,10 @@ AP_DECLARE(const char *) ap_select_protocol(conn_rec *c, request_rec *r,
  *         APR_EINVAL,  if the protocol is already in place
  *         APR_NOTIMPL, if no module performed the switch
  *         Other errors where appropriate
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE(apr_status_t) ap_switch_protocol(conn_rec *c, request_rec *r, 
                                             server_rec *s,
@@ -864,6 +874,10 @@ AP_DECLARE(apr_status_t) ap_switch_protocol(conn_rec *c, request_rec *r,
  *
  * @param c The connection to determine the protocol for
  * @return the protocol in use, never NULL
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE(const char *) ap_get_protocol(conn_rec *c);
 
@@ -880,6 +894,10 @@ AP_DECLARE(const char *) ap_get_protocol(conn_rec *c);
  * @param s The server/virtual host selected or NULL
  * @param protocol the protocol to switch to
  * @return != 0 iff protocol is allowed
+ * @bug This API or implementation and order of operations should be considered
+ * experimental and will continue to evolve in future 2.4 releases, with
+ * a corresponding minor module magic number (MMN) bump to indicate the
+ * API revision level.
  */
 AP_DECLARE(int) ap_is_allowed_protocol(conn_rec *c, request_rec *r,
                                        server_rec *s, const char *protocol);

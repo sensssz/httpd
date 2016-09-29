@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_lua - Serveur Apache HTTP Version 2.5</title>
+<title>mod_lua - Serveur Apache HTTP Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
-<p class="apache">Serveur Apache HTTP Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p>
+<p class="apache">Serveur Apache HTTP Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">Serveur HTTP</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Module Apache mod_lua</h1>
 <div class="toplang">
@@ -116,7 +116,7 @@ fonctionnement interne de httpd.</p>
 <p>
 <code>mod_lua</code> fournit un gestionnaire nommé
 <code>lua-script</code> qui peut être utilisé avec une directive
-<code class="directive"><a href="../mod/core.html#sethandler">SetHandler</a></code> ou <code class="directive"><a href="../mod/mod_mime.html#addhandler">AddHandler</a></code> :</p>
+<code class="directive"><a href="../mod/mod_mime.html#addhandler">AddHandler</a></code> ou <code class="directive"><a href="../mod/core.html#sethandler">SetHandler</a></code> :</p>
 
 <pre class="prettyprint lang-config">&lt;Files "*.lua"&gt;
     SetHandler lua-script
@@ -1072,26 +1072,6 @@ if r:wsupgrade() then
     r:wsclose()
 end</pre>
 
-<pre class="prettyprint lang-lua">r:wspeek() -- Vérifie s'il y a des données à lire
-
--- Se met en sommeil tant que rien ne nous est envoyé ...
-while r:wspeek() == false do
-   r.usleep(50000)
-end
--- Il y a des données à lire !
-local line = r:wsread()</pre>
-
-
-
-<pre class="prettyprint lang-lua">r:config() -- Extrait une arborescence de l'ensemble de
-	   -- la configuration de httpd pouvant être parcourue</pre>
-
-
-<pre class="prettyprint lang-lua">r:activeconfig() -- Extrait une arborescence de la configuration active
-		 -- de httpd (pour le serveur virtuel sélectionné)</pre>
-
-
-
 </div><div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="logging" id="logging">Fonctions de journalisation</a></h2>
@@ -1365,7 +1345,7 @@ le cas des requêtes dynamiques, utilisez <code>db:prepare</code> ou
 d'autorisation, elle peut être appelée via la directive <code class="directive"><a href="../mod/mod_authz_core.html#require">Require</a></code> :</p>
 
 
-<pre class="prettyprint lang-config">LuaRoot /usr/local/apache2/lua
+<pre class="prettyprint lang-config">LuaRoot "/usr/local/apache2/lua"
 LuaAuthzProvider foo authz.lua authz_check_foo
 &lt;Location "/"&gt;
   Require foo johndoe
@@ -1493,12 +1473,18 @@ end</pre>
 <table class="directive">
 <tr><th><a href="directive-dict.html#Description">Description:</a></th><td>Fournit un point d'entrée pour la phase check_user_id du
 traitement de la requête</td></tr>
-<tr><th><a href="directive-dict.html#Syntax">Syntaxe:</a></th><td><code>LuaHookCheckUserID  /path/to/lua/script.lua hook_function_name</code></td></tr>
+<tr><th><a href="directive-dict.html#Syntax">Syntaxe:</a></th><td><code>LuaHookCheckUserID  /chemin/vers/lua/script.lua hook_function_name [early|late]</code></td></tr>
 <tr><th><a href="directive-dict.html#Context">Contexte:</a></th><td>configuration du serveur, serveur virtuel, répertoire, .htaccess</td></tr>
 <tr><th><a href="directive-dict.html#Override">AllowOverride:</a></th><td>All</td></tr>
 <tr><th><a href="directive-dict.html#Status">Statut:</a></th><td>Expérimental</td></tr>
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_lua</td></tr>
-</table>
+<tr><th><a href="directive-dict.html#Compatibility">Compatibilité:</a></th><td>Le troisième argument optionnel est disponible depuis la
+version 2.3.15 du serveur HTTP Apache.</td></tr>
+</table><p>...</p>
+   <div class="note"><h3>Ordonnancement</h3><p>Les arguments optionnels
+   "early" ou "late" permettent de contrôler le moment auquel ce script
+   s'exécute par rapport aux autres modules.</p></div>
+
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
 <div class="directive-section"><h2><a name="luahookfixups" id="luahookfixups">Directive</a> <a name="LuaHookFixups" id="LuaHookFixups">LuaHookFixups</a></h2>
@@ -1553,7 +1539,7 @@ traitement d'une requête</td></tr>
     normale.
 </p>
 <p>Exemple :</p>
-<pre class="prettyprint lang-config">LuaHookLog /path/to/script.lua logger</pre>
+<pre class="prettyprint lang-config">LuaHookLog "/path/to/script.lua" logger</pre>
 
 <pre class="prettyprint lang-lua">-- /path/to/script.lua --
 function logger(r)
@@ -1597,7 +1583,7 @@ traitement de la requête</td></tr>
     phase map-to-storage du traitement de la requête. Les modules comme
     mod_cache agissent pendant cette phase, ce qui permet de présenter
     un exemple intéressant de ce que l'on peut faire ici :</p>
-    <pre class="prettyprint lang-config">LuaHookMapToStorage /path/to/lua/script.lua check_cache</pre>
+    <pre class="prettyprint lang-config">LuaHookMapToStorage "/path/to/lua/script.lua" check_cache</pre>
 
     <pre class="prettyprint lang-lua">require"apache2"
 cached_files = {}
@@ -1662,7 +1648,7 @@ version 2.3.15 du serveur HTTP Apache.</td></tr>
     <p>Exemple :</p>
 
 <pre class="prettyprint lang-config"># httpd.conf
-LuaHookTranslateName /scripts/conf/hooks.lua silly_mapper</pre>
+LuaHookTranslateName "/scripts/conf/hooks.lua" silly_mapper</pre>
 
 
 <pre class="prettyprint lang-lua">-- /scripts/conf/hooks.lua --
@@ -1762,7 +1748,7 @@ globale <code>bucket</code> contient les paquets de données tels qu'ils
 sont transmis au script Lua :
 </p>
 
-<pre class="prettyprint lang-config">LuaInputFilter myInputFilter /www/filter.lua input_filter
+<pre class="prettyprint lang-config">LuaInputFilter myInputFilter "/www/filter.lua" input_filter
 &lt;Files "*.lua"&gt;
   SetInputFilter myInputFilter
 &lt;/Files&gt;</pre>
@@ -1818,14 +1804,14 @@ filtres Lua</a>" pour plus de détails.
     d'interpolation dans le chemin du fichier et le nom de la fonction.
     Prenez garde aux problèmes de sécurité en écrivant vos expressions
     rationnelles.</p>
-   <div class="example"><h3>Exemples :</h3><pre class="prettyprint lang-config">LuaMapHandler /(\w+)/(\w+) /scripts/$1.lua handle_$2</pre>
+   <div class="example"><h3>Exemples :</h3><pre class="prettyprint lang-config">LuaMapHandler "/(\w+)/(\w+)" "/scripts/$1.lua" "handle_$2"</pre>
 </div>
         <p>Cette directive va faire correspondre des uri comme
 	/photos/show?id=9 au fichier /scripts/photos.lua, et invoquera la
 	fonction de gestionnaire handle_show au niveau de la vm lua
 	après chargement de ce fichier.</p>
 
-<pre class="prettyprint lang-config">LuaMapHandler /bingo /scripts/wombat.lua</pre>
+<pre class="prettyprint lang-config">LuaMapHandler "/bingo" "/scripts/wombat.lua"</pre>
 
         <p>Cette directive invoquera la fonction "handle" qui est la
 	valeur par défaut si aucun nom de fonction spécifique n'est
@@ -1854,7 +1840,7 @@ globale <code>bucket</code> contient les paquets de données tels qu'ils
 sont transmis au script Lua :
 </p>
 
-<pre class="prettyprint lang-config">LuaOutputFilter myOutputFilter /www/filter.lua output_filter
+<pre class="prettyprint lang-config">LuaOutputFilter myOutputFilter "/www/filter.lua" output_filter
 &lt;Files "*.lua"&gt;
   SetOutputFilter myOutputFilter
 &lt;/Files&gt;</pre>
@@ -1928,8 +1914,8 @@ filtres Lua</a>" pour plus de détails.
     chemins de recherche du module lua. Elle suit les mêmes conventions
     que lua. Ceci modifie le package.path dans les vms lua.</p>
 
-    <div class="example"><h3>Exemples :</h3><pre class="prettyprint lang-config">LuaPackagePath /scripts/lib/?.lua
-LuaPackagePath /scripts/lib/?/init.lua</pre>
+    <div class="example"><h3>Exemples :</h3><pre class="prettyprint lang-config">LuaPackagePath "/scripts/lib/?.lua"
+LuaPackagePath "/scripts/lib/?/init.lua"</pre>
 </div>
 
 </div>
@@ -2035,7 +2021,7 @@ relatifs dans les directives de mod_lua</td></tr>
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Commentaires</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_lua.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_lua.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -2045,13 +2031,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_lua.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Autorisé sous <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossaire</a> | <a href="../sitemap.html">Plan du site</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

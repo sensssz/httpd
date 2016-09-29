@@ -154,7 +154,6 @@ XDCDATA		=
 TARGET_nlm = \
 	$(OBJDIR)/modbucketeer.nlm \
 	$(OBJDIR)/moddumpio.nlm \
-	$(OBJDIR)/modfirehose.nlm \
 	$(EOLIST)
 
 #

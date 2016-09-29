@@ -66,11 +66,6 @@
 #define BCRYPT_ALGO_SUPPORTED 0
 #endif
 
-#if APR_CHARSET_EBCDIC
-#undef BCRYPT_ALGO_SUPPORTED
-#define BCRYPT_ALGO_SUPPORTED 0
-#endif
-
 /*
  * Must be initialized with apr_file_open_stderr() before using any of the
  * below functions.

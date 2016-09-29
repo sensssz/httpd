@@ -108,7 +108,6 @@ typedef struct {
     size_t avail;
     const char *encoding;
     urlmap *map;
-    const char *etag;
 } saxctxt;
 
 
@@ -127,7 +126,6 @@ static const char *const fpi_xhtml =
         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
 static const char *const fpi_xhtml_legacy =
         "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n";
-static const char *const fpi_html5 = "<!DOCTYPE html>\n";
 static const char *const html_etag = ">";
 static const char *const xhtml_etag = " />";
 /*#define DEFAULT_DOCTYPE fpi_html */
@@ -281,33 +279,6 @@ static void dump_content(saxctxt *ctx)
     }
     AP_fwrite(ctx, ctx->buf, strlen(ctx->buf), 1);
 }
-static void pinternalSubset(void* ctxt, const xmlChar *name,
-                            const xmlChar *externalID, const xmlChar *sysID)
-{
-    saxctxt* ctx = (saxctxt*) ctxt;
-    if (!ctxt || !name) {
-        /* sanity check */
-        return;
-    }
-    if (ctx->cfg->doctype != DEFAULT_DOCTYPE) {
-        /* do nothing if overridden in config */
-        return;
-    }
-    ap_fputstrs(ctx->f->next, ctx->bb, "<!DOCTYPE ", (const char *)name, NULL);
-    if (externalID) {
-        if (!ap_cstr_casecmp((const char*)name, "html") &&
-            !ap_cstr_casecmpn((const char *)externalID, "-//W3C//DTD XHTML ", 18)) {
-            ctx->etag = xhtml_etag;
-        }
-        else {
-            ctx->etag = html_etag;
-        }
-        ap_fputstrs(ctx->f->next, ctx->bb, " PUBLIC \"", (const char *)externalID, "\"", NULL);
-    if (sysID)
-        ap_fputstrs(ctx->f->next, ctx->bb, " \"", (const char *)sysID, "\"", NULL);
-    }
-    ap_fputs(ctx->f->next, ctx->bb, ">\n");
-}
 static void pcdata(void *ctxt, const xmlChar *uchars, int length)
 {
     const char *chars = (const char*) uchars;
@@ -338,7 +309,6 @@ static void pcomment(void *ctxt, const xmlChar *uchars)
         ap_fputs(ctx->f->next, ctx->bb, "<!--");
         AP_fwrite(ctx, chars, strlen(chars), 1);
         ap_fputs(ctx->f->next, ctx->bb, "-->");
-        dump_content(ctx);
     }
 }
 static void pendElement(void *ctxt, const xmlChar *uname)
@@ -353,8 +323,8 @@ static void pendElement(void *ctxt, const xmlChar *uname)
             return;
     
     }
-    else if ((ctx->cfg->doctype == fpi_html_legacy)
-             || (ctx->cfg->doctype == fpi_xhtml_legacy)) {
+    else if ((ctx->cfg->doctype == fpi_html)
+             || (ctx->cfg->doctype == fpi_xhtml)) {
         /* enforce html legacy */
         if (!desc)
             return;
@@ -660,7 +630,7 @@ static void pstartElement(void *ctxt, const xmlChar *uname,
     }
     ctx->offset = 0;
     if (desc && desc->empty)
-        ap_fputs(ctx->f->next, ctx->bb, ctx->etag);
+        ap_fputs(ctx->f->next, ctx->bb, ctx->cfg->etag);
     else
         ap_fputc(ctx->f->next, ctx->bb, '>');
 
@@ -690,7 +660,7 @@ static meta *metafix(request_rec *r, const char *buf)
         while (!apr_isalpha(*++p));
         for (q = p; apr_isalnum(*q) || (*q == '-'); ++q);
         header = apr_pstrndup(r->pool, p, q-p);
-        if (ap_cstr_casecmpn(header, "Content-", 8)) {
+        if (strncasecmp(header, "Content-", 8)) {
             /* find content=... string */
             p = apr_strmatch(seek_content, buf+offs+pmatch[0].rm_so,
                               pmatch[0].rm_eo - pmatch[0].rm_so);
@@ -718,7 +688,7 @@ static meta *metafix(request_rec *r, const char *buf)
                 }
             }
         }
-        else if (!ap_cstr_casecmpn(header, "Content-Type", 12)) {
+        else if (!strncasecmp(header, "Content-Type", 12)) {
             ret = apr_palloc(r->pool, sizeof(meta));
             ret->start = offs+pmatch[0].rm_so;
             ret->end = offs+pmatch[0].rm_eo;
@@ -842,8 +812,8 @@ static saxctxt *check_filter_init (ap_filter_t *f)
             else if (!f->r->content_type) {
                 errmsg = "No content-type; bailing out of proxy-html filter";
             }
-            else if (ap_cstr_casecmpn(f->r->content_type, "text/html", 9) &&
-                     ap_cstr_casecmpn(f->r->content_type,
+            else if (strncasecmp(f->r->content_type, "text/html", 9) &&
+                     strncasecmp(f->r->content_type,
                                  "application/xhtml+xml", 21)) {
                 errmsg = "Non-HTML content; not inserting proxy-html filter";
             }
@@ -865,7 +835,6 @@ static saxctxt *check_filter_init (ap_filter_t *f)
         fctx->bb = apr_brigade_create(f->r->pool,
                                       f->r->connection->bucket_alloc);
         fctx->cfg = cfg;
-        fctx->etag = cfg->etag;
         apr_table_unset(f->r->headers_out, "Content-Length");
 
         if (cfg->interp)
@@ -919,16 +888,6 @@ static apr_status_t proxy_html_filter(ap_filter_t *f, apr_bucket_brigade *bb)
                  == APR_SUCCESS) {
             if (ctxt->parser == NULL) {
                 const char *cenc;
-
-                /* For documents smaller than four bytes, there is no reason to do
-                 * HTML rewriting. The URL schema (i.e. 'http') needs four bytes alone.
-                 * And the HTML parser needs at least four bytes to initialise correctly.
-                 */
-                if ((bytes < 4) && APR_BUCKET_IS_EOS(APR_BUCKET_NEXT(b))) {
-                    ap_remove_output_filter(f) ;
-                    return ap_pass_brigade(f->next, bb) ;
-                }
-
                 if (!xml2enc_charset ||
                     (xml2enc_charset(f->r, &enc, &cenc) != APR_SUCCESS)) {
                     if (!xml2enc_charset)
@@ -1159,10 +1118,7 @@ static const char *set_doctype(cmd_parms *cmd, void *CFG,
                                const char *t, const char *l)
 {
     proxy_html_conf *cfg = (proxy_html_conf *)CFG;
-    if (!strcasecmp(t, "auto")) {
-        cfg->doctype = DEFAULT_DOCTYPE; /* activates pinternalSubset */
-    }
-    else if (!strcasecmp(t, "xhtml")) {
+    if (!strcasecmp(t, "xhtml")) {
         cfg->etag = xhtml_etag;
         if (l && !strcasecmp(l, "legacy"))
             cfg->doctype = fpi_xhtml_legacy;
@@ -1175,10 +1131,6 @@ static const char *set_doctype(cmd_parms *cmd, void *CFG,
             cfg->doctype = fpi_html_legacy;
         else
             cfg->doctype = fpi_html;
-    }
-    else if (!strcasecmp(t, "html5")) {
-        cfg->etag = html_etag;
-        cfg->doctype = fpi_html5;
     }
     else {
         cfg->doctype = apr_pstrdup(cmd->pool, t);
@@ -1282,7 +1234,6 @@ static int mod_proxy_html(apr_pool_t *p, apr_pool_t *p1, apr_pool_t *p2)
     sax.characters = pcharacters;
     sax.comment = pcomment;
     sax.cdataBlock = pcdata;
-    sax.internalSubset = pinternalSubset;
     xml2enc_charset = APR_RETRIEVE_OPTIONAL_FN(xml2enc_charset);
     xml2enc_filter = APR_RETRIEVE_OPTIONAL_FN(xml2enc_filter);
     if (!xml2enc_charset) {

@@ -71,9 +71,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name mod_example_ipc
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mod_lbmethod_rr
-    End Project Dependency
 }}}
 
 ###############################################################################
@@ -109,9 +106,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name mod_alias
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mod_allowhandlers
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name mod_allowmethods
@@ -193,9 +187,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name mod_charset_lite
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mod_crypto
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name mod_data
@@ -981,27 +972,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "mod_allowhandlers"=.\modules\aaa\mod_allowhandlers.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libapr
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libaprutil
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libhttpd
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "mod_allowmethods"=.\modules\aaa\mod_allowmethods.dsp - Package Owner=<4>
 
 Package=<5>
@@ -1658,27 +1628,6 @@ Package=<4>
 ###############################################################################
 
 Project: "mod_charset_lite"=.\modules\filters\mod_charset_lite.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libapr
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libaprutil
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libhttpd
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "mod_crypto"=.\modules\filters\mod_crypto.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -2392,33 +2341,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "mod_lbmethod_rr"=.\modules\proxy\examples\mod_lbmethod_rr.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libapr
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libaprutil
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libhttpd
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mod_proxy
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mod_proxy_balancer
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "mod_ldap"=.\modules\ldap\mod_ldap.dsp - Package Owner=<4>
 
 Package=<5>
@@ -3054,30 +2976,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libhttpd
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "mod_serf"=.\modules\proxy\mod_serf.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libapr
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libaprutil
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libhttpd
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name mod_proxy
     End Project Dependency
 }}}
 

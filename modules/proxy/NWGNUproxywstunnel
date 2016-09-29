@@ -19,6 +19,8 @@ XINCDIRS	+= \
 			$(APR)/include \
 			$(APRUTIL)/include \
 			$(SRC)/include \
+			$(STDMOD)/http \
+			$(STDMOD)/proxy \
 			$(NWOS) \
 			$(EOLIST)
 
@@ -103,7 +105,7 @@ NLM_DESCRIPTION	= Apache $(VERSION_STR) Proxy Web Socket Tunnel Module
 # This is used by the '-threadname' directive.  If left blank,
 # NLM_NAME Thread will be used.
 #
-NLM_THREAD_NAME	= Proxy WbSkt Module
+NLM_THREAD_NAME	= Prxy WbSkt Module
 
 #
 # If this is specified, it will override VERSION value in
@@ -147,15 +149,12 @@ XDCDATA		=
 #
 # If there is an NLM target, put it here
 #
-TARGET_nlm = \
-	$(OBJDIR)/$(NLM_NAME).nlm \
-	$(EOLIST)
+TARGET_nlm = $(OBJDIR)/$(NLM_NAME).nlm
 
 #
 # If there is an LIB target, put it here
 #
-TARGET_lib = \
-	$(EOLIST)
+TARGET_lib = 
 
 #
 # These are the OBJ files needed to create the NLM target above.
@@ -178,8 +177,8 @@ FILES_nlm_libs = \
 # These will be added as a module command in the link.opt file.
 #
 FILES_nlm_modules = \
-	aprlib \
 	libc \
+	aprlib \
 	proxy \
 	$(EOLIST)
 
@@ -202,10 +201,10 @@ FILE_nlm_copyright =
 # Any additional imports go here
 #
 FILES_nlm_Ximports = \
+	@libc.imp \
 	@aprlib.imp \
 	@httpd.imp \
-	@mod_proxy.imp \
-	@libc.imp \
+	@$(OBJDIR)/mod_proxy.imp \
 	$(EOLIST)
 
 #
@@ -240,11 +239,12 @@ install :: nlms FORCE
 # Any specialized rules here
 #
 
-vpath %.c ../arch/netware
-
+vpath %.c balancers
 #
 # Include the 'tail' makefile that has targets that depend on variables defined
 # in this makefile
 #
 
 include $(APBUILD)/NWGNUtail.inc
+
+

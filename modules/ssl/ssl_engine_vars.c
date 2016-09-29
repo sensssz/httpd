@@ -71,79 +71,6 @@ static int ssl_is_https(conn_rec *c)
     return sslconn && sslconn->ssl;
 }
 
-/* SSLv3 uses 36 bytes for Finishd messages, TLS1.0 12 bytes,
- * So tls-unique is max 36 bytes, however with tls-server-end-point,
- * the CB data is the certificate signature, so we use the maximum
- * hash size known to the library (currently 64).
- * */
-#define TLS_CB_MAX EVP_MAX_MD_SIZE
-#define TLS_UNIQUE_PREFIX "tls-unique:"
-#define TLS_SERVER_END_POINT_PREFIX "tls-server-end-point:"
-
-static apr_status_t ssl_get_tls_cb(apr_pool_t *p, conn_rec *c, const char *type,
-                                   unsigned char **buf, apr_size_t *size)
-{
-    SSLConnRec *sslconn = ssl_get_effective_config(c);
-    const char *prefix;
-    apr_size_t preflen;
-    const unsigned char *data;
-    unsigned char cb[TLS_CB_MAX], *retbuf;
-    unsigned int l = 0;
-    X509 *x = NULL;
-
-    if (!sslconn || !sslconn->ssl) {
-        return APR_EGENERAL;
-    }
-    if (strcEQ(type, "SERVER_TLS_UNIQUE")) {
-        l = SSL_get_peer_finished(sslconn->ssl, cb, TLS_CB_MAX);
-    }
-    else if (strcEQ(type, "CLIENT_TLS_UNIQUE")) {
-        l = SSL_get_finished(sslconn->ssl, cb, TLS_CB_MAX);
-    }
-    else if (strcEQ(type, "SERVER_TLS_SERVER_END_POINT")) {
-        x = SSL_get_certificate(sslconn->ssl);
-    }
-    else if (strcEQ(type, "CLIENT_TLS_SERVER_END_POINT")) {
-        x = SSL_get_peer_certificate(sslconn->ssl);
-    }
-    if (l > 0) {
-        preflen = sizeof(TLS_UNIQUE_PREFIX) -1;
-        prefix = TLS_UNIQUE_PREFIX;
-        data = cb;
-    } 
-    else if (x != NULL) {
-        const EVP_MD *md;
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-        md = EVP_get_digestbynid(OBJ_obj2nid(x->sig_alg->algorithm));
-#else
-        md = EVP_get_digestbynid(X509_get_signature_nid(x));
-#endif
-        /* Override digest as specified by RFC 5929 section 4.1. */
-        if (md == NULL || md == EVP_md5() || md == EVP_sha1()) {
-            md = EVP_sha256();
-        }
-        if (!X509_digest(x, md, cb, &l)) {
-            return APR_EGENERAL;
-        }
-
-        preflen = sizeof(TLS_SERVER_END_POINT_PREFIX) - 1;
-        prefix = TLS_SERVER_END_POINT_PREFIX;
-        data = cb;
-    } 
-    else {
-        return APR_EGENERAL;
-    }
-
-    retbuf = apr_palloc(p, preflen + l);
-    memcpy(retbuf, prefix, preflen);
-    memcpy(&retbuf[preflen], data, l);
-    *size = preflen + l;
-    *buf = retbuf;
-
-    return APR_SUCCESS;
-}
-
 static const char var_interface[] = "mod_ssl/" AP_SERVER_BASEREVISION;
 static char var_library_interface[] = MODSSL_LIBRARY_TEXT;
 static char *var_library = NULL;
@@ -211,7 +138,6 @@ void ssl_var_register(apr_pool_t *p)
     char *cp, *cp2;
 
     APR_REGISTER_OPTIONAL_FN(ssl_is_https);
-    APR_REGISTER_OPTIONAL_FN(ssl_get_tls_cb);
     APR_REGISTER_OPTIONAL_FN(ssl_var_lookup);
     APR_REGISTER_OPTIONAL_FN(ssl_ext_list);
 
@@ -438,7 +364,7 @@ static char *ssl_var_lookup_ssl(apr_pool_t *p, SSLConnRec *sslconn,
         char buf[MODSSL_SESSION_ID_STRING_LEN];
         SSL_SESSION *pSession = SSL_get_session(ssl);
         if (pSession) {
-            IDCONST unsigned char *id;
+            unsigned char *id;
             unsigned int idlen;
 
 #ifdef OPENSSL_NO_SSL_INTERN
@@ -603,25 +529,13 @@ static char *ssl_var_lookup_ssl_cert(apr_pool_t *p, request_rec *r, X509 *xs,
         resdup = FALSE;
     }
     else if (strcEQ(var, "A_SIG")) {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
         nid = OBJ_obj2nid((ASN1_OBJECT *)(xs->cert_info->signature->algorithm));
-#else
-        ASN1_OBJECT *paobj;
-        X509_ALGOR_get0(&paobj, NULL, NULL, X509_get0_tbs_sigalg(xs));
-        nid = OBJ_obj2nid(paobj);
-#endif
         result = apr_pstrdup(p,
                              (nid == NID_undef) ? "UNKNOWN" : OBJ_nid2ln(nid));
         resdup = FALSE;
     }
     else if (strcEQ(var, "A_KEY")) {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
         nid = OBJ_obj2nid((ASN1_OBJECT *)(xs->cert_info->key->algor->algorithm));
-#else
-        ASN1_OBJECT *paobj;
-        X509_PUBKEY_get0_param(&paobj, NULL, 0, NULL, X509_get_X509_PUBKEY(xs));
-        nid = OBJ_obj2nid(paobj);
-#endif
         result = apr_pstrdup(p,
                              (nid == NID_undef) ? "UNKNOWN" : OBJ_nid2ln(nid));
         resdup = FALSE;
@@ -683,8 +597,11 @@ static char *ssl_var_lookup_ssl_cert_dn(apr_pool_t *p, X509_NAME *xsname, char *
     for (i = 0; ssl_var_lookup_ssl_cert_dn_rec[i].name != NULL; i++) {
         if (strEQn(var, ssl_var_lookup_ssl_cert_dn_rec[i].name, varlen)
             && strlen(ssl_var_lookup_ssl_cert_dn_rec[i].name) == varlen) {
-            for (j = 0; j < X509_NAME_entry_count(xsname); j++) {
-                xsne = X509_NAME_get_entry(xsname, j);
+            for (j = 0; j < sk_X509_NAME_ENTRY_num((STACK_OF(X509_NAME_ENTRY) *)
+                                                   xsname->entries);
+                 j++) {
+                xsne = sk_X509_NAME_ENTRY_value((STACK_OF(X509_NAME_ENTRY) *)
+                                                xsname->entries, j);
 
                 n =OBJ_obj2nid((ASN1_OBJECT *)X509_NAME_ENTRY_get_object(xsne));
 
@@ -986,6 +903,7 @@ static char *ssl_var_lookup_ssl_version(apr_pool_t *p, char *var)
 static void extract_dn(apr_table_t *t, apr_hash_t *nids, const char *pfx,
                        X509_NAME *xn, apr_pool_t *p)
 {
+    STACK_OF(X509_NAME_ENTRY) *ents = xn->entries;
     X509_NAME_ENTRY *xsne;
     apr_hash_t *count;
     int i, nid;
@@ -995,9 +913,10 @@ static void extract_dn(apr_table_t *t, apr_hash_t *nids, const char *pfx,
     count = apr_hash_make(p);
 
     /* For each RDN... */
-    for (i = 0; i < X509_NAME_entry_count(xn); i++) {
+    for (i = 0; i < sk_X509_NAME_ENTRY_num(ents); i++) {
          const char *tag;
-         xsne = X509_NAME_get_entry(xn, i);
+
+         xsne = sk_X509_NAME_ENTRY_value(ents, i);
 
          /* Retrieve the nid, and check whether this is one of the nids
           * which are to be extracted. */
@@ -1164,14 +1083,14 @@ apr_array_header_t *ssl_ext_list(apr_pool_t *p, conn_rec *c, int peer,
     }
 
     count = X509_get_ext_count(xs);
-    /* Create an array large enough to accommodate every extension. This is
+    /* Create an array large enough to accomodate every extension. This is
      * likely overkill, but safe.
      */
     array = apr_array_make(p, count, sizeof(char *));
     for (j = 0; j < count; j++) {
         X509_EXTENSION *ext = X509_get_ext(xs, j);
 
-        if (OBJ_cmp(X509_EXTENSION_get_object(ext), oid) == 0) {
+        if (OBJ_cmp(ext->object, oid) == 0) {
             BIO *bio = BIO_new(BIO_s_mem());
 
             /* We want to obtain a string representation of the extensions

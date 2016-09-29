@@ -42,22 +42,19 @@ struct h2_bucket_beam;
 typedef struct h2_stream h2_stream;
 
 struct h2_stream {
-    apr_uint32_t id;            /* http2 stream id */
-    apr_uint32_t initiated_on;  /* initiating stream id (PUSH) or 0 */
-    apr_time_t created;         /* when stream was created */
+    int id;                     /* http2 stream id */
     h2_stream_state_t state;    /* http/2 state of this stream */
     struct h2_session *session; /* the session this stream belongs to */
     
     apr_pool_t *pool;           /* the memory pool for this stream */
-    const struct h2_request *request; /* the request made in this stream */
-    struct h2_request *rtmp;    /* request being assembled */
+    struct h2_request *request; /* the request made in this stream */
     struct h2_bucket_beam *input;
     int request_headers_added;  /* number of request headers added */
     
     struct h2_response *response;
-    struct h2_response *last_sent;
     struct h2_bucket_beam *output;
     apr_bucket_brigade *buffer;
+    apr_bucket_brigade *tmp;
     apr_array_header_t *files;  /* apr_file_t* we collected during I/O */
 
     int rst_error;              /* stream error for RST_STREAM */
@@ -68,10 +65,7 @@ struct h2_stream {
     unsigned int submitted : 1; /* response HEADER has been sent */
     
     apr_off_t input_remaining;  /* remaining bytes on input as advertised via content-length */
-    apr_off_t out_data_frames;  /* # of DATA frames sent */
-    apr_off_t out_data_octets;  /* # of DATA octets (payload) sent */
-    apr_off_t in_data_frames;   /* # of DATA frames received */
-    apr_off_t in_data_octets;   /* # of DATA octets (payload) received */
+    apr_off_t data_frames_sent; /* # of DATA frames sent out for this stream */
 };
 
 
@@ -84,8 +78,8 @@ struct h2_stream {
  * @param session the session this stream belongs to
  * @return the newly opened stream
  */
-h2_stream *h2_stream_open(apr_uint32_t id, apr_pool_t *pool, struct h2_session *session,
-                          int initiated_on);
+h2_stream *h2_stream_open(int id, apr_pool_t *pool, struct h2_session *session,
+                          int initiated_on, const struct h2_request *req);
 
 /**
  * Cleanup any resources still held by the stream, called by last bucket.
@@ -113,13 +107,6 @@ void h2_stream_cleanup(h2_stream *stream);
  */
 apr_pool_t *h2_stream_detach_pool(h2_stream *stream);
 
-/**
- * Initialize stream->request with the given h2_request.
- * 
- * @param stream stream to write request to
- * @param r the request with all the meta data
- */
-apr_status_t h2_stream_set_request(h2_stream *stream, const h2_request *r);
 
 /**
  * Initialize stream->request with the given request_rec.
@@ -127,7 +114,7 @@ apr_status_t h2_stream_set_request(h2_stream *stream, const h2_request *r);
  * @param stream stream to write request to
  * @param r the request with all the meta data
  */
-apr_status_t h2_stream_set_request_rec(h2_stream *stream, request_rec *r);
+apr_status_t h2_stream_set_request(h2_stream *stream, request_rec *r);
 
 /*
  * Add a HTTP/2 header (including pseudo headers) or trailer 
@@ -170,13 +157,13 @@ void h2_stream_rst(h2_stream *stream, int error_code);
 
 /**
  * Schedule the stream for execution. All header information must be
- * present. Use the given priority comparison callback to determine 
+ * present. Use the given priority comparision callback to determine 
  * order in queued streams.
  * 
  * @param stream the stream to schedule
  * @param eos    != 0 iff no more input will arrive
- * @param cmp    priority comparison
- * @param ctx    context for comparison
+ * @param cmp    priority comparision
+ * @param ctx    context for comparision
  */
 apr_status_t h2_stream_schedule(h2_stream *stream, int eos, int push_enabled,
                                 h2_stream_pri_cmp *cmp, void *ctx);
@@ -189,7 +176,6 @@ apr_status_t h2_stream_schedule(h2_stream *stream, int eos, int push_enabled,
 int h2_stream_is_scheduled(const h2_stream *stream);
 
 struct h2_response *h2_stream_get_response(h2_stream *stream);
-struct h2_response *h2_stream_get_unsent_response(h2_stream *stream);
 
 /**
  * Set the response for this stream. Invoked when all meta data for
@@ -200,7 +186,7 @@ struct h2_response *h2_stream_get_unsent_response(h2_stream *stream);
  * @param bb bucket brigade with output data for the stream. Optional,
  *        may be incomplete.
  */
-apr_status_t h2_stream_add_response(h2_stream *stream, 
+apr_status_t h2_stream_set_response(h2_stream *stream, 
                                     struct h2_response *response,
                                     struct h2_bucket_beam *output);
 
@@ -290,11 +276,5 @@ apr_status_t h2_stream_submit_pushes(h2_stream *stream);
  * Get priority information set for this stream.
  */
 const struct h2_priority *h2_stream_get_priority(h2_stream *stream);
-
-/**
- * Return a textual representation of the stream state as in RFC 7540
- * nomenclator, all caps, underscores.
- */
-const char *h2_stream_state_str(h2_stream *stream);
 
 #endif /* defined(__mod_h2__h2_stream__) */

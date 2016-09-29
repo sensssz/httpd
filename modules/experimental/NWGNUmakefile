@@ -161,8 +161,6 @@ XDCDATA		=
 # it twice to allow it parent NWGNUmakefile to work properly.  If another
 # submakefile is added, the extra reference to the first NLM should be removed.
 TARGET_nlm = \
-	$(OBJDIR)/noloris.nlm \
-	$(OBJDIR)/noloris.nlm \
 	$(EOLIST)
 
 #

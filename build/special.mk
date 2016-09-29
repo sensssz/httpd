@@ -27,10 +27,10 @@ INSTALL_TARGETS = install-modules-$(INSTALL_DSO)
 include $(top_builddir)/build/rules.mk
 
 install-modules-yes: $(SHARED_TARGETS)
-	@if test -n "$(shared)"; then \
-	    $(MKINSTALLDIRS) $(DESTDIR)$(libexecdir); \
-	    $(top_srcdir)/build/instdso.sh SH_LIBTOOL='$(SH_LIBTOOL)' $(shared) $(DESTDIR)$(libexecdir); \
-	fi;
+	@$(MKINSTALLDIRS) $(DESTDIR)$(libexecdir)
+	@list='$(shared)'; for i in $$list; do \
+	  $(top_srcdir)/build/instdso.sh SH_LIBTOOL='$(SH_LIBTOOL)' $$i $(DESTDIR)$(libexecdir); \
+	done
 
 install-modules-no:
 

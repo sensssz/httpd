@@ -173,7 +173,6 @@ static int reclaim_one_pid(pid_t pid, action_t action)
     return 0;
 }
 
-/* XXX The terminate argument is ignored. Implement or remove? */
 AP_DECLARE(void) ap_reclaim_child_processes(int terminate,
                                             ap_reclaim_callback_fn_t *mpm_callback)
 {
@@ -628,7 +627,7 @@ static apr_status_t dummy_connection(ap_pod_t *pod)
      * expensive to do correctly (performing a complete SSL handshake)
      * or cause log spam by doing incorrectly (simply sending EOF). */
     lp = ap_listeners;
-    while (lp && lp->protocol && ap_cstr_casecmp(lp->protocol, "http") != 0) {
+    while (lp && lp->protocol && strcasecmp(lp->protocol, "http") != 0) {
         lp = lp->next;
     }
     if (!lp) {
@@ -676,7 +675,7 @@ static apr_status_t dummy_connection(ap_pod_t *pod)
         return rv;
     }
 
-    if (lp->protocol && ap_cstr_casecmp(lp->protocol, "https") == 0) {
+    if (lp->protocol && strcasecmp(lp->protocol, "https") == 0) {
         /* Send a TLS 1.0 close_notify alert.  This is perhaps the
          * "least wrong" way to open and cleanly terminate an SSL
          * connection.  It should "work" without noisy error logs if

@@ -52,11 +52,10 @@ XINCDIRS	+= \
 			$(SSL_INC) \
 			$(APR)/include \
 			$(APRUTIL)/include \
-			$(SRC)/include \
-			$(STDMOD)/cache \
-			$(STDMOD)/generators \
-			$(STDMOD)/proxy \
-			$(SERVER)/mpm/NetWare \
+			$(AP_WORK)/include \
+			$(AP_WORK)/modules/cache \
+			$(AP_WORK)/modules/generators \
+			$(AP_WORK)/server/mpm/NetWare \
 			$(NWOS) \
 			$(EOLIST)
 
@@ -209,7 +208,7 @@ TARGET_lib = \
 # These are the OBJ files needed to create the NLM target above.
 # Paths must all use the '/' character
 #
-FILES_nlm_objs := $(patsubst %.c,$(OBJDIR)/%.o,$(filter-out $(wildcard *ssl_ct*.c),$(wildcard *.c)))
+FILES_nlm_objs := $(patsubst %.c,$(OBJDIR)/%.o,$(wildcard *.c))
 
 
 #
@@ -316,7 +315,7 @@ install :: nlms FORCE
 #
 # Any specialized rules here
 #
-vpath %.c $(STDMOD)/arch/netware
+vpath %.c $(AP_WORK)/modules/arch/netware
 
 #
 # Include the 'tail' makefile that has targets that depend on variables defined

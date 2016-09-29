@@ -44,7 +44,7 @@ typedef struct
 {
     request_rec *r; /* Request_rec */
     apr_table_t *t; /* apr_table_t* */
-    const char  *n; /* name of table */
+     char  *n; /* name of table */
 } req_table_t;
 
 typedef struct {

@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Günlük Dosyaları - Apache HTTP Sunucusu Sürüm 2.5</title>
+<title>Günlük Dosyaları - Apache HTTP Sunucusu Sürüm 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
-<p class="apache">Apache HTTP Sunucusu Sürüm 2.5</p>
+<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
+<p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.5</a></div><div id="page-content"><div id="preamble"><h1>Günlük Dosyaları</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.4</a></div><div id="page-content"><div id="preamble"><h1>Günlük Dosyaları</h1>
 <div class="toplang">
 <p><span>Mevcut Diller: </span><a href="./en/logs.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="./fr/logs.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
@@ -156,9 +156,8 @@
     <p>Bunu <code class="directive">LogLevel</code> yönergesinde modülün ismini
       belirterek yapabilirsiniz:</p>
 
-    <div class="example"><p><code>
-    LogLevel info rewrite:trace5
-    </code></p></div>
+    <pre class="prettyprint lang-config">LogLevel info rewrite:trace5</pre>
+
 
     <p>Bu satırla ana <code class="directive">LogLevel</code> info'ya ayarlanırken
       <code class="module"><a href="./mod/mod_rewrite.html">mod_rewrite</a></code> için musluk <code>trace5</code> seviyesine
@@ -186,8 +185,7 @@
       bilgiyi incelemektir. Günlük incelemesi bu belgenin kapsamına dahil
       değildir ve aslında bu işlem sunucunun yaptığı işlerden biri değildir.
       Bu konu ve günlük incelemesi yapan uygulamalar hakkında daha ayrıntılı
-      bilgi edinmek için <a href="http://dmoz.org/Computers/Software/Internet/Site_Management/Log_analysis/">dmoz.org</a>
-      bakınız.</p>
+      bilgi edinmek için <a href="http://dmoz.org/Computers/Software/Internet/Site_Management/Log_Analysis/">dmoz.org</a> bakınız.</p>
 
     <p>Apache httpd’nin çeşitli sürümlerinde erişim günlüklerini denetlemek
       için kullanılan diğer modüller ve yönergeler arasında mod_log_referer,
@@ -207,10 +205,9 @@
 
       <p>Erişim günlüğü için sıklıkla kullanılan bir yapılandırma:</p>
 
-      <div class="example"><p><code>
-        LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common<br />
-        CustomLog logs/access_log common
-      </code></p></div>
+      <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common
+CustomLog logs/access_log common</pre>
+
 
       <p>İlk satırda belli bir biçem dizgesi için <code>common</code> diye bir
         <em>takma ad</em> tanımlanmaktadır. Biçem dizgesi, sunucuya hangi
@@ -341,11 +338,9 @@
       <p>Sıklıkla kullanılan diğer bir biçem dizgesi Birleşik Günlük Biçemi
         (Combined Log Format) olup şöyle kullanılabilir:</p>
 
-      <div class="example"><p><code>
-        LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\"
-        \"%{User-agent}i\"" combined<br />
-         CustomLog log/access_log combined
-      </code></p></div>
+      <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
+CustomLog log/access_log combined</pre>
+
 
       <p>Bu biçem ilaveten 2 alan içermesi dışında Ortak Günlük Biçemi ile
         aynıdır. İlave alanların ikisi de <code>%{<em>başlık</em>}i</code>
@@ -390,12 +385,11 @@
         <code>AgentLog</code> yönergelerinin etkilerinin nasıl taklit
         edileceğini de göstermektedir.</p>
 
-      <div class="example"><p><code>
-        LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common<br />
-        CustomLog logs/access_log common<br />
-        CustomLog logs/referer_log "%{Referer}i -&gt; %U"<br />
-        CustomLog logs/agent_log "%{User-agent}i"
-      </code></p></div>
+      <pre class="prettyprint lang-config">LogFormat "%h %l %u %t \"%r\" %&gt;s %b" common
+CustomLog logs/access_log common
+CustomLog logs/referer_log "%{Referer}i -&gt; %U"
+CustomLog logs/agent_log "%{User-agent}i"</pre>
+
 
       <p>Bu örnek ayrıca, <code class="directive"><a href="./mod/mod_log_config.html#logformat">LogFormat</a></code> yönergesi ile bir takma ad tanımlamanın şart
         olmadığını da göstermektedir. Günlük biçemi doğrudan <code class="directive"><a href="./mod/mod_log_config.html#customlog">CustomLog</a></code> yönergesinde
@@ -413,32 +407,29 @@
         edilip edilmeyeceği <code class="directive"><a href="./mod/mod_log_config.html#customlog">CustomLog</a></code> yönergesinin
         <code>env=</code> deyimi kullanılarak belirtilir. Bazı örnekler:</p>
 
-      <div class="example"><p><code>
-        # yerel konaktan kaynaklanan istekleri imleyelim<br />
-        SetEnvIf Remote_Addr "127\.0\.0\.1" kaydetme<br />
-        # robots.txt dosyası isteklerini imleyelim<br />
-        SetEnvIf Request_URI "^/robots\.txt$" kaydetme<br />
-        # Kalanları günlüğe kaydedelim<br />
-        CustomLog logs/access_log common env=!kaydetme
-      </code></p></div>
+      <pre class="prettyprint lang-config"># yerel konaktan kaynaklanan istekleri imleyelim
+SetEnvIf Remote_Addr "127\.0\.0\.1" kaydetme
+# robots.txt dosyası isteklerini imleyelim
+SetEnvIf Request_URI "^/robots\.txt$" kaydetme
+# Kalanları günlüğe kaydedelim
+CustomLog logs/access_log common env=!kaydetme</pre>
+
 
       <p>Başka bir örnek olarak, Türkçe belge isteklerini bir dosyaya diğer
         dillerdeki istekleri başka bir dosyaya kaydedelim.</p>
 
-      <div class="example"><p><code>
-        SetEnvIf Accept-Language "tr" turkce<br />
-        CustomLog logs/turkce_log common env=turkce<br />
-        CustomLog logs/diger_diller_log common env=!turkce
-      </code></p></div>
+      <pre class="prettyprint lang-config">SetEnvIf Accept-Language "tr" turkce
+CustomLog logs/turkce_log common env=turkce
+CustomLog logs/diger_diller_log common env=!turkce</pre>
 
-      <p>Bir arabellkleme senaryosuna arabelleğin verimli kullanılıp
+
+      <p>Bir arabellekleme senaryosuna arabelleğin verimli kullanılıp
         kullanılmadığını bilmek isteyelim. Bu basitçe şöyle yapılabilir:</p>
 
-      <div class="example"><p><code>
-        SetEnv CACHE_MISS 1<br />
-        LogFormat "%h %l %u %t "%r " %&gt;s %b %{CACHE_MISS}e" common-cache<br />
-        CustomLog logs/access_log common-cache
-      </code></p></div>
+      <pre class="prettyprint lang-config">SetEnv CACHE_MISS 1
+LogFormat "%h %l %u %t "%r " %&gt;s %b %{CACHE_MISS}e" common-cache
+CustomLog logs/access_log common-cache</pre>
+
 
       <p><code class="module"><a href="./mod/mod_cache.html">mod_cache</a></code> önce <code class="module"><a href="./mod/mod_env.html">mod_env</a></code> modülünü
         çalıştıracak ve başarılı olunduğu takdirde içeriği onsuz teslim
@@ -449,10 +440,9 @@
       <p><code>env=</code> sözdizimine ek olarak, <code class="directive"><a href="./mod/mod_log_config.html#logformat">LogFormat</a></code> HTTP yanıt kodudaki koşul
         değerlerini günlüklemeyi de destekler:</p>
 
-      <div class="example"><p><code>
-      LogFormat "%400,501{User-agent}i" browserlog<br />
-      LogFormat "%!200,304,302{Referer}i" refererlog
-      </code></p></div>
+      <pre class="prettyprint lang-config">LogFormat "%400,501{User-agent}i" browserlog
+LogFormat "%!200,304,302{Referer}i" refererlog</pre>
+
 
       <p>Bu örnekte, HTTP durum kodu 400 veya 501 ise <code>User-agent</code>
         başlığı günlüklenecektir. Aksi takdirde, günlüğe bir "-" yazılacaktır.
@@ -530,10 +520,8 @@
       günlükleri 24 saatte bir döndürmek isterseniz bunu şöyle
       yapabilirsiniz:</p>
 
-    <div class="example"><p><code>
-      CustomLog "|/usr/local/apache/bin/rotatelogs
-      /var/log/access_log 86400" common
-    </code></p></div>
+    <pre class="prettyprint lang-config">CustomLog "|/usr/local/apache/bin/rotatelogs /var/log/access_log 86400" common</pre>
+
 
     <p>Borunun diğer ucundaki süreci başlatacak komutun tırnak içine
       alındığına dikkat ediniz. Bu örnekler erişim günlüğü için verilmişse de
@@ -551,11 +539,9 @@
       yapılmak istenirse "<code>|</code>" yerine "<code>|$</code>"
       kullanılır:</p>
 
-    <div class="example"><p><code>
-      # Kabu kullanarak "rotatelogs" çalıştırmak<br />
-      CustomLog "|$/usr/local/apache/bin/rotatelogs
-      /var/log/access_log 86400" common
-    </code></p></div>
+    <pre class="prettyprint lang-config"># Kabuk kullanarak "rotatelogs" çalıştırmak
+CustomLog "|$/usr/local/apache/bin/rotatelogs /var/log/access_log 86400" common</pre>
+
 
     <p>Bu, Apache 2.2 için öntanımlı davranıştı. Kabuk özelliklerine bağlı
       olarak, yeniden başlatma sırasındaki sinyal işleme sorunları ve günlük
@@ -564,6 +550,18 @@
       gösterimi de desteklenmekte olup "<code>|</code>" kullanımına
       eşdeğerdir.</p>
 
+    <div class="note"><h3>Windows'ta yığın alanı</h3>
+    <p>Windows'ta çok sayıda borulu günlükleme süreci çalışırken ve özellikle
+      HTTPD bir hizmet olarak çalışıyorsa sorunlar baş gösterebilir. Bunun
+      başlıca sebebi masaüstü yığın alanının (heap) dışına taşılmasıdır. Her
+      hizmete ayrılan masüstü yığın alanı, kayıt defterindeki
+      HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\SessionManager\SubSystems\Windows
+      kaydındaki üçüncü değiştirge olan <code>SharedSection</code>
+      değeridir. <strong>Bu değeri değiştirirken çok dikkatli olun</strong>;
+      bu, Windows kayıt defterini değiştirirken verilen normal
+      uyarılardandır, fakat eğer bu değer çok yüksek olursa masaüstü yığın
+      alanının tükenebileceği dikkate alınmalıdır.</p>
+    </div>
   </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="virtualhost" id="virtualhost">Sanal Konaklar</a></h2>
@@ -596,14 +594,12 @@
       ayrıştırılabilir. Örneğin, bu işlem için şu yönergeler kullanılıyor
       olsun:</p>
 
-    <div class="example"><p><code>
-      LogFormat "%v %l %u %t \"%r\" %&gt;s %b"
-      ortaksankon<br />
-      CustomLog logs/access_log ortaksankon
-    </code></p></div>
+    <pre class="prettyprint lang-config">LogFormat "%v %l %u %t \"%r\" %&gt;s %b" ortaksankon
+CustomLog logs/access_log ortaksankon</pre>
+
 
     <p><code>%v</code> belirteci isteği sunan sanal konağın ismini günlüğe
-      yazmak için kullanılır. Daha sonra <a href="programs/other.html">split-logfile</a> gibi bir program
+      yazmak için kullanılır. Daha sonra <a href="programs/split-logfile.html">split-logfile</a> gibi bir program
       kullanarak, bu dosyadan her sanal konak için ayrı birer dosya elde
       edilebilir.</p>
   </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
@@ -666,7 +662,7 @@
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/logs.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/logs.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -676,13 +672,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/logs.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
-<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

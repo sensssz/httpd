@@ -19,8 +19,8 @@ XINCDIRS	+= \
 			$(LIBXML2SDK)/include \
 			$(APR)/include \
 			$(APRUTIL)/include \
-			$(SRC)/include \
-			$(STDMOD)/http \
+			$(AP_WORK)/include \
+			$(AP_WORK)/modules/http \
 			$(NWOS) \
 			$(EOLIST)
 

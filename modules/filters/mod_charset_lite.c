@@ -790,7 +790,7 @@ static apr_status_t xlate_out_filter(ap_filter_t *f, apr_bucket_brigade *bb)
     if (!ctx->noop && ctx->xlate == NULL) {
         const char *mime_type = f->r->content_type;
 
-        if (mime_type && (ap_cstr_casecmpn(mime_type, "text/", 5) == 0 ||
+        if (mime_type && (strncasecmp(mime_type, "text/", 5) == 0 ||
 #if APR_CHARSET_EBCDIC
         /* On an EBCDIC machine, be willing to translate mod_autoindex-
          * generated output.  Otherwise, it doesn't look too cool.
@@ -806,7 +806,7 @@ static apr_status_t xlate_out_filter(ap_filter_t *f, apr_bucket_brigade *bb)
          */
             strcmp(mime_type, DIR_MAGIC_TYPE) == 0 ||
 #endif
-            ap_cstr_casecmpn(mime_type, "message/", 8) == 0 ||
+            strncasecmp(mime_type, "message/", 8) == 0 ||
             dc->force_xlate == FX_FORCE)) {
 
             rv = apr_xlate_open(&ctx->xlate,
@@ -1123,17 +1123,10 @@ static void charset_register_hooks(apr_pool_t *p)
 {
     ap_hook_fixups(find_code_page, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_insert_filter(xlate_insert_filter, NULL, NULL, APR_HOOK_REALLY_LAST);
-#if APR_CHARSET_EBCDIC
-    ap_register_output_filter(XLATEOUT_FILTER_NAME, xlate_out_filter, NULL,
-                              AP_FTYPE_RESOURCE+1);
-    ap_register_input_filter(XLATEIN_FILTER_NAME, xlate_in_filter, NULL,
-                             AP_FTYPE_RESOURCE+1);
-#else
     ap_register_output_filter(XLATEOUT_FILTER_NAME, xlate_out_filter, NULL,
                               AP_FTYPE_RESOURCE);
     ap_register_input_filter(XLATEIN_FILTER_NAME, xlate_in_filter, NULL,
                              AP_FTYPE_RESOURCE);
-#endif
 }
 
 AP_DECLARE_MODULE(charset_lite) =

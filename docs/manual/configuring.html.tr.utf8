@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Yapılandırma Dosyaları - Apache HTTP Sunucusu Sürüm 2.5</title>
+<title>Yapılandırma Dosyaları - Apache HTTP Sunucusu Sürüm 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
-<p class="apache">Apache HTTP Sunucusu Sürüm 2.5</p>
+<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p>
+<p class="apache">Apache HTTP Sunucusu Sürüm 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.5</a></div><div id="page-content"><div id="preamble"><h1>Yapılandırma Dosyaları</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Sunucusu</a> &gt; <a href="http://httpd.apache.org/docs/">Belgeleme</a> &gt; <a href="./">Sürüm 2.4</a></div><div id="page-content"><div id="preamble"><h1>Yapılandırma Dosyaları</h1>
 <div class="toplang">
 <p><span>Mevcut Diller: </span><a href="./de/configuring.html" hreflang="de" rel="alternate" title="Deutsch">&nbsp;de&nbsp;</a> |
 <a href="./en/configuring.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
@@ -30,7 +30,6 @@
 <a href="./ko/configuring.html" hreflang="ko" rel="alternate" title="Korean">&nbsp;ko&nbsp;</a> |
 <a href="./tr/configuring.html" title="Türkçe">&nbsp;tr&nbsp;</a></p>
 </div>
-<div class="outofdate">Bu çeviri güncel olmayabilir. Son değişiklikler için İngilizce sürüm geçerlidir.</div>
 
 <p>Bu belgede Apache HTTP Sunucusunu yapılandırmakta kullanılan dosyalar
 açıklanmıştır.</p>
@@ -73,13 +72,17 @@ açıklanmıştır.</p>
     son karakteri “\” (tersbölü) olmalı, satırsonu karakteri ile bu tersbölü
     karakteri arasında başka karakter bulunmamalıdır.</p>
 
+    <p>Yönergelerdeki değiştirgeler boşluklarla ayrılır. Eğer bir değiştirge
+    kendi içinde boşluklar içeriyorsa tırnak içine alınır.</p>
+
     <p>Yapılandırma dosyalarındaki yönergelerin isimleri harf büyüklüğüne
     duyarlı olduğu halde argümanları genellikle harf büyüklüğüne duyarlı
     değildir. Diyez (“#”) karakteri ile başlayan satırlar açıklama olarak
-    ele alınır ve yok sayılırlar. Yapılandırma yönergesi içeren satırların
-    ardına  açıklama yerleştirilemez. Yönerge isminden önce yer alan boşluklar
-    ve boş satırlar yok sayılır; bu özellik, okunabilirliği sağlamak için
-    yönergelerin girintilenebilmesi olanağını verir.</p>
+    ele alınır ve yok sayılırlar. Yapılandırma yönergesi içeren satırlara
+    açıklama yerleştirilemez. Yönerge isminden önce yer alan boşluklar
+    yoksayılır; bu özellik, okunabilirliği sağlamak için yönergelerin
+    girintilenebilmesi olanağını verir. Ayrıca, boş satırlar da
+    yoksayılır.</p>
 
 
     <p><code class="directive"><a href="./mod/core.html#define">Define</a></code> ile veya kabuğun ortam
@@ -102,7 +105,7 @@ açıklanmıştır.</p>
     dosyasındaki işlemlerde çok daha sonra yer alır.</p>
 
     <p>Yapılandırma dosyasındaki bir satırın uzunluğu, değişken ikamesi
-    yapıldıkta, devam satırları eklenditen sonra en fazla 16MiB olabilir. <a href="configuring.xml#htaccess">.htaccess dosyalarında</a> azami uzunluk
+    yapıldıkta, devam satırları eklenditen sonra en fazla 16MiB olabilir. <a href="configuring.html#htaccess">.htaccess dosyalarında</a> azami uzunluk
     8190 karakterdir.</p>
 
     <p>Sunucuyu başlatmadan önce <code>apachectl configtest</code> ile veya
@@ -114,7 +117,8 @@ açıklanmıştır.</p>
     kaldırılmış, tüm açıklamalar, çözümlenmiş ortam değişkenleri ve içerilmiş
     tüm dosyalar dahil yapılandırmanın bir dökümünü almak için
     <code class="module"><a href="./mod/mod_info.html">mod_info</a></code>'nun <code>-DDUMP_CONFIG</code> seçeneğini
-    kullanabilirsiniz.</p>
+    kullanabilirsiniz. Ancak, çıktı yinelenen yönergeler için katıştırılan veya
+    geçersiz kılınanları yansıtmayacaktır.</p>
   </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section">
 <h2><a name="modules" id="modules">Modüller</a></h2>
@@ -205,7 +209,7 @@ açıklanmıştır.</p>
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Yorum</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/configuring.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/configuring.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -215,13 +219,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/configuring.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br /><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> altında lisanslıdır.</p>
-<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/quickreference.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">Modüller</a> | <a href="./mod/directives.html">Yönergeler</a> | <a href="http://wiki.apache.org/httpd/FAQ">SSS</a> | <a href="./glossary.html">Terimler</a> | <a href="./sitemap.html">Site Haritası</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

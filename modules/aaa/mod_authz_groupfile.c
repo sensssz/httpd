@@ -18,7 +18,7 @@
  *
  *          AuthGroupFile standard /path/to/file
  *
- * and the presence of a
+ * and the presense of a
  *
  *         require group <list-of-groups>
  *

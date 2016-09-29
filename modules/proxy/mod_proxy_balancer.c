@@ -73,7 +73,7 @@ static int proxy_balancer_canon(request_rec *r, char *url)
     apr_port_t port = 0;
 
     /* TODO: offset of BALANCER_PREFIX ?? */
-    if (ap_cstr_casecmpn(url, "balancer:", 9) == 0) {
+    if (strncasecmp(url, "balancer:", 9) == 0) {
         url += 9;
     }
     else {
@@ -212,8 +212,7 @@ static char *get_cookie_param(request_rec *r, const char *name)
 /* Find the worker that has the 'route' defined
  */
 static proxy_worker *find_route_worker(proxy_balancer *balancer,
-                                       const char *route, request_rec *r,
-                                       int recursion)
+                                       const char *route, request_rec *r)
 {
     int i;
     int checking_standby;
@@ -250,15 +249,10 @@ static proxy_worker *find_route_worker(proxy_balancer *balancer,
                          * This enables to safely remove the member from the
                          * balancer. Of course you will need some kind of
                          * session replication between those two remote.
-                         * Also check that we haven't gone thru all the
-                         * balancer members by means of redirects.
-                         * This should avoid redirect cycles.
                          */
-                        if ((*worker->s->redirect)
-                            && (recursion < balancer->workers->nelts)) {
+                        if (*worker->s->redirect) {
                             proxy_worker *rworker = NULL;
-                            rworker = find_route_worker(balancer, worker->s->redirect,
-                                                        r, recursion + 1);
+                            rworker = find_route_worker(balancer, worker->s->redirect, r);
                             /* Check if the redirect worker is usable */
                             if (rworker && !PROXY_WORKER_IS_USABLE(rworker)) {
                                 /*
@@ -321,7 +315,7 @@ static proxy_worker *find_session_route(proxy_balancer *balancer,
         /* We have a route in path or in cookie
          * Find the worker that has this route defined.
          */
-        worker = find_route_worker(balancer, *route, r, 1);
+        worker = find_route_worker(balancer, *route, r);
         if (worker && strcmp(*route, worker->s->route)) {
             /*
              * Notice that the route of the worker chosen is different from
@@ -1160,7 +1154,7 @@ static int balancer_handler(request_rec *r)
         if ((val = apr_table_get(params, "w_hm"))) {
             proxy_hcmethods_t *method = proxy_hcmethods;
             for (; method->name; method++) {
-                if (!ap_cstr_casecmp(method->name, val) && method->implemented)
+                if (!strcasecmp(method->name, val) && method->implemented)
                     wsel->s->method = method->method;
             }
         }
@@ -1436,7 +1430,7 @@ static int balancer_handler(request_rec *r)
                 ap_rprintf(r, "          <httpd:lbset>%d</httpd:lbset>\n",
                            worker->s->lbset);
                 /* End proxy_worker_stat */
-                if (!ap_cstr_casecmp(worker->s->scheme, "ajp")) {
+                if (!strcasecmp(worker->s->scheme, "ajp")) {
                     ap_rputs("          <httpd:flushpackets>", r);
                     switch (worker->s->flush_packets) {
                         case flush_off:

@@ -24,7 +24,6 @@
 #include "http_protocol.h"
 #include "http_request.h"
 #include "ap_provider.h"
-#include "util_varbuf.h"
 #include "util_expr_private.h"
 #include "util_md5.h"
 
@@ -32,12 +31,6 @@
 #include "apr_fnmatch.h"
 #include "apr_base64.h"
 #include "apr_sha1.h"
-#include "apr_version.h"
-#include "apr_strings.h"
-#include "apr_strmatch.h"
-#if APR_VERSION_AT_LEAST(1,5,0)
-#include "apr_escape.h"
-#endif
 
 #include <limits.h>     /* for INT_MAX */
 
@@ -211,29 +204,13 @@ static const char *ap_expr_eval_string_func(ap_expr_eval_ctx_t *ctx,
                                             const ap_expr_t *info,
                                             const ap_expr_t *arg)
 {
+    ap_expr_string_func_t *func = (ap_expr_string_func_t *)info->node_arg1;
     const void *data = info->node_arg2;
 
     AP_DEBUG_ASSERT(info->node_op == op_StringFuncInfo);
-    AP_DEBUG_ASSERT(info->node_arg1 != NULL);
+    AP_DEBUG_ASSERT(func != NULL);
     AP_DEBUG_ASSERT(data != NULL);
-    if (arg->node_op == op_ListElement) {
-        /* Evaluate the list elements and store them in apr_array_header. */
-        ap_expr_string_list_func_t *func = (ap_expr_string_list_func_t *)info->node_arg1;
-        apr_array_header_t *args = apr_array_make(ctx->p, 2, sizeof(char *));
-        do {
-            const ap_expr_t *val = arg->node_arg1;
-            const char **new = apr_array_push(args);
-            *new = ap_expr_eval_word(ctx, val);
-
-            arg = arg->node_arg2;
-        } while (arg != NULL);
-
-        return (*func)(ctx, data, args);
-    }
-    else {
-        ap_expr_string_func_t *func = (ap_expr_string_func_t *)info->node_arg1;
-        return (*func)(ctx, data, ap_expr_eval_word(ctx, arg));
-    }
+    return (*func)(ctx, data, ap_expr_eval_word(ctx, arg));
 }
 
 static int intstrcmp(const char *s1, const char *s2)
@@ -487,25 +464,7 @@ static ap_expr_t *ap_expr_info_make(int type, const char *name,
     parms.func  = &info->node_arg1;
     parms.data  = &info->node_arg2;
     parms.err   = &ctx->error2;
-    parms.arg   = NULL;
-    if (arg) {
-        switch(arg->node_op) {
-            case op_String:
-                parms.arg = arg->node_arg1;
-                break;
-            case op_ListElement:
-                do {
-                    const ap_expr_t *val = arg->node_arg1;
-                    if (val->node_op == op_String) {
-                        parms.arg = val->node_arg1;
-                    }
-                    arg = arg->node_arg2;
-                } while (arg != NULL);
-                break;
-            default:
-                break;
-        }
-    }
+    parms.arg   = (arg && arg->node_op == op_String) ? arg->node_arg1 : NULL;
     if (ctx->lookup_fn(&parms) != OK)
         return NULL;
     return info;
@@ -876,8 +835,7 @@ AP_DECLARE(int) ap_expr_exec_ctx(ap_expr_eval_ctx_t *ctx)
         *ctx->result_string = ap_expr_eval_word(ctx, ctx->info->root_node);
         if (*ctx->err != NULL) {
             ap_log_rerror(LOG_MARK(ctx->info), APLOG_ERR, 0, ctx->r,
-                          APLOGNO(03298)
-                          "Evaluation of string expression from %s:%d failed: %s",
+                          "Evaluation of expression from %s:%d failed: %s",
                           ctx->info->filename, ctx->info->line_number, *ctx->err);
             return -1;
         } else {
@@ -892,7 +850,6 @@ AP_DECLARE(int) ap_expr_exec_ctx(ap_expr_eval_ctx_t *ctx)
         rc = ap_expr_eval(ctx, ctx->info->root_node);
         if (*ctx->err != NULL) {
             ap_log_rerror(LOG_MARK(ctx->info), APLOG_ERR, 0, ctx->r,
-                          APLOGNO(03299)
                           "Evaluation of expression from %s:%d failed: %s",
                           ctx->info->filename, ctx->info->line_number, *ctx->err);
             return -1;
@@ -1124,70 +1081,9 @@ static const char *sha1_func(ap_expr_eval_ctx_t *ctx, const void *data,
 static const char *md5_func(ap_expr_eval_ctx_t *ctx, const void *data,
                                const char *arg)
 {
-    return ap_md5(ctx->p, (const unsigned char *)arg);
+	return ap_md5(ctx->p, (const unsigned char *)arg);
 }
 
-#if APR_VERSION_AT_LEAST(1,6,0)
-static const char *ldap_func(ap_expr_eval_ctx_t *ctx, const void *data,
-                               const char *arg)
-{
-    return apr_pescape_ldap(ctx->p, arg, APR_ESCAPE_STRING, APR_ESCAPE_LDAP_ALL);
-}
-#endif
-
-static int replace_func_parse_arg(ap_expr_lookup_parms *parms)
-{
-    const char *original = parms->arg;
-    const apr_strmatch_pattern *pattern;
-
-    if (!parms->arg) {
-        *parms->err = apr_psprintf(parms->ptemp, "replace() function needs "
-                                   "exactly 3 arguments");
-        return !OK;
-    }
-    pattern = apr_strmatch_precompile(parms->pool, original, 0);
-    *parms->data = pattern;
-    return OK;
-}
-
-static const char *replace_func(ap_expr_eval_ctx_t *ctx, const void *data,
-                               const apr_array_header_t *args)
-{
-    char *buff, *original, *replacement;
-    struct ap_varbuf vb;
-    apr_size_t repl_len, orig_len;
-    const char *repl;
-    apr_size_t bytes;
-    apr_size_t len;
-    const apr_strmatch_pattern *pattern = data;
-    if (args->nelts != 3) {
-        *ctx->err = apr_psprintf(ctx->p, "replace() function needs "
-                                 "exactly 3 arguments");
-        return "";
-    }
-
-    buff = APR_ARRAY_IDX(args, 2, char *);
-    original = APR_ARRAY_IDX(args, 1, char *);
-    replacement = APR_ARRAY_IDX(args, 0, char *);
-    repl_len = strlen(replacement);
-    orig_len = strlen(original);
-    bytes = strlen(buff);
-
-    ap_varbuf_init(ctx->p, &vb, 0);
-    vb.strlen = 0;
-    
-    while ((repl = apr_strmatch(pattern, buff, bytes))) {
-        len = (apr_size_t) (repl - buff);
-        ap_varbuf_strmemcat(&vb, buff, len);
-        ap_varbuf_strmemcat(&vb, replacement, repl_len);
-
-        len += orig_len;
-        bytes -= len;
-        buff += len;
-    }
-
-    return ap_varbuf_pdup(ctx->p, &vb, NULL, 0, buff, bytes, &len);
-}
 
 #define MAX_FILE_SIZE 10*1024*1024
 static const char *file_func(ap_expr_eval_ctx_t *ctx, const void *data,
@@ -1244,18 +1140,6 @@ static const char *filesize_func(ap_expr_eval_ctx_t *ctx, const void *data,
     else
         return "0";
 }
-
-static const char *filemod_func(ap_expr_eval_ctx_t *ctx, const void *data,
-                                  char *arg)
-{
-    apr_finfo_t sb;
-    if (apr_stat(&sb, arg, APR_FINFO_MIN, ctx->p) == APR_SUCCESS
-        && sb.filetype == APR_REG && sb.mtime > 0)
-        return apr_psprintf(ctx->p, "%" APR_OFF_T_FMT, (apr_off_t)sb.mtime);
-    else
-        return "0";
-}
-
 
 static const char *unescape_func(ap_expr_eval_ctx_t *ctx, const void *data,
                                  const char *arg)
@@ -1453,9 +1337,6 @@ static const char *request_var_names[] = {
     "CONTEXT_DOCUMENT_ROOT",    /* 26 */
     "REQUEST_STATUS",           /* 27 */
     "REMOTE_ADDR",              /* 28 */
-    "SERVER_PROTOCOL_VERSION",  /* 29 */
-    "SERVER_PROTOCOL_VERSION_MAJOR",  /* 30 */
-    "SERVER_PROTOCOL_VERSION_MINOR",  /* 31 */
     NULL
 };
 
@@ -1542,26 +1423,6 @@ static const char *request_var_fn(ap_expr_eval_ctx_t *ctx, const void *data)
         return r->status ? apr_psprintf(ctx->p, "%d", r->status) : "";
     case 28:
         return r->useragent_ip;
-    case 29:
-        switch (r->proto_num) {
-        case 1001:  return "1001";   /* 1.1 */
-        case 1000:  return "1000";   /* 1.0 */
-        case 9:     return "9";      /* 0.9 */
-        }
-        return apr_psprintf(ctx->p, "%d", r->proto_num);
-    case 30:
-        switch (HTTP_VERSION_MAJOR(r->proto_num)) {
-        case 0:     return "0";
-        case 1:     return "1";
-        }
-        return apr_psprintf(ctx->p, "%d", HTTP_VERSION_MAJOR(r->proto_num));
-    case 31:
-        switch (HTTP_VERSION_MINOR(r->proto_num)) {
-        case 0:     return "0";
-        case 1:     return "1";
-        case 9:     return "9";
-        }
-        return apr_psprintf(ctx->p, "%d", HTTP_VERSION_MINOR(r->proto_num));
     default:
         ap_assert(0);
         return NULL;
@@ -1788,15 +1649,10 @@ static const struct expr_provider_single string_func_providers[] = {
     { unescape_func,        "unescape",       NULL, 0 },
     { file_func,            "file",           NULL, 1 },
     { filesize_func,        "filesize",       NULL, 1 },
-    { filemod_func,         "filemod",        NULL, 1 },
     { base64_func,          "base64",         NULL, 0 },
     { unbase64_func,        "unbase64",       NULL, 0 },
     { sha1_func,            "sha1",           NULL, 0 },
     { md5_func,             "md5",            NULL, 0 },
-#if APR_VERSION_AT_LEAST(1,6,0)
-    { ldap_func,            "ldap",           NULL, 0 },
-#endif
-    { replace_func,         "replace",        replace_func_parse_arg, 0 },
     { NULL, NULL, NULL}
 };
 
@@ -1834,7 +1690,7 @@ static int core_expr_lookup(ap_expr_lookup_parms *parms)
             while (prov->func) {
                 const char **name = prov->names;
                 while (*name) {
-                    if (ap_cstr_casecmp(*name, parms->name) == 0) {
+                    if (strcasecmp(*name, parms->name) == 0) {
                         *parms->func = prov->func;
                         *parms->data = name;
                         return OK;
@@ -1867,7 +1723,7 @@ static int core_expr_lookup(ap_expr_lookup_parms *parms)
                 if (parms->type == AP_EXPR_FUNC_OP_UNARY)
                     match = !strcmp(prov->name, parms->name);
                 else
-                    match = !ap_cstr_casecmp(prov->name, parms->name);
+                    match = !strcasecmp(prov->name, parms->name);
                 if (match) {
                     if ((parms->flags & AP_EXPR_FLAG_RESTRICTED)
                         && prov->restricted) {

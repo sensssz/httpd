@@ -95,7 +95,6 @@ static apr_status_t bucketeer_out_filter(ap_filter_t *f,
             /* Okay, we've seen the EOS.
              * Time to pass it along down the chain.
              */
-            ap_remove_output_filter(f);
             return ap_pass_brigade(f->next, ctx->bb);
         }
 
@@ -146,7 +145,6 @@ static apr_status_t bucketeer_out_filter(ap_filter_t *f,
                         if (rv) {
                             return rv;
                         }
-                        apr_brigade_cleanup(ctx->bb);
                     }
                 }
             }

@@ -43,16 +43,7 @@
 
 #if APR_HAVE_UNISTD_H
 #include <unistd.h>
-#else
-/* Not sure what absence of unistd would signify for tty.  Treating it as a
- * big NO is safe, as we then won't try to write to stderr that's not a tty.
- */
-#define isatty(n) (0)
 #endif
-
-/* we know core's module_index is 0 */
-#undef APLOG_MODULE_INDEX
-#define APLOG_MODULE_INDEX AP_CORE_MODULE_INDEX
 
 /* WARNING: Win32 binds http_main.c dynamically to the server. Please place
  *          extern functions and global data in another appropriate module.
@@ -107,17 +98,13 @@ static void show_compile_settings(void)
     printf("Server's Module Magic Number: %u:%u\n",
            MODULE_MAGIC_NUMBER_MAJOR, MODULE_MAGIC_NUMBER_MINOR);
 #if APR_MAJOR_VERSION >= 2
-    printf("Server loaded:  APR %s, PCRE %s\n",
-           apr_version_string(), ap_pcre_version_string(AP_REG_PCRE_LOADED));
-    printf("Compiled using: APR %s, PCRE %s\n",
-           APR_VERSION_STRING, ap_pcre_version_string(AP_REG_PCRE_COMPILED));
+    printf("Server loaded:  APR %s\n", apr_version_string());
+    printf("Compiled using: APR %s\n", APR_VERSION_STRING);
 #else
-    printf("Server loaded:  APR %s, APR-UTIL %s, PCRE %s\n",
-           apr_version_string(), apu_version_string(),
-           ap_pcre_version_string(AP_REG_PCRE_LOADED));
-    printf("Compiled using: APR %s, APR-UTIL %s, PCRE %s\n",
-           APR_VERSION_STRING, APU_VERSION_STRING,
-           ap_pcre_version_string(AP_REG_PCRE_COMPILED));
+    printf("Server loaded:  APR %s, APR-UTIL %s\n",
+           apr_version_string(), apu_version_string());
+    printf("Compiled using: APR %s, APR-UTIL %s\n",
+           APR_VERSION_STRING, APU_VERSION_STRING);
 #endif
     /* sizeof(foo) is long on some platforms so we might as well
      * make it long everywhere to keep the printf format
@@ -272,19 +259,10 @@ static void destroy_and_exit_process(process_rec *process,
      * by us before they can do so. In this case maybe valueable log messages
      * might get lost.
      */
-
-    /* If we are to print an error, we need the name before we destroy pool.
-     * short_name is a pointer into argv, so remains valid.
-     */
-    const char *name = process->short_name ? process->short_name : "httpd";
-
     apr_sleep(TASK_SWITCH_SLEEP);
     ap_main_state = AP_SQ_MS_EXITING;
     apr_pool_destroy(process->pool); /* and destroy all descendent pools */
     apr_terminate();
-    if ((process_exit_value != 0) && isatty(fileno(stderr))) {
-        fprintf(stderr, "%s: abnormal exit %d\n", name, process_exit_value);
-    }
     exit(process_exit_value);
 }
 

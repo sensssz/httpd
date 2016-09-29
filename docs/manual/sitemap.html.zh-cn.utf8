@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>站点导航 - Apache HTTP 服务器 版本 2.5</title>
+<title>站点导航 - Apache HTTP 服务器 版本 2.4</title>
 <link href="./style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="./style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="./style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="./style/css/prettify.css" />
@@ -17,12 +17,12 @@
 <link href="./images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page">
 <div id="page-header">
-<p class="menu"><a href="./mod/">模块</a> | <a href="./mod/quickreference.html">指令</a> | <a href="http://wiki.apache.org/httpd/FAQ">常见问题</a> | <a href="./glossary.html">术语</a> | <a href="./sitemap.html">网站导航</a></p>
-<p class="apache">Apache HTTP 服务器版本 2.5</p>
+<p class="menu"><a href="./mod/">模块</a> | <a href="./mod/directives.html">指令</a> | <a href="http://wiki.apache.org/httpd/FAQ">常见问题</a> | <a href="./glossary.html">术语</a> | <a href="./sitemap.html">网站导航</a></p>
+<p class="apache">Apache HTTP 服务器版本 2.4</p>
 <img alt="" src="./images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="./images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP 服务器</a> &gt; <a href="http://httpd.apache.org/docs/">文档</a> &gt; <a href="./">版本 2.5</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP 服务器</a> &gt; <a href="http://httpd.apache.org/docs/">文档</a> &gt; <a href="./">版本 2.4</a></div>
 <div id="page-content"><div id="preamble"><h1>站点导航</h1>
 <div class="toplang">
 <p><span>可用语言: </span><a href="./de/sitemap.html" hreflang="de" rel="alternate" title="Deutsch">&nbsp;de&nbsp;</a> |
@@ -37,7 +37,7 @@
 <div class="outofdate">此翻译可能过期。要了解最近的更改，请阅读英文版。</div>
 
 <p>本页列出了
-<a href="./">Apache HTTP 服务器 2.5
+<a href="./">Apache HTTP 服务器 2.4
 的全部文档</a>。</p>
 </div>
 <div id="quickview"><ul id="toc">
@@ -133,6 +133,7 @@
 <li><a href="platform/win_compiling.html">为 Microsoft Windows 编译 Apache</a></li>
 <li><a href="platform/netware.html">在 Novell NetWare 中使用 Apache</a></li>
 <li><a href="platform/perf-hp.html">在 HPUX 中运行高性能 web 服务器</a></li>
+<li><a href="platform/ebcdic.html">Apache 与 EBCDIC 系统</a></li>
 </ul>
 </div><div class="top"><a href="#page-header"><img alt="top" src="./images/up.gif" /></a></div>
 <div class="section"><h2><a name="programs" id="programs">Apache HTTP 服务器与支持程序</a></h2>
@@ -172,7 +173,6 @@
 </ul><ul><li><a href="mod/mod_access_compat.html">Apache 模块 mod_access_compat</a></li>
 <li><a href="mod/mod_actions.html">Apache 模块 mod_actions</a></li>
 <li><a href="mod/mod_alias.html">Apache 模块 mod_alias</a></li>
-<li><a href="mod/mod_allowhandlers.html">Apache 模块 mod_allowhandlers</a></li>
 <li><a href="mod/mod_allowmethods.html">Apache 模块 mod_allowmethods</a></li>
 <li><a href="mod/mod_asis.html">Apache 模块 mod_asis</a></li>
 <li><a href="mod/mod_auth_basic.html">Apache 模块 mod_auth_basic</a></li>
@@ -202,7 +202,6 @@
 <li><a href="mod/mod_cgi.html">Apache 模块 mod_cgi</a></li>
 <li><a href="mod/mod_cgid.html">Apache 模块 mod_cgid</a></li>
 <li><a href="mod/mod_charset_lite.html">Apache 模块 mod_charset_lite</a></li>
-<li><a href="mod/mod_crypto.html">Apache 模块 mod_crypto</a></li>
 <li><a href="mod/mod_data.html">Apache 模块 mod_data</a></li>
 <li><a href="mod/mod_dav.html">Apache 模块 mod_dav</a></li>
 <li><a href="mod/mod_dav_fs.html">Apache 模块 mod_dav_fs</a></li>
@@ -219,7 +218,6 @@
 <li><a href="mod/mod_ext_filter.html">Apache 模块 mod_ext_filter</a></li>
 <li><a href="mod/mod_file_cache.html">Apache 模块 mod_file_cache</a></li>
 <li><a href="mod/mod_filter.html">Apache 模块 mod_filter</a></li>
-<li><a href="mod/mod_firehose.html">Apache 模块 mod_firehose</a></li>
 <li><a href="mod/mod_headers.html">Apache 模块 mod_headers</a></li>
 <li><a href="mod/mod_heartbeat.html">Apache 模块 mod_heartbeat</a></li>
 <li><a href="mod/mod_heartmonitor.html">Apache 模块 mod_heartmonitor</a></li>
@@ -229,7 +227,6 @@
 <li><a href="mod/mod_include.html">Apache 模块 mod_include</a></li>
 <li><a href="mod/mod_info.html">Apache 模块 mod_info</a></li>
 <li><a href="mod/mod_isapi.html">Apache 模块 mod_isapi</a></li>
-<li><a href="mod/mod_journald.html">Apache 模块 mod_journald</a></li>
 <li><a href="mod/mod_lbmethod_bybusyness.html">Apache 模块 mod_lbmethod_bybusyness</a></li>
 <li><a href="mod/mod_lbmethod_byrequests.html">Apache 模块 mod_lbmethod_byrequests</a></li>
 <li><a href="mod/mod_lbmethod_bytraffic.html">Apache 模块 mod_lbmethod_bytraffic</a></li>
@@ -245,7 +242,6 @@
 <li><a href="mod/mod_mime_magic.html">Apache 模块 mod_mime_magic</a></li>
 <li><a href="mod/mod_negotiation.html">Apache 模块 mod_negotiation</a></li>
 <li><a href="mod/mod_nw_ssl.html">Apache 模块 mod_nw_ssl</a></li>
-<li><a href="mod/mod_policy.html">Apache 模块 mod_policy</a></li>
 <li><a href="mod/mod_privileges.html">Apache 模块 mod_privileges</a></li>
 <li><a href="mod/mod_proxy.html">Apache 模块 mod_proxy</a></li>
 <li><a href="mod/mod_proxy_ajp.html">Apache 模块 mod_proxy_ajp</a></li>
@@ -282,12 +278,9 @@
 <li><a href="mod/mod_socache_shmcb.html">Apache 模块 mod_socache_shmcb</a></li>
 <li><a href="mod/mod_speling.html">Apache 模块 mod_speling</a></li>
 <li><a href="mod/mod_ssl.html">Apache 模块 mod_ssl</a></li>
-<li><a href="mod/mod_ssl_ct.html">Apache 模块 mod_ssl_ct</a></li>
 <li><a href="mod/mod_status.html">Apache 模块 mod_status</a></li>
 <li><a href="mod/mod_substitute.html">Apache 模块 mod_substitute</a></li>
 <li><a href="mod/mod_suexec.html">Apache 模块 mod_suexec</a></li>
-<li><a href="mod/mod_syslog.html">Apache 模块 mod_syslog</a></li>
-<li><a href="mod/mod_systemd.html">Apache 模块 mod_systemd</a></li>
 <li><a href="mod/mod_unique_id.html">Apache 模块 mod_unique_id</a></li>
 <li><a href="mod/mod_unixd.html">Apache 模块 mod_unixd</a></li>
 <li><a href="mod/mod_userdir.html">Apache 模块 mod_userdir</a></li>
@@ -328,7 +321,7 @@
 </div><div class="top"><a href="#page-header"><img src="./images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">评论</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/sitemap.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/sitemap.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -338,13 +331,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/sitemap.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />基于 <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> 许可证.</p>
-<p class="menu"><a href="./mod/">模块</a> | <a href="./mod/quickreference.html">指令</a> | <a href="http://wiki.apache.org/httpd/FAQ">常见问题</a> | <a href="./glossary.html">术语</a> | <a href="./sitemap.html">网站导航</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="./mod/">模块</a> | <a href="./mod/directives.html">指令</a> | <a href="http://wiki.apache.org/httpd/FAQ">常见问题</a> | <a href="./glossary.html">术语</a> | <a href="./sitemap.html">网站导航</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

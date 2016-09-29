@@ -39,7 +39,6 @@
 #include "http_protocol.h"
 #include "http_log.h"
 #include "http_main.h"
-#include "mpm_common.h"
 #include "util_filter.h"
 #include "util_charset.h"
 #include "scoreboard.h"
@@ -229,51 +228,41 @@ AP_DECLARE(void) ap_die(int type, request_rec *r)
     ap_die_r(type, r, r->status);
 }
 
-AP_DECLARE(apr_status_t) ap_check_pipeline(conn_rec *c, apr_bucket_brigade *bb,
-                                           unsigned int max_blank_lines)
+static void check_pipeline(conn_rec *c, apr_bucket_brigade *bb)
 {
-    apr_status_t rv = APR_EOF;
+    apr_status_t rv;
+    int num_blank_lines = DEFAULT_LIMIT_BLANK_LINES;
     ap_input_mode_t mode = AP_MODE_SPECULATIVE;
-    unsigned int num_blank_lines = 0;
     apr_size_t cr = 0;
     char buf[2];
 
+    c->data_in_input_filters = 0;
     while (c->keepalive != AP_CONN_CLOSE && !c->aborted) {
         apr_size_t len = cr + 1;
 
         apr_brigade_cleanup(bb);
         rv = ap_get_brigade(c->input_filters, bb, mode,
                             APR_NONBLOCK_READ, len);
-        if (rv != APR_SUCCESS || APR_BRIGADE_EMPTY(bb) || !max_blank_lines) {
+        if (rv != APR_SUCCESS || APR_BRIGADE_EMPTY(bb)) {
+            /*
+             * Error or empty brigade: There is no data present in the input
+             * filter
+             */
             if (mode == AP_MODE_READBYTES) {
                 /* Unexpected error, stop with this connection */
                 ap_log_cerror(APLOG_MARK, APLOG_ERR, rv, c, APLOGNO(02967)
                               "Can't consume pipelined empty lines");
                 c->keepalive = AP_CONN_CLOSE;
-                rv = APR_EGENERAL;
-            }
-            else if (rv != APR_SUCCESS || APR_BRIGADE_EMPTY(bb)) {
-                if (rv != APR_SUCCESS && !APR_STATUS_IS_EAGAIN(rv)) {
-                    /* Pipe is dead */
-                    c->keepalive = AP_CONN_CLOSE;
-                }
-                else {
-                    /* Pipe is up and empty */
-                    rv = APR_EAGAIN;
-                }
-            }
-            else {
-                apr_off_t n = 0;
-                /* Single read asked, (non-meta-)data available? */
-                rv = apr_brigade_length(bb, 0, &n);
-                if (rv == APR_SUCCESS && n <= 0) {
-                    rv = APR_EAGAIN;
-                }
             }
             break;
         }
 
-        /* Lookup and consume blank lines */
+        /* Ignore trailing blank lines (which must not be interpreted as
+         * pipelined requests) up to the limit, otherwise we would block
+         * on the next read without flushing data, and hence possibly delay
+         * pending response(s) until the next/real request comes in or the
+         * keepalive timeout expires.
+         */
         rv = apr_brigade_flatten(bb, buf, &len);
         if (rv != APR_SUCCESS || len != cr + 1) {
             int log_level;
@@ -281,15 +270,14 @@ AP_DECLARE(apr_status_t) ap_check_pipeline(conn_rec *c, apr_bucket_brigade *bb,
                 /* Unexpected error, stop with this connection */
                 c->keepalive = AP_CONN_CLOSE;
                 log_level = APLOG_ERR;
-                rv = APR_EGENERAL;
             }
             else {
                 /* Let outside (non-speculative/blocking) read determine
                  * where this possible failure comes from (metadata,
-                 * morphed EOF socket, ...). Debug only here.
+                 * morphed EOF socket => empty bucket? debug only here).
                  */
+                c->data_in_input_filters = 1;
                 log_level = APLOG_DEBUG;
-                rv = APR_SUCCESS;
             }
             ap_log_cerror(APLOG_MARK, log_level, rv, c, APLOGNO(02968)
                           "Can't check pipelined data");
@@ -297,47 +285,40 @@ AP_DECLARE(apr_status_t) ap_check_pipeline(conn_rec *c, apr_bucket_brigade *bb,
         }
 
         if (mode == AP_MODE_READBYTES) {
-            /* [CR]LF consumed, try next */
             mode = AP_MODE_SPECULATIVE;
             cr = 0;
         }
         else if (cr) {
             AP_DEBUG_ASSERT(len == 2 && buf[0] == APR_ASCII_CR);
             if (buf[1] == APR_ASCII_LF) {
-                /* consume this CRLF */
                 mode = AP_MODE_READBYTES;
-                num_blank_lines++;
+                num_blank_lines--;
             }
             else {
-                /* CR(?!LF) is data */
+                c->data_in_input_filters = 1;
                 break;
             }
         }
         else {
             if (buf[0] == APR_ASCII_LF) {
-                /* consume this LF */
                 mode = AP_MODE_READBYTES;
-                num_blank_lines++;
+                num_blank_lines--;
             }
             else if (buf[0] == APR_ASCII_CR) {
                 cr = 1;
             }
             else {
-                /* Not [CR]LF, some data */
+                c->data_in_input_filters = 1;
                 break;
             }
         }
-        if (num_blank_lines > max_blank_lines) {
-            /* Enough blank lines with this connection,
-             * stop and don't recycle it.
-             */
+        /* Enough blank lines with this connection?
+         * Stop and don't recycle it.
+         */
+        if (num_blank_lines < 0) {
             c->keepalive = AP_CONN_CLOSE;
-            rv = APR_NOTFOUND;
-            break;
         }
     }
-
-    return rv;
 }
 
 
@@ -346,7 +327,6 @@ AP_DECLARE(void) ap_process_request_after_handler(request_rec *r)
     apr_bucket_brigade *bb;
     apr_bucket *b;
     conn_rec *c = r->connection;
-    apr_status_t rv;
 
     /* Send an EOR bucket through the output filter chain.  When
      * this bucket is destroyed, the request will be logged and
@@ -356,16 +336,8 @@ AP_DECLARE(void) ap_process_request_after_handler(request_rec *r)
     b = ap_bucket_eor_create(c->bucket_alloc, r);
     APR_BRIGADE_INSERT_HEAD(bb, b);
 
-    /* Find the last request, taking into account internal
-     * redirects. We want to send the EOR bucket at the end of
-     * all the buckets so it does not jump the queue.
-     */
-    while (r->next) {
-        r = r->next;
-    }
-
-    ap_pass_brigade(r->output_filters, bb);
-
+    ap_pass_brigade(c->output_filters, bb);
+    
     /* The EOR bucket has either been handled by an output filter (eg.
      * deleted or moved to a buffered_bb => no more in bb), or an error
      * occured before that (eg. c->aborted => still in bb) and we ought
@@ -379,15 +351,8 @@ AP_DECLARE(void) ap_process_request_after_handler(request_rec *r)
      * already by the EOR bucket's cleanup function.
      */
 
-    /* Check pipeline consuming blank lines, they must not be interpreted as
-     * the next pipelined request, otherwise we would block on the next read
-     * without flushing data, and hence possibly delay pending response(s)
-     * until the next/real request comes in or the keepalive timeout expires.
-     */
-    rv = ap_check_pipeline(c, bb, DEFAULT_LIMIT_BLANK_LINES);
-    c->data_in_input_filters = (rv == APR_SUCCESS);
+    check_pipeline(c, bb);
     apr_brigade_destroy(bb);
-
     if (c->cs)
         c->cs->state = (c->aborted) ? CONN_STATE_LINGER
                                     : CONN_STATE_WRITE_COMPLETION;
@@ -479,7 +444,7 @@ AP_DECLARE(void) ap_process_request(request_rec *r)
 
     ap_process_async_request(r);
 
-    if (!c->data_in_input_filters || ap_run_input_pending(c) != OK) {
+    if (!c->data_in_input_filters) {
         bb = apr_brigade_create(c->pool, c->bucket_alloc);
         b = apr_bucket_flush_create(c->bucket_alloc);
         APR_BRIGADE_INSERT_HEAD(bb, b);
@@ -720,17 +685,8 @@ AP_DECLARE(void) ap_internal_fast_redirect(request_rec *rr, request_rec *r)
     update_r_in_filters(r->output_filters, rr, r);
 
     if (r->main) {
-        ap_filter_t *next = r->output_filters;
-        while (next && (next != r->proto_output_filters)) {
-            if (next->frec == ap_subreq_core_filter_handle) {
-                break;
-            }
-            next = next->next;
-        }
-        if (!next || next == r->proto_output_filters) {
-            ap_add_output_filter_handle(ap_subreq_core_filter_handle,
-                                        NULL, r, r->connection);
-        }
+        ap_add_output_filter_handle(ap_subreq_core_filter_handle,
+                                    NULL, r, r->connection);
     }
     else {
         /*

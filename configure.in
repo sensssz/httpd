@@ -90,7 +90,7 @@ APACHE_HELP_STRING(--with-included-apr,Use bundled copies of APR/APR-Util))
 if test "x$with_included_apr" = "xyes"; then
   apr_found=reconfig
   if test ! -d srclib/apr && test ! -d $srcdir/srclib/apr; then
-    AC_MSG_ERROR([Bundled APR requested but not found at ./srclib/. Please refer to the documentation on APR in the httpd INSTALL file.])
+    AC_MSG_ERROR([Bundled APR requested but not found at ./srclib/. Download and unpack the corresponding apr and apr-util packages to ./srclib/.])
   fi
 else 
   APR_FIND_APR("$srcdir/srclib/apr", "./srclib/apr", 1, 1 2, [
@@ -106,7 +106,7 @@ else
 fi
 
 if test "$apr_found" = "no"; then
-  AC_MSG_ERROR([APR not found.  Please refer to the documentation on APR in the httpd INSTALL file.])
+  AC_MSG_ERROR([APR not found.  Please read the documentation.])
 fi
 
 if test "$apr_found" = "reconfig"; then
@@ -150,7 +150,7 @@ if test "x${apr_major_version}" = "x2"; then
 elif test "x$with_included_apr" = "xyes"; then
   apu_found=reconfig
   if test ! -d srclib/apr-util && test ! -d $srcdir/srclib/apr-util; then
-    AC_MSG_ERROR([Bundled APR-Util requested but not found at ./srclib/.  Please refer to the documentation on APR in the httpd INSTALL file.])
+    AC_MSG_ERROR([Bundled APR-Util requested but not found at ./srclib/. Download and unpack the corresponding apr and apr-util packages to ./srclib/.])
   fi
 else 
    dnl If httpd is buildconf'ed against an apr 2.x tree, then 1.x
@@ -162,7 +162,7 @@ else
 fi
 
 if test "$apu_found" = "no"; then
-  AC_MSG_ERROR([APR-util not found.  Please refer to the documentation on APR in the httpd INSTALL file.])
+  AC_MSG_ERROR([APR-util not found.  Please read the documentation.])
 fi
 
 # Catch some misconfigurations:
@@ -206,14 +206,6 @@ AC_PROG_CPP
 dnl Try to get c99 support for variadic macros
 ifdef([AC_PROG_CC_C99], [AC_PROG_CC_C99])
 
-dnl In case of cross compilation we set CC_FOR_BUILD to cc unless
-dnl we got already CC_FOR_BUILD from environment.
-if test "x${build_alias}" != "x${host_alias}"; then
-  if test "x${CC_FOR_BUILD}" = "x"; then
-    CC_FOR_BUILD=cc
-  fi
-fi
-
 if test "x${cache_file}" = "x/dev/null"; then
   # Likewise, ensure that CC and CPP are passed through to the pcre
   # configure script iff caching is disabled (the autoconf 2.5x default).
@@ -236,16 +228,12 @@ if test "$PCRE_CONFIG" != "false"; then
   fi
   case `$PCRE_CONFIG --version` in
   [[1-5].*])
-    AC_MSG_ERROR([Need at least pcre version 6.7])
-    ;;
-  [6.[0-6]*])
-    AC_MSG_ERROR([Need at least pcre version 6.7])
+    AC_MSG_ERROR([Need at least pcre version 6.0])
     ;;
   esac
   AC_MSG_NOTICE([Using external PCRE library from $PCRE_CONFIG])
   APR_ADDTO(PCRE_INCLUDES, [`$PCRE_CONFIG --cflags`])
   APR_ADDTO(PCRE_LIBS, [`$PCRE_CONFIG --libs`])
-  APR_ADDTO(HTTPD_LIBS, [\$(PCRE_LIBS)])
 else
   AC_MSG_ERROR([pcre-config for libpcre not found. PCRE is required and available from http://pcre.org/])
 fi
@@ -274,20 +262,6 @@ APR_ADDTO(INCLUDES, $APU_INCLUDES)
 
 dnl Add in path to PCRE includes
 APR_ADDTO(INCLUDES, $PCRE_INCLUDES)
-
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $PCRE_INCLUDES"
-AC_EGREP_CPP(yes,
-[
-#include <pcre.h>
-#ifdef PCRE_DUPNAMES
-yes
-#endif
-],pcre_have_dupnames=yes,pcre_have_dupnames=no)
-if test "$pcre_have_dupnames" != "yes"; then
-    AC_MSG_ERROR([pcre version does not support PCRE_DUPNAMES])
-fi
-CPPFLAGS="$save_CPPFLAGS"
 
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([Applying OS-specific hints for httpd...])
@@ -370,7 +344,6 @@ case $host in
       ;;
   *mingw32*)
       APR_ADDTO(INTERNAL_CPPFLAGS, [-DAP_DECLARE_EXPORT])
-      APR_ADDTO(INTERNAL_CPPFLAGS, [-DAPREQ_DECLARE_EXPORT])
       APR_SETIFNULL(ac_cv_func_times, [no])
       APR_SETIFNULL(ac_cv_func_getpwnam, [no])
       APR_SETIFNULL(ac_cv_func_getgrnam, [no])
@@ -531,8 +504,6 @@ if test "$ac_cv_struct_tm_gmtoff" = "yes"; then
     AC_DEFINE(HAVE_GMTOFF, 1, [Define if struct tm has a tm_gmtoff field])
 fi
 
-APACHE_CHECK_SYSTEMD
-
 dnl ## Set up any appropriate OS-specific environment variables for apachectl
 
 case $host in
@@ -625,12 +596,11 @@ AC_ARG_ENABLE(maintainer-mode,APACHE_HELP_STRING(--enable-maintainer-mode,Turn o
     APR_ADDTO(CPPFLAGS, -DAP_DEBUG)
     if test "$GCC" = "yes"; then
       APR_ADDTO(CFLAGS,[-Wall -Wmissing-prototypes -Wstrict-prototypes -Wmissing-declarations -Wpointer-arith])
-      APACHE_ADD_GCC_CFLAG([-std=c89])
-      APACHE_ADD_GCC_CFLAG([-Werror])
       APACHE_ADD_GCC_CFLAG([-Wdeclaration-after-statement])
+      APACHE_ADD_GCC_CFLAG([-Werror=declaration-after-statement])
       APACHE_ADD_GCC_CFLAG([-Wformat])
       APACHE_ADD_GCC_CFLAG([-Wformat-security])
-      APACHE_ADD_GCC_CFLAG([-Wunused])
+      APACHE_ADD_GCC_CFLAG([-Werror=format-security])
     elif test "$AIX_XLC" = "yes"; then
       APR_ADDTO(CFLAGS,-qfullpath -qinitauto=FE -qcheck=all -qinfo=pro)
     fi
@@ -685,22 +655,6 @@ fi
 APACHE_SUBST(PICFLAGS)
 APACHE_SUBST(PILDFLAGS)
 
-AC_ARG_WITH(valgrind,
-  [  --with-valgrind[[=DIR]]   Enable code to reduce valgrind false positives
-                          (optionally: set path to valgrind headers) ],
-  [ if test "$withval" != no; then
-      if test "$withval" = yes; then
-        withval=/usr/include/valgrind
-      fi
-      APR_ADDTO(CPPFLAGS, -I$withval)
-      AC_CHECK_HEADERS(valgrind.h memcheck.h)
-      APR_IFALLYES(header:valgrind.h header:memcheck.h,
-        [AC_DEFINE(HAVE_VALGRIND, 1, [Compile in valgrind support]) ],
-        [AC_MSG_ERROR(valgrind headers not found) ]
-      )
-    fi ]
-)
-
 prefix="$orig_prefix"
 APACHE_ENABLE_MODULES
 
@@ -713,7 +667,6 @@ APACHE_SUBST(OS_DIR)
 APACHE_SUBST(BUILTIN_LIBS)
 APACHE_SUBST(SHLIBPATH_VAR)
 APACHE_SUBST(OS_SPECIFIC_VARS)
-APACHE_SUBST(HTTPD_LIBS)
 
 PRE_SHARED_CMDS='echo ""'
 POST_SHARED_CMDS='echo ""'
@@ -781,26 +734,7 @@ APACHE_HELP_STRING(--with-suexec-gidmin,Minimal allowed GID),[
 
 AC_ARG_WITH(suexec-logfile,
 APACHE_HELP_STRING(--with-suexec-logfile,Set the logfile),[
-  if test "x$withval" = "xyes"; then
-    AC_MSG_ERROR([log filename required for --with-suexec-logfile option])
-  elif test "x$withval" != "xno"; then
-    AC_DEFINE_UNQUOTED(AP_LOG_EXEC, "$withval", [SuExec log file])
-  fi
-])
-
-AC_ARG_WITH(suexec-syslog,
-APACHE_HELP_STRING(--with-suexec-syslog,Set the logfile),[
-  if test $withval = "yes"; then
-    if test "x${with_suexec_logfile}" != "xno"; then
-      AC_MSG_NOTICE([hint: use "--without-suexec-logfile --with-suexec-syslog"])
-      AC_MSG_ERROR([suexec does not support both logging to file and syslog])
-    fi
-    AC_CHECK_FUNCS([vsyslog], [], [
-       AC_MSG_ERROR([cannot support syslog from suexec without vsyslog()])])
-    AC_DEFINE(AP_LOG_SYSLOG, 1, [SuExec log to syslog])
-  fi    
-])
-
+  AC_DEFINE_UNQUOTED(AP_LOG_EXEC, "$withval", [SuExec log file] ) ] )
 
 AC_ARG_WITH(suexec-safepath,
 APACHE_HELP_STRING(--with-suexec-safepath,Set the safepath),[
@@ -809,17 +743,6 @@ APACHE_HELP_STRING(--with-suexec-safepath,Set the safepath),[
 AC_ARG_WITH(suexec-umask,
 APACHE_HELP_STRING(--with-suexec-umask,umask for suexec'd process),[
   AC_DEFINE_UNQUOTED(AP_SUEXEC_UMASK, 0$withval, [umask for suexec'd process] ) ] )
-
-INSTALL_SUEXEC=setuid
-AC_ARG_ENABLE([suexec-capabilities], 
-APACHE_HELP_STRING(--enable-suexec-capabilities,Use Linux capability bits not setuid root suexec), [
-  if test "$enableval" = "yes"; then
-    INSTALL_SUEXEC=caps
-    AC_DEFINE(AP_SUEXEC_CAPABILITIES, 1, 
-              [Enable if suexec is installed with Linux capabilities, not setuid])
-  fi
-])
-APACHE_SUBST(INSTALL_SUEXEC)
 
 dnl APR should go after the other libs, so the right symbols can be picked up
 if test x${apu_found} != xobsolete; then
@@ -872,15 +795,6 @@ if test $v4mapped = "yes" -a $ac_cv_define_APR_HAVE_IPV6 = "yes"; then
               [Allow IPv4 connections on IPv6 listening sockets])
 fi
 
-AC_ARG_ENABLE(bsd-makefiles,APACHE_HELP_STRING(--enable-bsd-makefiles,use BSD Makefile syntax),
-[
-  FORCE_BSD_MAKEFILE=$enableval
-  AC_MSG_NOTICE([Setting "FORCE_BSD_MAKEFILE" to $FORCE_BSD_MAKEFILE])
-],
-[
-  FORCE_BSD_MAKEFILE="auto"
-])
-
 APACHE_FAST_OUTPUT(Makefile modules/Makefile srclib/Makefile) 
 APACHE_FAST_OUTPUT(os/Makefile server/Makefile)
 APACHE_FAST_OUTPUT(support/Makefile)
@@ -893,13 +807,6 @@ dnl ## Finalize the variables
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([Restore user-defined environment settings...])
 AC_MSG_NOTICE([])
-
-APACHE_CONF_SEL_CC=${CC}
-APACHE_CONF_SEL_CFLAGS=${CFLAGS}
-APACHE_CONF_SEL_LDFLAGS=${LDFLAGS}
-APACHE_CONF_SEL_LIBS=${LIBS}
-APACHE_CONF_SEL_CPPFLAGS=${CPPFLAGS}
-APACHE_CONF_SEL_CPP=${CPP}
 
 APR_RESTORE_THE_ENVIRONMENT(CPPFLAGS, EXTRA_)
 APR_RESTORE_THE_ENVIRONMENT(CFLAGS, EXTRA_)
@@ -932,64 +839,29 @@ if test "x$perlbin" = "x"; then
 fi
 AC_SUBST(perlbin)
 
-dnl If we are running on a BSD variant, see if we need to use the BSD .include syntax.
+dnl If we are running on BSD/OS, we need to use the BSD .include syntax.
 
+BSD_MAKEFILE=no
 ap_make_include=include
-ap_make_ifdef=ifdef
-ap_make_else=else
-ap_make_endif=endif
 ap_make_delimiter=' '
-if test "x$FORCE_BSD_MAKEFILE" = "xno"; then
-  BSD_MAKEFILE=no
-elif test "x$FORCE_BSD_MAKEFILE" = "xyes"; then
-  BSD_MAKEFILE=yes
-else
-  case $host in
-  *bsd*)
-      # Check whether they've installed GNU make
-      if make --version > /dev/null 2>&1; then
-          BSD_MAKEFILE=no
-      elif gmake --version > /dev/null 2>&1; then
-          BSD_MAKEFILE=no
-      else
-          BSD_MAKEFILE=yes
-      fi
-      ;;
-  *)
-      BSD_MAKEFILE=no
-      ;;
-  esac
-fi
-if test "x$BSD_MAKEFILE" = "xyes"; then
-  ap_make_include=.include
-  ap_make_ifdef=.ifdef
-  ap_make_else=.else
-  ap_make_endif=.endif
-  ap_make_delimiter='"'
-fi
-AC_MSG_NOTICE([using BSD Makefile syntax... $BSD_MAKEFILE])
-
+case $host in
+*bsdi*)
+    # Check whether they've installed GNU make
+    if make --version > /dev/null 2>&1; then
+        true
+    else
+        BSD_MAKEFILE=yes
+        ap_make_include=.include
+        ap_make_delimiter='"'
+    fi
+    ;;
+esac
 AC_SUBST(ap_make_include)
-AC_SUBST(ap_make_ifdef)
-AC_SUBST(ap_make_else)
-AC_SUBST(ap_make_endif)
 AC_SUBST(ap_make_delimiter)
 
 dnl Ensure that docs/conf is created.
 test -d docs/conf||$mkdir_p docs/conf
 
-AC_CONFIG_FILES(docs/conf/httpd.conf docs/conf/extra/httpd-autoindex.conf docs/conf/extra/httpd-dav.conf docs/conf/extra/httpd-default.conf docs/conf/extra/httpd-info.conf docs/conf/extra/httpd-languages.conf docs/conf/extra/httpd-manual.conf docs/conf/extra/httpd-mpm.conf docs/conf/extra/httpd-multilang-errordoc.conf docs/conf/extra/httpd-policy.conf docs/conf/extra/httpd-ssl.conf docs/conf/extra/httpd-userdir.conf docs/conf/extra/httpd-vhosts.conf docs/conf/extra/proxy-html.conf include/ap_config_layout.h support/apxs support/apachectl support/dbmmanage support/envvars-std support/log_server_status support/logresolve.pl support/phf_abuse_log.cgi support/split-logfile build/rules.mk build/pkg/pkginfo build/config_vars.sh)
-AC_CONFIG_COMMANDS([default], [true], [APACHE_GEN_MAKEFILES])
-AC_OUTPUT
-
-AC_MSG_NOTICE([summary of build options:
-
-    Server Version: ${HTTPD_VERSION}
-    Install prefix: ${prefix}
-    C compiler:     ${APACHE_CONF_SEL_CC}
-    CFLAGS:         ${APACHE_CONF_SEL_CFLAGS}
-    LDFLAGS:        ${APACHE_CONF_SEL_LDFLAGS}
-    LIBS:           ${APACHE_CONF_SEL_LIBS}
-    CPPFLAGS:       ${APACHE_CONF_SEL_CPPFLAGS}
-    C preprocessor: ${APACHE_CONF_SEL_CPP}
+AC_OUTPUT($APACHE_OUTPUT_FILES docs/conf/httpd.conf docs/conf/extra/httpd-autoindex.conf docs/conf/extra/httpd-dav.conf docs/conf/extra/httpd-default.conf docs/conf/extra/httpd-info.conf docs/conf/extra/httpd-languages.conf docs/conf/extra/httpd-manual.conf docs/conf/extra/httpd-mpm.conf docs/conf/extra/httpd-multilang-errordoc.conf docs/conf/extra/httpd-ssl.conf docs/conf/extra/httpd-userdir.conf docs/conf/extra/httpd-vhosts.conf docs/conf/extra/proxy-html.conf include/ap_config_layout.h support/apxs support/apachectl support/dbmmanage support/envvars-std support/log_server_status support/logresolve.pl support/phf_abuse_log.cgi support/split-logfile build/rules.mk build/pkg/pkginfo build/config_vars.sh,[true],[
+  APACHE_GEN_MAKEFILES
 ])

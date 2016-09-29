@@ -27,9 +27,10 @@ function add_symbol(sym_name) {
 
 # List of functions that we don't support, yet??
 #/ap_some_name/{next}
+/ap_mpm_pod_/{next}
 
-/^[ \t]*(AP|DAV|CACHE|PROXY)([RU]|REQ|_CORE)?_DECLARE[^(]*[(][^)]*[)]([^ ]* )*[^(]+[(]/ {
-    sub("[ \t]*(AP|DAV|CACHE|PROXY)([RU]|REQ|_CORE)?_DECLARE[^(]*[(][^)]*[)][ \t]*", "")
+/^[ \t]*(AP|DAV|CACHE)([RU]|_CORE)?_DECLARE[^(]*[(][^)]*[)]([^ ]* )*[^(]+[(]/ {
+    sub("[ \t]*(AP|DAV|CACHE)([RU]|_CORE)?_DECLARE[^(]*[(][^)]*[)][ \t]*", "")
     sub("[(].*", "")
     sub("([^ ]* (^([ \t]*[(])))+", "")
     add_symbol($0)
@@ -56,17 +57,6 @@ function add_symbol(sym_name) {
     sub("[ \t]+$", "", symbol)
     add_symbol(prefix "_hook_" symbol)
     add_symbol(prefix "_hook_get_" symbol)
-    add_symbol(prefix "_run_" symbol)
-    next
-}
-
-/^[ \t]*PROXY_DECLARE_OPTIONAL_HOOK[^(]*[(][^)]*/ {
-    split($0, args, ",")
-    prefix = args[1]
-    sub("^.*[(]", "", prefix)
-    symbol = args[4]
-    sub("^[ \t]+", "", symbol)
-    sub("[ \t]+$", "", symbol)
     add_symbol(prefix "_run_" symbol)
     next
 }
@@ -98,11 +88,6 @@ function add_symbol(sym_name) {
     add_symbol($NF)
 }
 
-/^[ \t]*(extern[ \t]+(module[ \t]+)?)?PROXY_DECLARE_DATA .*;/ {
-    gsub(/[*;\n\r]/, "")
-    gsub(/\[.*\]/, "")
-    add_symbol($NF)
-}
 
 END {
     printf("Added %d symbols to export list.\n", idx) > "/dev/stderr"

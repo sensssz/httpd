@@ -47,8 +47,8 @@ static void h2_hooks(apr_pool_t *pool);
 
 AP_DECLARE_MODULE(http2) = {
     STANDARD20_MODULE_STUFF,
-    h2_config_create_dir, /* func to create per dir config */
-    h2_config_merge,
+    NULL,
+    NULL,
     h2_config_create_svr, /* func to create per server config */
     h2_config_merge,      /* func to merge per server config */
     h2_cmds,              /* command handlers */
@@ -60,7 +60,6 @@ static int h2_h2_fixups(request_rec *r);
 typedef struct {
     unsigned int change_prio : 1;
     unsigned int sha256 : 1;
-    unsigned int inv_headers : 1;
 } features;
 
 static features myfeats;
@@ -85,16 +84,15 @@ static int h2_post_config(apr_pool_t *p, apr_pool_t *plog,
     const char *mod_h2_init_key = "mod_http2_init_counter";
     nghttp2_info *ngh2;
     apr_status_t status;
+    const char *sep = "";
     
     (void)plog;(void)ptemp;
 #ifdef H2_NG2_CHANGE_PRIO
     myfeats.change_prio = 1;
+    sep = "+";
 #endif
 #ifdef H2_OPENSSL
     myfeats.sha256 = 1;
-#endif
-#ifdef H2_NG2_INVALID_HEADER_CB
-    myfeats.inv_headers = 1;
 #endif
     
     apr_pool_userdata_get(&data, mod_h2_init_key, s->process->pool);
@@ -110,9 +108,8 @@ static int h2_post_config(apr_pool_t *p, apr_pool_t *plog,
     ap_log_error( APLOG_MARK, APLOG_INFO, 0, s, APLOGNO(03090)
                  "mod_http2 (v%s, feats=%s%s%s, nghttp2 %s), initializing...",
                  MOD_HTTP2_VERSION, 
-                 myfeats.change_prio? "CHPRIO"  : "", 
-                 myfeats.sha256?      "+SHA256" : "",
-                 myfeats.inv_headers? "+INVHD"  : "",
+                 myfeats.change_prio? "CHPRIO" : "", sep, 
+                 myfeats.sha256?      "SHA256" : "",
                  ngh2?                ngh2->version_str : "unknown");
     
     switch (h2_conn_mpm_type()) {

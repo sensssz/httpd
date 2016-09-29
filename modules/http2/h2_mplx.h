@@ -105,8 +105,8 @@ struct h2_mplx {
     apr_array_header_t *spare_slaves; /* spare slave connections */
     
     struct h2_workers *workers;
-    apr_uint32_t tx_handles_reserved;
-    apr_uint32_t tx_chunk_size;
+    int tx_handles_reserved;
+    apr_size_t tx_chunk_size;
     
     h2_mplx_consumed_cb *input_consumed;
     void *input_consumed_ctx;
@@ -157,8 +157,6 @@ void h2_mplx_task_done(h2_mplx *m, struct h2_task *task, struct h2_task **ptask)
  * @return the highest stream id being/been processed
  */
 apr_uint32_t h2_mplx_shutdown(h2_mplx *m);
-
-int h2_mplx_is_busy(h2_mplx *m);
 
 /*******************************************************************************
  * IO lifetime of streams.
@@ -231,11 +229,6 @@ apr_status_t h2_mplx_dispatch_master_events(h2_mplx *m,
                                             void *ctx);
 
 apr_status_t h2_mplx_suspend_stream(h2_mplx *m, int stream_id);
-
-
-typedef int h2_mplx_stream_cb(struct h2_stream *s, void *ctx);
-
-apr_status_t h2_mplx_stream_do(h2_mplx *m, h2_mplx_stream_cb *cb, void *ctx);
 
 /*******************************************************************************
  * Output handling of streams.

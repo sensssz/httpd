@@ -62,10 +62,18 @@ XINCDIRS	+= \
 			$(APR)/include \
 			$(APRUTIL)/include \
 			$(SRC)/include \
+			$(STDMOD)/aaa \
 			$(STDMOD)/core \
 			$(STDMOD)/filters \
 			$(STDMOD)/generators \
+			$(STDMOD)/http \
+			$(STDMOD)/loggers \
+			$(STDMOD)/mappers \
 			$(STDMOD)/proxy \
+			$(STDMOD)/ssl \
+			$(SERVER) \
+			$(SERVER)/mpm/netware \
+			$(PCRE) \
 			$(NWOS) \
 			$(EOLIST)
 
@@ -218,17 +226,6 @@ TARGET_lib = \
 # Paths must all use the '/' character
 #
 FILES_nlm_objs = \
-	$(OBJDIR)/apreq_cookie.o \
-	$(OBJDIR)/apreq_error.o \
-	$(OBJDIR)/apreq_module.o \
-	$(OBJDIR)/apreq_module_cgi.o \
-	$(OBJDIR)/apreq_module_custom.o \
-	$(OBJDIR)/apreq_param.o \
-	$(OBJDIR)/apreq_parser.o \
-	$(OBJDIR)/apreq_parser_header.o \
-	$(OBJDIR)/apreq_parser_multipart.o \
-	$(OBJDIR)/apreq_parser_urlencoded.o \
-	$(OBJDIR)/apreq_util.o \
 	$(OBJDIR)/buildmark.o \
 	$(OBJDIR)/config.o \
 	$(OBJDIR)/connection.o \
@@ -393,7 +390,7 @@ nlms :: libs $(TARGET_nlm)
 # Updated this target to create necessary directories and copy files to the
 # correct place.  (See $(AP_WORK)/build/NWGNUhead.inc for examples)
 #
-MKCNF	= $(AWK) -v BDIR=$(BASEDIR) -v PORT=$(PORT) -v SSLPORT=$(SSLPORT) -v MODSSL=$(WITH_SSL) -v MODHTTP2=$(WITH_HTTP2) -v BSDSKT=$(USE_STDSOCKETS) -f build/mkconfNW.awk $1 > $2
+MKCNF	= $(AWK) -v BDIR=$(BASEDIR) -v PORT=$(PORT) -v SSLPORT=$(SSLPORT) -v MODSSL=$(WITH_SSL) -v BSDSKT=$(USE_STDSOCKETS) -f build/mkconfNW.awk $1 > $2
 
 install :: nlms instscripts FORCE
 	$(call COPY,$(OBJDIR)/$(NLM_NAME).nlm,                         $(INSTALLBASE)/)
@@ -417,13 +414,11 @@ install :: nlms instscripts FORCE
 	$(call MKCNF,docs/conf/extra/httpd-default.conf.in,            $(INSTALLBASE)/conf/extra/httpd-default.conf)
 	$(call MKCNF,docs/conf/extra/httpd-info.conf.in,               $(INSTALLBASE)/conf/extra/httpd-info.conf)
 	$(call MKCNF,docs/conf/extra/httpd-languages.conf.in,          $(INSTALLBASE)/conf/extra/httpd-languages.conf)
-	$(call MKCNF,docs/conf/extra/httpd-macro.conf.in,              $(INSTALLBASE)/conf/extra/httpd-macro.conf)
 	$(call MKCNF,docs/conf/extra/httpd-manual.conf.in,             $(INSTALLBASE)/conf/extra/httpd-manual.conf)
 	$(call MKCNF,docs/conf/extra/httpd-mpm.conf.in,                $(INSTALLBASE)/conf/extra/httpd-mpm.conf)
 	$(call MKCNF,docs/conf/extra/httpd-multilang-errordoc.conf.in, $(INSTALLBASE)/conf/extra/httpd-multilang-errordoc.conf)
 	$(call MKCNF,docs/conf/extra/httpd-userdir.conf.in,            $(INSTALLBASE)/conf/extra/httpd-userdir.conf)
 	$(call MKCNF,docs/conf/extra/httpd-vhosts.conf.in,             $(INSTALLBASE)/conf/extra/httpd-vhosts.conf)
-	$(call MKCNF,docs/conf/extra/httpd-policy.conf.in,             $(INSTALLBASE)/conf/extra/httpd-policy.conf)
 	$(call MKCNF,docs/conf/extra/httpd-ssl.conf.in,                $(INSTALLBASE)/conf/extra/httpd-ssl.conf)
 	$(call MKCNF,docs/conf/extra/proxy-html.conf.in,               $(INSTALLBASE)/conf/extra/proxy-html.conf)
 	$(call COPYR,docs/docroot,                                     $(INSTALLBASE)/htdocs)
@@ -449,7 +444,6 @@ installdev :: FORCE
 	$(call COPY,$(STDMOD)/loggers/mod_log_config.h,                $(INSTALLBASE)/include/)
 	$(call COPY,$(STDMOD)/mappers/mod_rewrite.h,                   $(INSTALLBASE)/include/)
 	$(call COPY,$(STDMOD)/proxy/mod_proxy.h,                       $(INSTALLBASE)/include/)
-	$(call COPY,$(STDMOD)/proxy/mod_serf.h,                        $(INSTALLBASE)/include/)
 	$(call COPY,$(STDMOD)/session/mod_session.h,                   $(INSTALLBASE)/include/)
 	$(call COPY,$(STDMOD)/ssl/mod_ssl.h,                           $(INSTALLBASE)/include/)
 	$(call COPY,$(STDMOD)/ssl/mod_ssl_openssl.h,                   $(INSTALLBASE)/include/)

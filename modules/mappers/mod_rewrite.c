@@ -101,10 +101,6 @@
 #include "mod_rewrite.h"
 #include "ap_expr.h"
 
-#if APR_CHARSET_EBCDIC
-#include "util_charset.h"
-#endif
-
 static ap_dbd_t *(*dbd_acquire)(request_rec*) = NULL;
 static void (*dbd_prepare)(server_rec*, const char*, const char*) = NULL;
 static const char* really_last_key = "rewrite_really_last";
@@ -170,7 +166,6 @@ static const char* really_last_key = "rewrite_really_last";
 #define RULEFLAG_DISCARDPATHINFO    (1<<15)
 #define RULEFLAG_QSDISCARD          (1<<16)
 #define RULEFLAG_END                (1<<17)
-#define RULEFLAG_ESCAPENOPLUS       (1<<18)
 #define RULEFLAG_QSLAST             (1<<19)
 
 /* return code of the rewrite rule
@@ -242,7 +237,7 @@ static const char* really_last_key = "rewrite_really_last";
     (r->main->uri && r->uri && strcmp(r->main->uri, r->uri)))
 
 #ifndef REWRITE_MAX_ROUNDS
-#define REWRITE_MAX_ROUNDS 10000
+#define REWRITE_MAX_ROUNDS 32000
 #endif
 
 /*
@@ -268,8 +263,6 @@ typedef struct {
     const char *dbdq;              /* SQL SELECT statement for rewritemap */
     const char *checkfile2;        /* filename to check for map existence
                                       NULL if only one file               */
-    const char *user;              /* run RewriteMap program as this user */
-    const char *group;             /* run RewriteMap program as this group */
 } rewritemap_entry;
 
 /* special pattern types for RewriteCond */
@@ -324,7 +317,6 @@ typedef struct {
     data_item *cookie;               /* added cookies                         */
     int        skip;                 /* number of next rules to skip          */
     int        maxrounds;            /* limit on number of loops with N flag  */
-    char       *escapes;             /* specific backref escapes              */
 } rewriterule_entry;
 
 typedef struct {
@@ -425,7 +417,7 @@ static const char *rewritemap_mutex_type = "rewrite-map";
 /* Optional functions imported from mod_ssl when loaded: */
 static APR_OPTIONAL_FN_TYPE(ssl_var_lookup) *rewrite_ssl_lookup = NULL;
 static APR_OPTIONAL_FN_TYPE(ssl_is_https) *rewrite_is_https = NULL;
-static char *escape_backref(apr_pool_t *p, const char *path, const char *escapeme, int noplus);
+static char *escape_uri(apr_pool_t *p, const char *path);
 
 /*
  * +-------------------------------------------------------+
@@ -526,7 +518,7 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
     switch (*uri++) {
     case 'a':
     case 'A':
-        if (!ap_cstr_casecmpn(uri, "jp://", 5)) {        /* ajp://    */
+        if (!strncasecmp(uri, "jp://", 5)) {        /* ajp://    */
           *sqs = 1;
           return 6;
         }
@@ -534,7 +526,7 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'b':
     case 'B':
-        if (!ap_cstr_casecmpn(uri, "alancer://", 10)) {   /* balancer:// */
+        if (!strncasecmp(uri, "alancer://", 10)) {   /* balancer:// */
           *sqs = 1;
           return 11;
         }
@@ -542,10 +534,10 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'f':
     case 'F':
-        if (!ap_cstr_casecmpn(uri, "tp://", 5)) {        /* ftp://    */
+        if (!strncasecmp(uri, "tp://", 5)) {        /* ftp://    */
             return 6;
         }
-        if (!ap_cstr_casecmpn(uri, "cgi://", 6)) {       /* fcgi://   */
+        if (!strncasecmp(uri, "cgi://", 6)) {       /* fcgi://   */
             *sqs = 1;
             return 7;
         }
@@ -553,26 +545,26 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'g':
     case 'G':
-        if (!ap_cstr_casecmpn(uri, "opher://", 8)) {     /* gopher:// */
+        if (!strncasecmp(uri, "opher://", 8)) {     /* gopher:// */
             return 9;
         }
         break;
 
     case 'h':
     case 'H':
-        if (!ap_cstr_casecmpn(uri, "ttp://", 6)) {       /* http://   */
+        if (!strncasecmp(uri, "ttp://", 6)) {       /* http://   */
             *sqs = 1;
             return 7;
         }
-        else if (!ap_cstr_casecmpn(uri, "ttps://", 7)) { /* https://  */
+        else if (!strncasecmp(uri, "ttps://", 7)) { /* https://  */
             *sqs = 1;
             return 8;
         }
-        else if (!ap_cstr_casecmpn(uri, "2://", 4)) {    /* h2://     */
+        else if (!strncasecmp(uri, "2://", 4)) {    /* h2://     */
             *sqs = 1;
             return 5;
         }
-        else if (!ap_cstr_casecmpn(uri, "2c://", 5)) {   /* h2c://    */
+        else if (!strncasecmp(uri, "2c://", 5)) {   /* h2c://    */
             *sqs = 1;
             return 6;
         }
@@ -580,14 +572,14 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'l':
     case 'L':
-        if (!ap_cstr_casecmpn(uri, "dap://", 6)) {       /* ldap://   */
+        if (!strncasecmp(uri, "dap://", 6)) {       /* ldap://   */
             return 7;
         }
         break;
 
     case 'm':
     case 'M':
-        if (!ap_cstr_casecmpn(uri, "ailto:", 6)) {       /* mailto:   */
+        if (!strncasecmp(uri, "ailto:", 6)) {       /* mailto:   */
             *sqs = 1;
             return 7;
         }
@@ -595,17 +587,17 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'n':
     case 'N':
-        if (!ap_cstr_casecmpn(uri, "ews:", 4)) {         /* news:     */
+        if (!strncasecmp(uri, "ews:", 4)) {         /* news:     */
             return 5;
         }
-        else if (!ap_cstr_casecmpn(uri, "ntp://", 6)) {  /* nntp://   */
+        else if (!strncasecmp(uri, "ntp://", 6)) {  /* nntp://   */
             return 7;
         }
         break;
 
     case 's':
     case 'S':
-        if (!ap_cstr_casecmpn(uri, "cgi://", 6)) {       /* scgi://   */
+        if (!strncasecmp(uri, "cgi://", 6)) {       /* scgi://   */
             *sqs = 1;
             return 7;
         }
@@ -613,11 +605,11 @@ static unsigned is_absolute_uri(char *uri, int *supportsqs)
 
     case 'w':
     case 'W':
-        if (!ap_cstr_casecmpn(uri, "s://", 4)) {        /* ws://     */
+        if (!strncasecmp(uri, "s://", 4)) {        /* ws://     */
             *sqs = 1;
             return 5;
         }
-        else if (!ap_cstr_casecmpn(uri, "ss://", 5)) {  /* wss://    */
+        else if (!strncasecmp(uri, "ss://", 5)) {  /* wss://    */
             *sqs = 1;
             return 6;
         }
@@ -642,44 +634,24 @@ static APR_INLINE unsigned char *c2x(unsigned what, unsigned char prefix,
 }
 
 /*
- * Escapes a backreference in a similar way as php's urlencode does.
+ * Escapes a uri in a similar way as php's urlencode does.
  * Based on ap_os_escape_path in server/util.c
  */
-static char *escape_backref(apr_pool_t *p, const char *path, const char *escapeme, int noplus) {
+static char *escape_uri(apr_pool_t *p, const char *path) {
     char *copy = apr_palloc(p, 3 * strlen(path) + 3);
     const unsigned char *s = (const unsigned char *)path;
     unsigned char *d = (unsigned char *)copy;
     unsigned c;
 
     while ((c = *s)) {
-        if (!escapeme) { 
-            if (apr_isalnum(c) || c == '_') {
-                *d++ = c;
-            }
-            else if (c == ' ' && !noplus) {
-                *d++ = '+';
-            }
-            else {
-                d = c2x(c, '%', d);
-            }
+        if (apr_isalnum(c) || c == '_') {
+            *d++ = c;
         }
-        else { 
-            const char *esc = escapeme;
-            while (*esc) { 
-                if (c == *esc) { 
-                    if (c == ' ' && !noplus) { 
-                        *d++ = '+';
-                    }
-                    else { 
-                        d = c2x(c, '%', d);
-                    }
-                    break;
-                }
-                ++esc;
-            }
-            if (!*esc) { 
-                *d++ = c;
-            }
+        else if (c == ' ') {
+            *d++ = '+';
+        }
+        else {
+            d = c2x(c, '%', d);
         }
         ++s;
     }
@@ -725,7 +697,7 @@ static char *escape_absolute_uri(apr_pool_t *p, char *uri, unsigned scheme)
          *               [dn ["?" [attributes] ["?" [scope]
          *               ["?" [filter] ["?" extensions]]]]]]
          */
-        if (!ap_cstr_casecmpn(uri, "ldap", 4)) {
+        if (!strncasecmp(uri, "ldap", 4)) {
             char *token[5];
             int c = 0;
 
@@ -827,7 +799,7 @@ static void reduce_uri(request_rec *r)
     cp = (char *)ap_http_scheme(r);
     l  = strlen(cp);
     if (   strlen(r->filename) > l+3
-        && ap_cstr_casecmpn(r->filename, cp, l) == 0
+        && strncasecmp(r->filename, cp, l) == 0
         && r->filename[l]   == ':'
         && r->filename[l+1] == '/'
         && r->filename[l+2] == '/' ) {
@@ -1189,7 +1161,6 @@ static void rewrite_child_errfn(apr_pool_t *p, apr_status_t err,
 
 static apr_status_t rewritemap_program_child(apr_pool_t *p,
                                              const char *progname, char **argv,
-                                             const char *user, const char *group,
                                              apr_file_t **fpout,
                                              apr_file_t **fpin)
 {
@@ -1202,8 +1173,6 @@ static apr_status_t rewritemap_program_child(apr_pool_t *p,
                                                   APR_FULL_BLOCK, APR_NO_PIPE))
         && APR_SUCCESS == (rc=apr_procattr_dir_set(procattr,
                                              ap_make_dirstr_parent(p, argv[0])))
-        && (!user || APR_SUCCESS == (rc=apr_procattr_user_set(procattr, user, "")))
-        && (!group || APR_SUCCESS == (rc=apr_procattr_group_set(procattr, group)))
         && APR_SUCCESS == (rc=apr_procattr_cmdtype_set(procattr, APR_PROGRAM))
         && APR_SUCCESS == (rc=apr_procattr_child_errfn_set(procattr,
                                                            rewrite_child_errfn))
@@ -1261,7 +1230,6 @@ static apr_status_t run_rewritemap_programs(server_rec *s, apr_pool_t *p)
         }
 
         rc = rewritemap_program_child(p, map->argv[0], map->argv,
-                                      map->user, map->group,
                                       &fpout, &fpin);
         if (rc != APR_SUCCESS || fpin == NULL || fpout == NULL) {
             ap_log_error(APLOG_MARK, APLOG_ERR, rc, s, APLOGNO(00654)
@@ -2083,7 +2051,8 @@ static char *lookup_variable(char *var, rewrite_ctx *ctx)
                     return apr_psprintf(r->pool, "%u", ap_get_server_port(r));
                 }
                 else if (var[7] == 'H' && !strcmp(var, "REMOTE_HOST")) {
-                    result = ap_get_useragent_host(r, REMOTE_NAME, NULL);
+                    result = ap_get_remote_host(r->connection,r->per_dir_config,
+                                                REMOTE_NAME, NULL);
                 }
                 else if (!strcmp(var, "REMOTE_PORT")) {
                     return apr_itoa(r->pool, r->useragent_addr->port);
@@ -2421,7 +2390,7 @@ static char *do_expand(char *input, rewrite_ctx *ctx, rewriterule_entry *entry)
                     /* escape the backreference */
                     char *tmp2, *tmp;
                     tmp = apr_pstrmemdup(pool, bri->source + bri->regmatch[n].rm_so, span);
-                    tmp2 = escape_backref(pool, tmp, entry->escapes, entry->flags & RULEFLAG_ESCAPENOPLUS);
+                    tmp2 = escape_uri(pool, tmp);
                     rewritelog((ctx->r, 5, ctx->perdir, "escaping backreference '%s' to '%s'",
                             tmp, tmp2));
 
@@ -2590,14 +2559,14 @@ static void add_cookie(request_rec *r, char *s)
                                  : NULL,
                                  expires ? (exp_time ? exp_time : "")
                                  : NULL,
-                                 (secure && (!ap_cstr_casecmp(secure, "true")
+                                 (secure && (!strcasecmp(secure, "true")
                                              || !strcmp(secure, "1")
-                                             || !ap_cstr_casecmp(secure,
+                                             || !strcasecmp(secure,
                                                             "secure"))) ?
                                   "; secure" : NULL,
-                                 (httponly && (!ap_cstr_casecmp(httponly, "true")
+                                 (httponly && (!strcasecmp(httponly, "true")
                                                || !strcmp(httponly, "1")
-                                               || !ap_cstr_casecmp(httponly,
+                                               || !strcasecmp(httponly,
                                                               "HttpOnly"))) ?
                                   "; HttpOnly" : NULL,
                                  NULL);
@@ -2718,7 +2687,7 @@ static apr_status_t rewritelock_remove(void *data)
  * XXX: what an inclined parser. Seems we have to leave it so
  *      for backwards compat. *sigh*
  */
-static char *parseargline(apr_pool_t *p, char *str, char **a1, char **a2, char **a3)
+static int parseargline(char *str, char **a1, char **a2, char **a3)
 {
     char quote;
 
@@ -2743,7 +2712,7 @@ static char *parseargline(apr_pool_t *p, char *str, char **a1, char **a2, char *
     }
 
     if (!*str) {
-        return "bad argument line: at least two arguments required";
+        return 1;
     }
     *str++ = '\0';
 
@@ -2769,7 +2738,7 @@ static char *parseargline(apr_pool_t *p, char *str, char **a1, char **a2, char *
 
     if (!*str) {
         *a3 = NULL; /* 3rd argument is optional */
-        return NULL;
+        return 0;
     }
     *str++ = '\0';
 
@@ -2779,7 +2748,7 @@ static char *parseargline(apr_pool_t *p, char *str, char **a1, char **a2, char *
 
     if (!*str) {
         *a3 = NULL; /* 3rd argument is still optional */
-        return NULL;
+        return 0;
     }
 
     /*
@@ -2798,17 +2767,7 @@ static char *parseargline(apr_pool_t *p, char *str, char **a1, char **a2, char *
     }
     *str = '\0';
 
-    if (**a3 != '[') {
-        return apr_psprintf(p, "bad flag delimiters: third argument must begin "
-               "with '[' but found '%c' - too many arguments or rogue "
-               "whitespace?", **a3);
-    }
-    else if ((*a3)[strlen(*a3)-1] != ']') {
-        return apr_psprintf(p, "bad flag delimiters: third argument must end "
-                "with ']' but found '%c' - unintended whitespace within the "
-                "flags definition?", (*a3)[strlen(*a3)-1]);
-    }
-    return NULL;
+    return 0;
 }
 
 static void *config_server_create(apr_pool_t *p, server_rec *s)
@@ -3056,7 +3015,7 @@ static const char *cmd_rewriteoptions(cmd_parms *cmd,
 }
 
 static const char *cmd_rewritemap(cmd_parms *cmd, void *dconf, const char *a1,
-                                  const char *a2, const char *a3)
+                                  const char *a2)
 {
     rewrite_server_conf *sconf;
     rewritemap_entry *newmap;
@@ -3162,11 +3121,6 @@ static const char *cmd_rewritemap(cmd_parms *cmd, void *dconf, const char *a1,
 
         newmap->type      = MAPTYPE_PRG;
         newmap->checkfile = newmap->argv[0];
-        if (a3) {
-            char *tok_cntx;
-            newmap->user = apr_strtok(apr_pstrdup(cmd->pool, a3), ":", &tok_cntx);
-            newmap->group = apr_strtok(NULL, ":", &tok_cntx);
-        }
     }
     else if (strncasecmp(a2, "int:", 4) == 0) {
         newmap->type      = MAPTYPE_INT;
@@ -3238,7 +3192,6 @@ static const char *cmd_parseflagfield(apr_pool_t *p, void *cfg, char *key,
     const char *err;
 
     endp = key + strlen(key) - 1;
-    /* This should have been checked before, but just in case... */
     if (*key != '[' || *endp != ']') {
         return "bad flag delimiters";
     }
@@ -3334,10 +3287,9 @@ static const char *cmd_rewritecond(cmd_parms *cmd, void *in_dconf,
      * of the argument line. So we can use a1 .. a3 without
      * copying them again.
      */
-    if ((err = parseargline(cmd->pool, str, &a1, &a2, &a3))) {
-        return apr_psprintf(cmd->pool, "RewriteCond: %s "
-                "(TestString=%s, CondPattern=%s, flags=%s)",
-                err, a1, a2, a3);
+    if (parseargline(str, &a1, &a2, &a3)) {
+        return apr_pstrcat(cmd->pool, "RewriteCond: bad argument line '", str,
+                           "'", NULL);
     }
 
     /* arg1: the input string */
@@ -3494,12 +3446,6 @@ static const char *cmd_rewriterule_setflag(apr_pool_t *p, void *_cfg,
     case 'B':
         if (!*key || !strcasecmp(key, "ackrefescaping")) {
             cfg->flags |= RULEFLAG_ESCAPEBACKREF;
-            if (val && *val) { 
-                cfg->escapes = val;
-            }
-        }
-        else if (!strcasecmp(key, "NP") || !strcasecmp(key, "ackrefernoplus")) { 
-            cfg->flags |= RULEFLAG_ESCAPENOPLUS;
         }
         else {
             ++error;
@@ -3757,10 +3703,9 @@ static const char *cmd_rewriterule(cmd_parms *cmd, void *in_dconf,
     }
 
     /*  parse the argument line ourself */
-    if ((err = parseargline(cmd->pool, str, &a1, &a2, &a3))) {
-        return apr_psprintf(cmd->pool, "RewriteRule: %s "
-                "(pattern='%s', substitution='%s', flags='%s')",
-                err, a1, a2, a3);
+    if (parseargline(str, &a1, &a2, &a3)) {
+        return apr_pstrcat(cmd->pool, "RewriteRule: bad argument line '", str,
+                           "'", NULL);
     }
 
     /* arg3: optional flags field */
@@ -4132,7 +4077,7 @@ static int apply_rewrite_rule(rewriterule_entry *p, rewrite_ctx *ctx)
     /* Ok, we already know the pattern has matched, but we now
      * additionally have to check for all existing preconditions
      * (RewriteCond) which have to be also true. We do this at
-     * this very late stage to avoid unnecessary checks which
+     * this very late stage to avoid unnessesary checks which
      * would slow down the rewriting engine.
      */
     rewriteconds = p->rewriteconds;
@@ -4926,7 +4871,7 @@ static int hook_fixup(request_rec *r)
 
     /*
      *  Do the Options check after engine check, so
-     *  the user is able to explicitly turn RewriteEngine Off.
+     *  the user is able to explicitely turn RewriteEngine Off.
      */
     if (!(ap_allow_options(r) & (OPT_SYM_LINKS | OPT_SYM_OWNER))) {
         /* FollowSymLinks is mandatory! */
@@ -4941,7 +4886,7 @@ static int hook_fixup(request_rec *r)
     /*
      *  remember the current filename before rewriting for later check
      *  to prevent deadlooping because of internal redirects
-     *  on final URL/filename which can be equal to the initial one.
+     *  on final URL/filename which can be equal to the inital one.
      *  also, we'll restore original r->filename if we decline this
      *  request
      */
@@ -5094,8 +5039,6 @@ static int hook_fixup(request_rec *r)
             if (l > 12 && strncmp(r->filename, "passthrough:", 12) == 0) {
                 r->filename = apr_pstrdup(r->pool, r->filename+12);
             }
-
-            rewritelog((r, 2, NULL, "local path result: %s", r->filename));
 
             /* the filename must be either an absolute local path or an
              * absolute local URL.
@@ -5266,8 +5209,8 @@ static const command_rec command_table[] = {
                      "an input string and a to be applied regexp-pattern"),
     AP_INIT_RAW_ARGS("RewriteRule",     cmd_rewriterule,     NULL, OR_FILEINFO,
                      "an URL-applied regexp-pattern and a substitution URL"),
-    AP_INIT_TAKE23(   "RewriteMap",      cmd_rewritemap,      NULL, RSRC_CONF,
-                     "a mapname and a filename and options"),
+    AP_INIT_TAKE2(   "RewriteMap",      cmd_rewritemap,      NULL, RSRC_CONF,
+                     "a mapname and a filename"),
     { NULL }
 };
 

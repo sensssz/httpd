@@ -12,7 +12,7 @@ dnl behavior of 2.4.1 and later, but failing ./configure only if an explicitly
 dnl enabled module is missing its prereqs
 save_module_selection=$module_selection
 save_module_default=$module_default
-if test "x$enable_proxy" != "xno"; then
+if test "$enable_proxy" != "no"; then
     module_selection=most
     if test "$enable_proxy" = "shared" -o "$enable_proxy" = "static"; then
         module_default=$enable_proxy
@@ -50,7 +50,7 @@ APACHE_MODULE(proxy_ftp, Apache proxy FTP module.  Requires --enable-proxy., $pr
 APACHE_MODULE(proxy_http, Apache proxy HTTP module.  Requires --enable-proxy., $proxy_http_objs, , most, , proxy)
 APACHE_MODULE(proxy_fcgi, Apache proxy FastCGI module.  Requires --enable-proxy., $proxy_fcgi_objs, , most, , proxy)
 APACHE_MODULE(proxy_scgi, Apache proxy SCGI module.  Requires --enable-proxy., $proxy_scgi_objs, , most, , proxy)
-APACHE_MODULE(proxy_fdpass, Apache proxy to Unix Daemon Socket module.  Requires --enable-proxy., $proxy_fdpass_objs, , most, [
+APACHE_MODULE(proxy_fdpass, Apache proxy to Unix Daemon Socket module.  Requires --enable-proxy., $proxy_fdpass_objs, , , [
   AC_CHECK_DECL(CMSG_DATA,,, [
     #include <sys/types.h>
     #include <sys/socket.h>
@@ -63,15 +63,6 @@ APACHE_MODULE(proxy_fdpass, Apache proxy to Unix Daemon Socket module.  Requires
 APACHE_MODULE(proxy_wstunnel, Apache proxy Websocket Tunnel module.  Requires --enable-proxy., $proxy_wstunnel_objs, , most, , proxy)
 APACHE_MODULE(proxy_ajp, Apache proxy AJP module.  Requires --enable-proxy., $proxy_ajp_objs, , most, , proxy)
 APACHE_MODULE(proxy_balancer, Apache proxy BALANCER module.  Requires --enable-proxy., $proxy_balancer_objs, , most, , proxy)
-
-APACHE_MODULE(serf, [Reverse proxy module using Serf], , , no, [
-    APACHE_CHECK_SERF
-    if test "$ac_cv_serf" = "yes" ; then
-      APR_ADDTO(MOD_SERF_LDADD, [\$(SERF_LIBS)])
-    else
-      enable_serf=no
-    fi
-])
 
 APACHE_MODULE(proxy_express, mass reverse-proxy module. Requires --enable-proxy., , , most, , proxy)
 APACHE_MODULE(proxy_hcheck, [reverse-proxy health-check module. Requires --enable-proxy and --enable-watchdog.], , , most, , [proxy,watchdog])

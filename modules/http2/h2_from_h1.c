@@ -471,8 +471,7 @@ static h2_response *create_response(h2_from_h1 *from_h1, request_rec *r)
                      (void *) headers, r->headers_out, NULL);
     }
     
-    return h2_response_rcreate(from_h1->stream_id, r, r->status, 
-                               headers, r->pool);
+    return h2_response_rcreate(from_h1->stream_id, r, headers, r->pool);
 }
 
 apr_status_t h2_response_output_filter(ap_filter_t *f, apr_bucket_brigade *bb)

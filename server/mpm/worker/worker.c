@@ -68,7 +68,6 @@
 #include "mpm_default.h"
 #include "util_mutex.h"
 #include "unixd.h"
-#include "util_time.h"
 
 #include <signal.h>
 #include <limits.h>             /* for INT_MAX */
@@ -169,7 +168,7 @@ typedef struct worker_retained_data {
 #endif
     int hold_off_on_exponential_spawning;
     /*
-     * Current number of listeners buckets and maximum reached across
+     * Current number of listeners buckets and maximum reached accross
      * restarts (to size retained data according to dynamic num_buckets,
      * eg. idle_spawn_rate).
      */
@@ -705,10 +704,9 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t *thd, void * dummy)
 
     free(ti);
 
-    rv = apr_pollset_create(&pollset, num_listensocks, tpool,
-                            APR_POLLSET_NOCOPY);
+    rv = apr_pollset_create(&pollset, num_listensocks, tpool, 0);
     if (rv != APR_SUCCESS) {
-        ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf, APLOGNO(03285)
+        ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf,
                      "Couldn't create pollset in thread;"
                      " check system or user limits");
         /* let the parent decide how bad this really is */
@@ -716,16 +714,16 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t *thd, void * dummy)
     }
 
     for (lr = my_bucket->listeners; lr != NULL; lr = lr->next) {
-        apr_pollfd_t *pfd = apr_pcalloc(tpool, sizeof *pfd);
+        apr_pollfd_t pfd = { 0 };
 
-        pfd->desc_type = APR_POLL_SOCKET;
-        pfd->desc.s = lr->sd;
-        pfd->reqevents = APR_POLLIN;
-        pfd->client_data = lr;
+        pfd.desc_type = APR_POLL_SOCKET;
+        pfd.desc.s = lr->sd;
+        pfd.reqevents = APR_POLLIN;
+        pfd.client_data = lr;
 
-        rv = apr_pollset_add(pollset, pfd);
+        rv = apr_pollset_add(pollset, &pfd);
         if (rv != APR_SUCCESS) {
-            ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf, APLOGNO(03286)
+            ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf,
                          "Couldn't create add listener to pollset;"
                          " check system or user limits");
             /* let the parent decide how bad this really is */
@@ -760,7 +758,7 @@ static void * APR_THREAD_FUNC listener_thread(apr_thread_t *thd, void * dummy)
                 break; /* we've been signaled to die now */
             }
             else if (rv != APR_SUCCESS) {
-                ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf, APLOGNO(03287)
+                ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf,
                              "apr_queue_info_wait failed. Attempting to "
                              " shutdown process gracefully.");
                 signal_threads(ST_GRACEFUL);
@@ -943,7 +941,7 @@ static void * APR_THREAD_FUNC worker_thread(apr_thread_t *thd, void * dummy)
             rv = ap_queue_info_set_idle(worker_queue_info, last_ptrans);
             last_ptrans = NULL;
             if (rv != APR_SUCCESS) {
-                ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf, APLOGNO(03288)
+                ap_log_error(APLOG_MARK, APLOG_EMERG, rv, ap_server_conf,
                              "ap_queue_info_set_idle failed. Attempting to "
                              "shutdown process gracefully.");
                 signal_threads(ST_GRACEFUL);
@@ -1122,7 +1120,7 @@ static void * APR_THREAD_FUNC start_threads(apr_thread_t *thd, void *dummy)
         ++loops;
         if (loops % 120 == 0) { /* every couple of minutes */
             if (prev_threads_created == threads_created) {
-                ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf, APLOGNO(03289)
+                ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf,
                              "child %" APR_PID_T_FMT " isn't taking over "
                              "slots very quickly (%d of %d)",
                              ap_my_pid, threads_created, threads_per_child);
@@ -1839,7 +1837,7 @@ static int worker_run(apr_pool_t *_pconf, apr_pool_t *plog, server_rec *s)
     if (ap_daemons_to_start < num_buckets)
         ap_daemons_to_start = num_buckets;
     /* We want to create as much children at a time as the number of buckets,
-     * so to optimally accept connections (evenly distributed across buckets).
+     * so to optimally accept connections (evenly distributed accross buckets).
      * Thus min_spare_threads should at least maintain num_buckets children,
      * and max_spare_threads allow num_buckets more children w/o triggering
      * immediately (e.g. num_buckets idle threads margin, one per bucket).
@@ -2042,7 +2040,7 @@ static int worker_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp, 
 
     if ((num_listensocks = ap_setup_listeners(ap_server_conf)) < 1) {
         ap_log_error(APLOG_MARK, APLOG_ALERT | level_flags, 0,
-                     (startup ? NULL : s), APLOGNO(03290)
+                     (startup ? NULL : s),
                      "no listening sockets available, shutting down");
         return !OK;
     }
@@ -2057,7 +2055,7 @@ static int worker_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp, 
     if ((rv = ap_duplicate_listeners(pconf, ap_server_conf,
                                      &listen_buckets, &num_buckets))) {
         ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                     (startup ? NULL : s), APLOGNO(03291)
+                     (startup ? NULL : s),
                      "could not duplicate listeners");
         return !OK;
     }
@@ -2067,7 +2065,7 @@ static int worker_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp, 
         if (!one_process && /* no POD in one_process mode */
                 (rv = ap_mpm_podx_open(pconf, &all_buckets[i].pod))) {
             ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                         (startup ? NULL : s), APLOGNO(03292)
+                         (startup ? NULL : s),
                          "could not open pipe-of-death");
             return !OK;
         }
@@ -2077,7 +2075,7 @@ static int worker_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp, 
                                                     NULL, AP_ACCEPT_MUTEX_TYPE,
                                                     id, s, pconf, 0))))) {
             ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                         (startup ? NULL : s), APLOGNO(03293)
+                         (startup ? NULL : s),
                          "could not create accept mutex");
             return !OK;
         }
@@ -2399,7 +2397,6 @@ static void worker_hooks(apr_pool_t *p)
      */
     static const char *const aszSucc[] = {"core.c", NULL};
     one_process = 0;
-    ap_force_set_tz(p);
 
     ap_hook_open_logs(worker_open_logs, NULL, aszSucc, APR_HOOK_REALLY_FIRST);
     /* we need to set the MPM state before other pre-config hooks use MPM query

@@ -30,7 +30,6 @@
 #include "apr.h"
 #include "apr_strings.h"
 #include "apr_lib.h"
-#include "apr_md5.h"            /* for apr_password_validate */
 
 #define APR_WANT_STDIO
 #define APR_WANT_STRFUNC
@@ -80,7 +79,7 @@
  * char in here and get it to work, because if char is signed then it
  * will first be sign extended.
  */
-#define TEST_CHAR(c, f)        (test_char_table[(unsigned char)(c)] & (f))
+#define TEST_CHAR(c, f)        (test_char_table[(unsigned)(c)] & (f))
 
 /* Win32/NetWare/OS2 need to check for both forward and back slashes
  * in ap_getparents() and ap_escape_url.
@@ -935,7 +934,7 @@ AP_DECLARE(apr_status_t) ap_pcfg_openfile(ap_configfile_t **ret_cfg,
 
     if (finfo.filetype != APR_REG &&
 #if defined(WIN32) || defined(OS2) || defined(NETWARE)
-        ap_cstr_casecmp(apr_filepath_name_get(name), "nul") != 0) {
+        strcasecmp(apr_filepath_name_get(name), "nul") != 0) {
 #else
         strcmp(name, "/dev/null") != 0) {
 #endif /* WIN32 || OS2 */
@@ -1526,7 +1525,7 @@ AP_DECLARE(const char *) ap_parse_token_list_strict(apr_pool_t *p,
     while (!string_end) {
         const unsigned char c = (unsigned char)*cur;
 
-        if (!TEST_CHAR(c, T_HTTP_TOKEN_STOP)) {
+        if (!TEST_CHAR(c, T_HTTP_TOKEN_STOP) && c != '\0') {
             /* Non-separator character; we are finished with leading
              * whitespace. We must never have encountered any trailing
              * whitespace before the delimiter (comma) */
@@ -1592,56 +1591,6 @@ AP_DECLARE(const char *) ap_parse_token_list_strict(apr_pool_t *p,
     }
 
     return NULL;
-}
-
-/* Scan a string for HTTP VCHAR/obs-text characters including HT and SP
- * (as used in header values, for example, in RFC 7230 section 3.2)
- * returning the pointer to the first non-HT ASCII ctrl character.
- */
-AP_DECLARE(const char *) ap_scan_http_field_content(const char *ptr)
-{
-    for ( ; !TEST_CHAR(*ptr, T_HTTP_CTRLS); ++ptr) ;
-
-    return ptr;
-}
-
-/* Scan a string for HTTP token characters, returning the pointer to
- * the first non-token character.
- */
-AP_DECLARE(const char *) ap_scan_http_token(const char *ptr)
-{
-    for ( ; !TEST_CHAR(*ptr, T_HTTP_TOKEN_STOP); ++ptr) ;
-
-    return ptr;
-}
-
-/* Retrieve a token, advancing the pointer to the first non-token character
- * and returning a copy of the token string.
- * The caller must handle whitespace and determine the meaning of the
- * terminating character. Returns NULL if the character at **ptr is not
- * a valid token character.
- */
-AP_DECLARE(char *) ap_get_http_token(apr_pool_t *p, const char **ptr)
-{
-    const char *tok_end = ap_scan_http_token(*ptr);
-    char *tok;
-
-    if (tok_end == *ptr)
-        return NULL;
-
-    tok = apr_pstrmemdup(p, *ptr, tok_end - *ptr);
-    *ptr = tok_end;
-    return tok;
-}
-
-/* Scan a string for valid URI characters per RFC3986, and 
- * return a pointer to the first non-URI character encountered.
- */
-AP_DECLARE(const char *) ap_scan_http_uri_safe(const char *ptr)
-{
-    for ( ; TEST_CHAR(*ptr, T_URI_RFC3986); ++ptr) ;
-
-    return ptr;
 }
 
 /* Retrieve a token, spacing over it and returning a pointer to
@@ -1713,7 +1662,7 @@ AP_DECLARE(int) ap_find_token(apr_pool_t *p, const char *line, const char *tok)
         while (*s && !TEST_CHAR(*s, T_HTTP_TOKEN_STOP)) {
             ++s;
         }
-        if (!ap_cstr_casecmpn((const char *)start_token, (const char *)tok,
+        if (!strncasecmp((const char *)start_token, (const char *)tok,
                          s - start_token)) {
             return 1;
         }
@@ -1740,7 +1689,7 @@ AP_DECLARE(int) ap_find_last_token(apr_pool_t *p, const char *line,
         (lidx > 0 && !(apr_isspace(line[lidx - 1]) || line[lidx - 1] == ',')))
         return 0;
 
-    return (ap_cstr_casecmpn(&line[lidx], tok, tlen) == 0);
+    return (strncasecmp(&line[lidx], tok, tlen) == 0);
 }
 
 AP_DECLARE(char *) ap_escape_shell_cmd(apr_pool_t *p, const char *str)
@@ -1993,11 +1942,7 @@ AP_DECLARE(char *) ap_escape_path_segment(apr_pool_t *p, const char *segment)
 
 AP_DECLARE(char *) ap_os_escape_path(apr_pool_t *p, const char *path, int partial)
 {
-    /* Allocate +3 for potential "./" and trailing NULL.
-     * Allocate another +1 to allow the caller to add a trailing '/' (see
-     * comment in 'ap_sub_req_lookup_dirent')
-     */
-    char *copy = apr_palloc(p, 3 * strlen(path) + 3 + 1);
+    char *copy = apr_palloc(p, 3 * strlen(path) + 3);
     const unsigned char *s = (const unsigned char *)path;
     unsigned char *d = (unsigned char *)copy;
     unsigned c;
@@ -2242,16 +2187,6 @@ AP_DECLARE(void) ap_bin2hex(const void *src, apr_size_t srclen, char *dest)
         *dest++ = c2x_table[in[i] & 0xf];
     }
     *dest = '\0';
-}
-
-AP_DECLARE(int) ap_has_cntrl(const char *str)
-{
-    while (*str) {
-        if (apr_iscntrl(*str))
-            return 1;
-        str++;
-    }
-    return 0;
 }
 
 AP_DECLARE(int) ap_is_directory(apr_pool_t *p, const char *path)
@@ -2707,7 +2642,7 @@ AP_DECLARE(int) ap_parse_form_data(request_rec *r, ap_filter_t *f,
 
     /* sanity check - we only support forms for now */
     ct = apr_table_get(r->headers_in, "Content-Type");
-    if (!ct || ap_cstr_casecmpn("application/x-www-form-urlencoded", ct, 33)) {
+    if (!ct || strncasecmp("application/x-www-form-urlencoded", ct, 33)) {
         return ap_discard_request_body(r);
     }
 
@@ -3169,45 +3104,6 @@ AP_DECLARE(void) ap_get_loadavg(ap_loadavg_t *ld)
         }
     }
 #endif
-}
-
-static const char * const pw_cache_note_name = "conn_cache_note";
-struct pw_cache {
-    /* varbuf contains concatenated password and hash */
-    struct ap_varbuf vb;
-    apr_size_t pwlen;
-    apr_status_t result;
-};
-
-AP_DECLARE(apr_status_t) ap_password_validate(request_rec *r,
-                                              const char *username,
-                                              const char *passwd,
-                                              const char *hash)
-{
-    struct pw_cache *cache;
-    apr_size_t hashlen;
-
-    cache = (struct pw_cache *)apr_table_get(r->connection->notes, pw_cache_note_name);
-    if (cache != NULL) {
-        if (strncmp(passwd, cache->vb.buf, cache->pwlen) == 0
-            && strcmp(hash, cache->vb.buf + cache->pwlen) == 0) {
-            return cache->result;
-        }
-        /* make ap_varbuf_grow below not copy the old data */
-        cache->vb.strlen = 0;
-    }
-    else {
-        cache = apr_palloc(r->connection->pool, sizeof(struct pw_cache));
-        ap_varbuf_init(r->connection->pool, &cache->vb, 0);
-        apr_table_setn(r->connection->notes, pw_cache_note_name, (void *)cache);
-    }
-    cache->pwlen = strlen(passwd);
-    hashlen = strlen(hash);
-    ap_varbuf_grow(&cache->vb, cache->pwlen + hashlen + 1);
-    memcpy(cache->vb.buf, passwd, cache->pwlen);
-    memcpy(cache->vb.buf + cache->pwlen, hash, hashlen + 1);
-    cache->result = apr_password_validate(passwd, hash);
-    return cache->result;
 }
 
 AP_DECLARE(char *) ap_get_exec_line(apr_pool_t *p,

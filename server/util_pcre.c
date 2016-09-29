@@ -48,11 +48,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "apr_tables.h"
 #include "pcre.h"
 
-/* PCRE_DUPNAMES is only present since version 6.7 of PCRE */
-#ifndef PCRE_DUPNAMES
-#error PCRE Version 6.7 or later required!
-#else
-
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
 
@@ -71,18 +66,6 @@ static const char *const pstring[] = {
     "bad argument",             /* AP_REG_INVARG */
     "match failed"              /* AP_REG_NOMATCH */
 };
-
-AP_DECLARE(const char *) ap_pcre_version_string(int which)
-{
-    switch (which) {
-    case AP_REG_PCRE_COMPILED:
-        return APR_STRINGIFY(PCRE_MAJOR) "." APR_STRINGIFY(PCRE_MINOR) " " APR_STRINGIFY(PCRE_DATE);
-    case AP_REG_PCRE_LOADED:
-        return pcre_version();
-    default:
-        return "Unknown";
-    }
-}
 
 AP_DECLARE(apr_size_t) ap_regerror(int errcode, const ap_regex_t *preg,
                                    char *errbuf, apr_size_t errbuf_size)
@@ -312,7 +295,5 @@ AP_DECLARE(int) ap_regname(const ap_regex_t *preg,
 
     return namecount;
 }
-
-#endif /* PCRE_DUPNAMES defined */
 
 /* End of pcreposix.c */

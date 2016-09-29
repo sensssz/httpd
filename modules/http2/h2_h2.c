@@ -433,7 +433,6 @@ static int cipher_is_blacklisted(const char *cipher, const char **psource)
 static int h2_h2_process_conn(conn_rec* c);
 static int h2_h2_pre_close_conn(conn_rec* c);
 static int h2_h2_post_read_req(request_rec *r);
-static int h2_h2_late_fixups(request_rec *r);
 
 /*******************************************************************************
  * Once per lifetime init, retrieve optional functions
@@ -568,7 +567,6 @@ void h2_h2_register_hooks(void)
      * never see the response.
      */
     ap_hook_post_read_request(h2_h2_post_read_req, NULL, NULL, APR_HOOK_REALLY_FIRST);
-    ap_hook_fixups(h2_h2_late_fixups, NULL, NULL, APR_HOOK_LAST);
 }
 
 int h2_h2_process_conn(conn_rec* c)
@@ -684,7 +682,7 @@ static int h2_h2_post_read_req(request_rec *r)
          * that we manipulate filters only once. */
         if (task && !task->filters_set) {
             ap_filter_t *f;
-
+            
             /* setup the correct output filters to process the response
              * on the proper mod_http2 way. */
             ap_log_rerror(APLOG_MARK, APLOG_TRACE3, 0, r, "adding task output filter");
@@ -709,21 +707,6 @@ static int h2_h2_post_read_req(request_rec *r)
             }
             ap_add_output_filter("H2_TRAILERS", task, r, r->connection);
             task->filters_set = 1;
-        }
-    }
-    return DECLINED;
-}
-
-static int h2_h2_late_fixups(request_rec *r)
-{
-    /* slave connection? */
-    if (r->connection->master) {
-        h2_ctx *ctx = h2_ctx_rget(r);
-        struct h2_task *task = h2_ctx_get_task(ctx);
-        if (task) {
-            /* check if we copy vs. setaside files in this location */
-            task->output.copy_files = h2_config_geti(h2_config_rget(r), 
-                                                     H2_CONF_COPY_FILES);
         }
     }
     return DECLINED;

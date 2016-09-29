@@ -15,7 +15,7 @@
  */
 
 /*
- * http_config.c: once was auxiliary functions for reading httpd's config
+ * http_config.c: once was auxillary functions for reading httpd's config
  * file and converting filenames into a namespace
  *
  * Rob McCool
@@ -737,7 +737,7 @@ AP_DECLARE(void) ap_remove_loaded_module(module *mod)
      *
      *  Note: 1. We cannot determine if the module was successfully
      *           removed by ap_remove_module().
-     *        2. We have not to complain explicitly when the module
+     *        2. We have not to complain explicity when the module
      *           is not found because ap_remove_module() did it
      *           for us already.
      */
@@ -842,8 +842,7 @@ AP_DECLARE(module *) ap_find_linked_module(const char *name)
 #define AP_MAX_ARGC 64
 
 static const char *invoke_cmd(const command_rec *cmd, cmd_parms *parms,
-                              void *mconfig, const char *args, 
-                              ap_directive_t *parent)
+                              void *mconfig, const char *args)
 {
     int override_list_ok = 0;
     char *w, *w2, *w3;
@@ -864,11 +863,6 @@ static const char *invoke_cmd(const command_rec *cmd, cmd_parms *parms,
                           cmd->name);
             return NULL;
         }
-        else if (parms->directive && parms->directive->parent) {
-            return apr_pstrcat(parms->pool, cmd->name, " not allowed in ",
-                               parms->directive->parent->directive, ">",
-                               " context", NULL);
-        }
         else {
             return apr_pstrcat(parms->pool, cmd->name,
                                " not allowed here", NULL);
@@ -877,7 +871,6 @@ static const char *invoke_cmd(const command_rec *cmd, cmd_parms *parms,
 
     parms->info = cmd->cmd_data;
     parms->cmd = cmd;
-    parms->parent = parent;
 
     switch (cmd->args_how) {
     case RAW_ARGS:
@@ -1030,11 +1023,11 @@ static const char *invoke_cmd(const command_rec *cmd, cmd_parms *parms,
          */
         w = ap_getword_conf(parms->temp_pool, &args);
 
-        if (*w == '\0' || (ap_cstr_casecmp(w, "on") && ap_cstr_casecmp(w, "off")))
+        if (*w == '\0' || (strcasecmp(w, "on") && strcasecmp(w, "off")))
             return apr_pstrcat(parms->pool, cmd->name, " must be On or Off",
                                NULL);
 
-        return cmd->AP_FLAG(parms, mconfig, ap_cstr_casecmp(w, "off") != 0);
+        return cmd->AP_FLAG(parms, mconfig, strcasecmp(w, "off") != 0);
 
     default:
         return apr_pstrcat(parms->pool, cmd->name,
@@ -1047,7 +1040,7 @@ AP_CORE_DECLARE(const command_rec *) ap_find_command(const char *name,
                                                      const command_rec *cmds)
 {
     while (cmds->name) {
-        if (!ap_cstr_casecmp(name, cmds->name))
+        if (!strcasecmp(name, cmds->name))
             return cmds;
 
         ++cmds;
@@ -1212,8 +1205,8 @@ static const char *ap_build_config_sub(apr_pool_t *p, apr_pool_t *temp_pool,
 
             *bracket = '\0';
 
-            if (ap_cstr_casecmp(cmd_name + 2,
-                              (*curr_parent)->directive + 1) != 0) {
+            if (strcasecmp(cmd_name + 2,
+                           (*curr_parent)->directive + 1) != 0) {
                 parms->err_directive = newdir;
                 return apr_pstrcat(p, "Expected </",
                                    (*curr_parent)->directive + 1, "> but saw ",
@@ -1259,7 +1252,7 @@ AP_DECLARE(const char *) ap_build_cont_config(apr_pool_t *p,
     while ((rc = ap_varbuf_cfg_getline(&vb, parms->config_file, max_len))
            == APR_SUCCESS) {
         if (!memcmp(vb.buf, "</", 2)
-            && (ap_cstr_casecmp(vb.buf + 2, bracket) == 0)
+            && (strcasecmp(vb.buf + 2, bracket) == 0)
             && (*curr_parent == NULL)) {
             break;
         }
@@ -1328,12 +1321,12 @@ static const char *ap_walk_config_sub(const ap_directive_t *current,
             continue;
         }
 
-        retval = invoke_cmd(cmd, parms, dir_config, current->args, NULL);
+        retval = invoke_cmd(cmd, parms, dir_config, current->args);
 
         if (retval != NULL && strcmp(retval, DECLINE_CMD) != 0) {
             /* If the directive in error has already been set, don't
              * replace it.  Otherwise, an error inside a container
-             * will be reported as occurring on the first line of the
+             * will be reported as occuring on the first line of the
              * container.
              */
             if (!parms->err_directive) {
@@ -1636,7 +1629,7 @@ AP_DECLARE(const char *) ap_soak_end_container(cmd_parms *cmd, char *directive)
             if (cmd_name[1] == '/') {
                 cmd_name[strlen(cmd_name) - 1] = '\0';
 
-                if (ap_cstr_casecmp(cmd_name + 2, directive + 1) != 0) {
+                if (strcasecmp(cmd_name + 2, directive + 1) != 0) {
                     return apr_pstrcat(cmd->pool, "Expected </",
                                        directive + 1, "> but saw ",
                                        cmd_name, ">", NULL);
@@ -1692,7 +1685,7 @@ static const char *execute_now(char *cmd_line, const char *args,
         const char *retval;
         cmd = ml->cmd;
 
-        retval = invoke_cmd(cmd, parms, sub_tree, args, parent);
+        retval = invoke_cmd(cmd, parms, sub_tree, args);
 
         if (retval != NULL) {
             return retval;
@@ -1879,9 +1872,6 @@ AP_DECLARE(const char *) ap_process_resource_config(server_rec *s,
 
     if (error) {
         if (parms.err_directive)
-            /* note: this may not be a 'syntactic' error per se.
-             * should it rather be "Configuration error ..."?
-             */
             return apr_psprintf(p, "Syntax error on line %d of %s: %s",
                                 parms.err_directive->line_num,
                                 parms.err_directive->filename, error);
@@ -2691,7 +2681,7 @@ static int count_directives_sub(const char *directive, ap_directive_t *current)
     while (current != NULL) {
         if (current->first_child != NULL)
             count += count_directives_sub(directive, current->first_child);
-        if (ap_cstr_casecmp(current->directive, directive) == 0)
+        if (strcasecmp(current->directive, directive) == 0)
             count++;
         current = current->next;
     }

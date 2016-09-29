@@ -95,7 +95,7 @@ extern "C" {
 #define DEFAULT_X_CACHE         0
 #define DEFAULT_X_CACHE_DETAIL  0
 #define DEFAULT_CACHE_STALE_ON_ERROR 1
-#define DEFAULT_CACHE_LOCKPATH "mod_cache-lock"
+#define DEFAULT_CACHE_LOCKPATH "/mod_cache-lock"
 #define CACHE_LOCKNAME_KEY "mod_cache-lockname"
 #define CACHE_LOCKFILE_KEY "mod_cache-lockfile"
 #define CACHE_CTX_KEY "mod_cache-ctx"
@@ -300,7 +300,7 @@ apr_status_t cache_remove_lock(cache_server_conf *conf,
         cache_request_rec *cache, request_rec *r, apr_bucket_brigade *bb);
 
 cache_provider_list *cache_get_providers(request_rec *r,
-                                         cache_server_conf *conf);
+        cache_server_conf *conf, apr_uri_t uri);
 
 /**
  * Get a value from a table, where the table may contain multiple

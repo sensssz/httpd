@@ -101,6 +101,8 @@
 #define AJP_EBAD_MESSAGE        (APR_OS_START_USERERR + 8)
 /** Cant log via AJP14 */
 #define AJP_ELOGFAIL            (APR_OS_START_USERERR + 9)
+/** Bad request method */
+#define AJP_EBAD_METHOD         (APR_OS_START_USERERR + 10)
 
 
 /** A structure that represents ajp message */
@@ -412,13 +414,11 @@ apr_status_t ajp_ilink_receive(apr_socket_t *sock, ajp_msg_t *msg);
  * @param r         current request
  * @param buffsize  max size of the AJP packet.
  * @param uri       requested uri
- * @param secret    authentication secret
  * @return          APR_SUCCESS or error
  */
 apr_status_t ajp_send_header(apr_socket_t *sock, request_rec *r,
                              apr_size_t buffsize,
-                             apr_uri_t *uri,
-                             const char *secret);
+                             apr_uri_t *uri);
 
 /**
  * Read the ajp message and return the type of the message.

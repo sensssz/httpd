@@ -42,8 +42,6 @@
 %{
 #include "util_expr_private.h"
 #include "util_expr_parse.h"
-#include "http_main.h"
-#include "http_log.h"
 
 #undef  YY_INPUT
 #define YY_INPUT(buf,result,max_size)                       \
@@ -59,20 +57,6 @@
         yyextra->inputptr += result;                        \
     }                                                       \
 }
-
-/*
- * XXX: It would be nice if we could recover somehow, e.g. via
- * XXX: longjmp. It is not clear if the scanner is in any state
- * XXX: to be cleaned up, though.
- */
-#define YY_FATAL_ERROR(msg)                                     \
-    do {                                                        \
-        ap_log_error(APLOG_MARK, APLOG_CRIT, 0, ap_server_conf, \
-                     APLOGNO(03296)                             \
-                     "expr parser fatal error (BUG?): "         \
-                     "%s, exiting", msg);                       \
-         abort();                                               \
-    } while (0)
 
 #define YY_EXTRA_TYPE ap_expr_parse_ctx_t*
 
@@ -252,7 +236,7 @@
  /*
   * fixed name variable expansion %{XXX} and function call in %{func:arg} syntax
   */
-<var>[a-ij-rs-zA-IJ-RS-Z][a-ij-rs-zA-IJ-RS-Z0-9_]* {
+<var>[a-zA-Z][a-zA-Z0-9_]* {
     yylval->cpVal = apr_pstrdup(yyextra->pool, yytext);
     return T_ID;
 }
@@ -364,12 +348,12 @@
 "eq"  { return T_OP_EQ; }
 "in"  { return T_OP_IN; }
 
-"-"[a-ij-rs-zA-IJ-RS-Z_] {
+"-"[a-zA-Z_] {
     yylval->cpVal = apr_pstrdup(yyextra->pool, yytext + 1);
     return T_OP_UNARY;
 }
 
-"-"[a-ij-rs-zA-IJ-RS-Z_][a-ij-rs-zA-IJ-RS-Z_0-9]+ {
+"-"[a-zA-Z_][a-zA-Z_0-9]+ {
     yylval->cpVal = apr_pstrdup(yyextra->pool, yytext + 1);
     return T_OP_BINARY;
 }
@@ -391,7 +375,7 @@
  /*
   * Identifiers
   */
-[a-ij-rs-zA-IJ-RS-Z][a-ij-rs-zA-IJ-RS-Z0-9_]* {
+[a-zA-Z][a-zA-Z0-9_]* {
     yylval->cpVal = apr_pstrdup(yyextra->pool, yytext);
     return T_ID;
 }

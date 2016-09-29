@@ -64,7 +64,7 @@
 extern apr_shm_t *ap_scoreboard_shm;
 
 /* my_generation is returned to the scoreboard code */
-volatile ap_generation_t my_generation=0;
+static volatile ap_generation_t my_generation=0;
 
 /* Definitions of WINNT MPM specific config globals */
 static HANDLE shutdown_event;  /* used to signal the parent to shutdown */
@@ -358,6 +358,7 @@ static int send_handles_to_child(apr_pool_t *p,
     HANDLE hDup;
     HANDLE os_start;
     HANDLE hScore;
+    apr_size_t BytesWritten;
 
     if ((rv = apr_file_write_full(child_in, &my_generation,
                                   sizeof(my_generation), NULL))
@@ -372,7 +373,7 @@ static int send_handles_to_child(apr_pool_t *p,
                      "Parent: Unable to duplicate the ready event handle for the child");
         return -1;
     }
-    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), NULL))
+    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), &BytesWritten))
             != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_CRIT, rv, ap_server_conf, APLOGNO(00393)
                      "Parent: Unable to send the exit event handle to the child");
@@ -384,7 +385,7 @@ static int send_handles_to_child(apr_pool_t *p,
                      "Parent: Unable to duplicate the exit event handle for the child");
         return -1;
     }
-    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), NULL))
+    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), &BytesWritten))
             != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_CRIT, rv, ap_server_conf, APLOGNO(00395)
                      "Parent: Unable to send the exit event handle to the child");
@@ -401,7 +402,7 @@ static int send_handles_to_child(apr_pool_t *p,
                      "Parent: Unable to duplicate the start mutex to the child");
         return -1;
     }
-    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), NULL))
+    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), &BytesWritten))
             != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_CRIT, rv, ap_server_conf, APLOGNO(00398)
                      "Parent: Unable to send the start mutex to the child");
@@ -418,7 +419,7 @@ static int send_handles_to_child(apr_pool_t *p,
                      "Parent: Unable to duplicate the scoreboard handle to the child");
         return -1;
     }
-    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), NULL))
+    if ((rv = apr_file_write_full(child_in, &hDup, sizeof(hDup), &BytesWritten))
             != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_CRIT, rv, ap_server_conf, APLOGNO(00401)
                      "Parent: Unable to send the scoreboard handle to the child");
@@ -1003,7 +1004,7 @@ static void winnt_rewrite_args(process_rec *process)
      *   -k config
      *   -k uninstall
      *   -k stop
-     *   -k shutdown (same as -k stop). Maintained for backward compatibility.
+     *   -k shutdown (same as -k stop). Maintained for backward compatability.
      *
      * We can't leave this phase until we know our identity
      * and modify the command arguments appropriately.
@@ -1049,7 +1050,7 @@ static void winnt_rewrite_args(process_rec *process)
         my_pid = GetCurrentProcessId();
         parent_pid = (DWORD) atol(pid);
 
-        /* Prevent holding open the (nonexistent) console */
+        /* Prevent holding open the (nonexistant) console */
         ap_real_exit_code = 0;
 
         /* The parent gave us stdin, we need to remember this
@@ -1768,6 +1769,8 @@ static void winnt_hooks(apr_pool_t *p)
     ap_hook_mpm(winnt_run, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_mpm_query(winnt_query, NULL, NULL, APR_HOOK_MIDDLE);
     ap_hook_mpm_get_name(winnt_get_name, NULL, NULL, APR_HOOK_MIDDLE);
+    ap_hook_insert_network_bucket(winnt_insert_network_bucket, NULL, NULL,
+                                  APR_HOOK_MIDDLE);
 }
 
 AP_DECLARE_MODULE(mpm_winnt) = {

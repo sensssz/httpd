@@ -226,7 +226,7 @@ static apr_status_t open_scoreboard(apr_pool_t *pconf)
     /* The config says to create a name-based shmem */
     if (ap_scoreboard_fname) {
         /* make sure it's an absolute pathname */
-        fname = ap_runtime_dir_relative(pconf, ap_scoreboard_fname);
+        fname = ap_server_root_relative(pconf, ap_scoreboard_fname);
         if (!fname) {
             ap_log_error(APLOG_MARK, APLOG_CRIT, APR_EBADPATH, ap_server_conf, APLOGNO(00003)
                          "Fatal error: Invalid Scoreboard path %s",
@@ -248,7 +248,7 @@ static apr_status_t open_scoreboard(apr_pool_t *pconf)
         else if (rv == APR_ENOTIMPL) {
             /* Make sure it's an absolute pathname */
             ap_scoreboard_fname = DEFAULT_SCOREBOARD;
-            fname = ap_runtime_dir_relative(pconf, ap_scoreboard_fname);
+            fname = ap_server_root_relative(pconf, ap_scoreboard_fname);
 
             return create_namebased_scoreboard(global_pool, fname);
         }
@@ -399,7 +399,7 @@ AP_DECLARE(int) ap_find_child_by_pid(apr_proc_t *pid)
     int i;
     int max_daemons_limit = 0;
 
-    ap_mpm_query(AP_MPMQ_MAX_DAEMON_USED, &max_daemons_limit);
+    ap_mpm_query(AP_MPMQ_MAX_DAEMONS, &max_daemons_limit);
 
     for (i = 0; i < max_daemons_limit; ++i) {
         if (ap_scoreboard_image->parent[i].pid == pid->pid) {

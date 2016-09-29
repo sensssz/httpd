@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>Apache Tutorial: CGI による動的コンテンツ - Apache HTTP サーバ バージョン 2.5</title>
+<title>Apache Tutorial: CGI による動的コンテンツ - Apache HTTP サーバ バージョン 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -16,12 +16,12 @@
 
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body id="manual-page"><div id="page-header">
-<p class="menu"><a href="../mod/">モジュール</a> | <a href="../mod/quickreference.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">用語</a> | <a href="../sitemap.html">サイトマップ</a></p>
-<p class="apache">Apache HTTP サーバ バージョン 2.5</p>
+<p class="menu"><a href="../mod/">モジュール</a> | <a href="../mod/directives.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">用語</a> | <a href="../sitemap.html">サイトマップ</a></p>
+<p class="apache">Apache HTTP サーバ バージョン 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP サーバ</a> &gt; <a href="http://httpd.apache.org/docs/">ドキュメンテーション</a> &gt; <a href="../">バージョン 2.5</a> &gt; <a href="./">How-To / チュートリアル</a></div><div id="page-content"><div id="preamble"><h1>Apache Tutorial: CGI による動的コンテンツ</h1>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP サーバ</a> &gt; <a href="http://httpd.apache.org/docs/">ドキュメンテーション</a> &gt; <a href="../">バージョン 2.4</a> &gt; <a href="./">How-To / チュートリアル</a></div><div id="page-content"><div id="preamble"><h1>Apache Tutorial: CGI による動的コンテンツ</h1>
 <div class="toplang">
 <p><span>翻訳済み言語: </span><a href="../en/howto/cgi.html" hreflang="en" rel="alternate" title="English">&nbsp;en&nbsp;</a> |
 <a href="../fr/howto/cgi.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a> |
@@ -240,10 +240,11 @@
       というファイルに保存し、それを <code>cgi-bin</code>
       ディレクトリに置いてください。</p>
 
-      <pre class="prettyprint lang-perl">#!/usr/bin/perl<br />
-print "Content-type: text/html\n\n";<br />
-print "Hello, World.";</pre>
-
+      <div class="example"><p><code>
+        #!/usr/bin/perl<br />
+        print "Content-type: text/html\n\n";<br />
+        print "Hello, World.";
+      </code></p></div>
 
       <p>Perl に精通していなくても、
       何が起こるかを理解することはできるでしょう。1 行目は、
@@ -460,12 +461,15 @@ print "Hello, World.";</pre>
       <a href="../env.html">あなた自身の環境変数を加える</a>ための、
       多くの異なる方法を用意してします。</p>
 
-      <pre class="prettyprint lang-perl">#!/usr/bin/perl
-print "Content-type: text/html\n\n";
-foreach $key (keys %ENV) {
-  print "$key --&gt; $ENV{$key}&lt;br&gt;";
-}</pre>
-
+      <div class="example"><p><code>
+        #!/usr/bin/perl<br />
+        print "Content-type: text/html\n\n";<br />
+        foreach $key (keys %ENV) {<br />
+        <span class="indent">
+          print "$key --&gt; $ENV{$key}&lt;br&gt;";<br />
+        </span>
+        }
+      </code></p></div>
     
 
     <h3><a name="stdin" id="stdin">STDIN と STDOUT</a></h3>
@@ -540,7 +544,7 @@ foreach $key (keys %ENV) {
     CGI の仕様を読むべきです。オリジナルバージョンを
     <a href="http://hoohoo.ncsa.uiuc.edu/cgi/interface.html">NCSA</a>
     で、アップデートされたドラフトを
-    <a href="http://www.ietf.org/rfc/rfc3875">Common Gateway Interface RFC
+    <a href="http://web.golux.com/coar/cgi/">Common Gateway Interface RFC
     プロジェクト</a>で参照することができます。</p>
 
     <p>CGI の問題について、加わっているメーリングリストまたはニュース
@@ -563,7 +567,7 @@ foreach $key (keys %ENV) {
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">コメント</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/howto/cgi.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/howto/cgi.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -573,13 +577,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/howto/cgi.html';
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />この文書は <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a> のライセンスで提供されています。.</p>
-<p class="menu"><a href="../mod/">モジュール</a> | <a href="../mod/quickreference.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">用語</a> | <a href="../sitemap.html">サイトマップ</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">モジュール</a> | <a href="../mod/directives.html">ディレクティブ</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">用語</a> | <a href="../sitemap.html">サイトマップ</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

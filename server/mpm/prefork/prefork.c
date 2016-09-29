@@ -47,7 +47,6 @@
 #include "ap_listen.h"
 #include "ap_mmn.h"
 #include "apr_poll.h"
-#include "util_time.h"
 
 #include <stdlib.h>
 
@@ -223,9 +222,6 @@ static void clean_child_exit(int code) __attribute__ ((noreturn));
 static void clean_child_exit(int code)
 {
     mpm_state = AP_MPMQ_STOPPING;
-
-    apr_signal(SIGHUP, SIG_IGN);
-    apr_signal(SIGTERM, SIG_IGN);
 
     if (pchild) {
         apr_pool_destroy(pchild);
@@ -570,8 +566,7 @@ static void child_main(int child_num_arg, int child_bucket)
     (void) ap_update_child_status(sbh, SERVER_READY, (request_rec *) NULL);
 
     /* Set up the pollfd array */
-    status = apr_pollset_create(&pollset, num_listensocks, pchild,
-                                APR_POLLSET_NOCOPY);
+    status = apr_pollset_create(&pollset, num_listensocks, pchild, 0);
     if (status != APR_SUCCESS) {
         ap_log_error(APLOG_MARK, APLOG_EMERG, status, ap_server_conf, APLOGNO(00156)
                      "Couldn't create pollset in child; check system or user limits");
@@ -579,14 +574,14 @@ static void child_main(int child_num_arg, int child_bucket)
     }
 
     for (lr = my_bucket->listeners, i = num_listensocks; i--; lr = lr->next) {
-        apr_pollfd_t *pfd = apr_pcalloc(pchild, sizeof *pfd);
+        apr_pollfd_t pfd = { 0 };
 
-        pfd->desc_type = APR_POLL_SOCKET;
-        pfd->desc.s = lr->sd;
-        pfd->reqevents = APR_POLLIN;
-        pfd->client_data = lr;
+        pfd.desc_type = APR_POLL_SOCKET;
+        pfd.desc.s = lr->sd;
+        pfd.reqevents = APR_POLLIN;
+        pfd.client_data = lr;
 
-        status = apr_pollset_add(pollset, pfd);
+        status = apr_pollset_add(pollset, &pfd);
         if (status != APR_SUCCESS) {
             /* If the child processed a SIGWINCH before setting up the
              * pollset, this error path is expected and harmless,
@@ -708,7 +703,7 @@ static void child_main(int child_num_arg, int child_bucket)
         SAFE_ACCEPT(accept_mutex_off());      /* unlock after "accept" */
 
         if (status == APR_EGENERAL) {
-            /* resource shortage or should-not-occur occurred */
+            /* resource shortage or should-not-occur occured */
             clean_child_exit(APEXIT_CHILDSICK);
         }
         else if (status != APR_SUCCESS) {
@@ -822,13 +817,6 @@ static int make_child(server_rec *s, int slot, int bucket)
          */
         apr_signal(SIGHUP, just_die);
         apr_signal(SIGTERM, just_die);
-        /* Ignore SIGINT in child. This fixes race-condition in signals
-         * handling when httpd is runnning on foreground and user hits ctrl+c.
-         * In this case, SIGINT is sent to all children followed by SIGTERM
-         * from the main process, which interrupts the SIGINT handler and
-         * leads to inconsistency.
-         */
-        apr_signal(SIGINT, SIG_IGN);
         /* The child process just closes listeners on AP_SIG_GRACEFUL.
          * The pod is used for signalling the graceful restart.
          */
@@ -1306,7 +1294,7 @@ static int prefork_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp,
 
     if ((num_listensocks = ap_setup_listeners(ap_server_conf)) < 1) {
         ap_log_error(APLOG_MARK, APLOG_ALERT | level_flags, 0,
-                     (startup ? NULL : s), APLOGNO(03279)
+                     (startup ? NULL : s),
                      "no listening sockets available, shutting down");
         return !OK;
     }
@@ -1321,7 +1309,7 @@ static int prefork_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp,
     if ((rv = ap_duplicate_listeners(pconf, ap_server_conf,
                                      &listen_buckets, &num_buckets))) {
         ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                     (startup ? NULL : s), APLOGNO(03280)
+                     (startup ? NULL : s),
                      "could not duplicate listeners");
         return !OK;
     }
@@ -1330,7 +1318,7 @@ static int prefork_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp,
     for (i = 0; i < num_buckets; i++) {
         if ((rv = ap_mpm_pod_open(pconf, &all_buckets[i].pod))) {
             ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                         (startup ? NULL : s), APLOGNO(03281)
+                         (startup ? NULL : s),
                          "could not open pipe-of-death");
             return !OK;
         }
@@ -1340,7 +1328,7 @@ static int prefork_open_logs(apr_pool_t *p, apr_pool_t *plog, apr_pool_t *ptemp,
                                                     NULL, AP_ACCEPT_MUTEX_TYPE,
                                                     id, s, pconf, 0))))) {
             ap_log_error(APLOG_MARK, APLOG_CRIT | level_flags, rv,
-                         (startup ? NULL : s), APLOGNO(03282)
+                         (startup ? NULL : s),
                          "could not create accept mutex");
             return !OK;
         }
@@ -1528,7 +1516,6 @@ static void prefork_hooks(apr_pool_t *p)
      * console.
      */
     static const char *const aszSucc[] = {"core.c", NULL};
-    ap_force_set_tz(p);
 
     ap_hook_open_logs(prefork_open_logs, NULL, aszSucc, APR_HOOK_REALLY_FIRST);
     /* we need to set the MPM state before other pre-config hooks use MPM query

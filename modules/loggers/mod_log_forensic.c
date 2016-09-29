@@ -185,6 +185,7 @@ static int log_before(request_rec *r)
                                      &log_forensic_module);
     const char *id;
     hlog h;
+    apr_size_t n;
     apr_status_t rv;
 
     if (!cfg->fd || r->prev) {
@@ -220,8 +221,9 @@ static int log_before(request_rec *r)
     ap_assert(h.pos < h.end);
     *h.pos++ = '\n';
 
-    rv = apr_file_write_full(cfg->fd, h.log, h.count-1, NULL);
-    ap_assert(rv == APR_SUCCESS);
+    n = h.count-1;
+    rv = apr_file_write(cfg->fd, h.log, &n);
+    ap_assert(rv == APR_SUCCESS && n == h.count-1);
 
     apr_table_setn(r->notes, "forensic-id", id);
 
@@ -235,7 +237,7 @@ static int log_after(request_rec *r)
     const char *id = ap_get_module_config(r->request_config,
                                           &log_forensic_module);
     char *s;
-    apr_size_t n;
+    apr_size_t l, n;
     apr_status_t rv;
 
     if (!cfg->fd || id == NULL) {
@@ -243,9 +245,9 @@ static int log_after(request_rec *r)
     }
 
     s = apr_pstrcat(r->pool, "-", id, "\n", NULL);
-    n = strlen(s);
-    rv = apr_file_write_full(cfg->fd, s, n, NULL);
-    ap_assert(rv == APR_SUCCESS);
+    l = n = strlen(s);
+    rv = apr_file_write(cfg->fd, s, &n);
+    ap_assert(rv == APR_SUCCESS && n == l);
 
     return OK;
 }

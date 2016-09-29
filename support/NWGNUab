@@ -51,7 +51,7 @@ endif
 
 XINCDIRS	+= \
 			$(NWOS) \
-			$(SRC)/include \
+			$(AP_WORK)/include \
 			$(APR)/include \
 			$(APRUTIL)/include \
 			$(APR)/misc/netware \

@@ -774,7 +774,7 @@ static enum header_state get_header_line(char *buffer, int len, apr_file_t *map)
     /* We need to shortcut the rest of this block following the Body:
      * tag - we will not look for continutation after this line.
      */
-    if (!ap_cstr_casecmpn(buffer, "Body:", 5))
+    if (!strncasecmp(buffer, "Body:", 5))
         return header_seen;
 
     while (apr_file_getc(&c, map) != APR_EOF) {
@@ -1030,7 +1030,7 @@ static int read_type_map(apr_file_t **map, negotiation_state *neg,
                     *eol = '\0';
                 if ((mime_info.body = get_body(buffer, &len, tag, *map)) < 0) {
                     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00685)
-                                  "Syntax error in type map, no end tag '%s' "
+                                  "Syntax error in type map, no end tag '%s'"
                                   "found in %s for Body: content.",
                                   tag, r->filename);
                      break;
@@ -2252,7 +2252,7 @@ static int variant_has_language(var_rec *variant, const char *lang)
 }
 
 /* check for environment variables 'no-gzip' and
- * 'gzip-only-text/html' to get a behaviour similar
+ * 'gzip-only-text/html' to get a behaviour similiar
  * to mod_deflate
  */
 static int discard_variant_by_env(var_rec *variant, int discard)
@@ -2775,7 +2775,7 @@ static int setup_choice_response(request_rec *r, negotiation_state *neg,
      * see that Vary header yet at this point in the control flow.
      * This won't cause any cache consistency problems _unless_ the
      * CGI script also returns a Cache-Control header marking the
-     * response as cacheable.  This needs to be fixed, also there are
+     * response as cachable.  This needs to be fixed, also there are
      * problems if a CGI returns an Etag header which also need to be
      * fixed.
      */
@@ -3127,7 +3127,7 @@ static int handle_multi(request_rec *r)
     ap_internal_fast_redirect(sub_req, r);
 
     /* give no advise for time on this subrequest.  Perhaps we
-     * should tally the last mtime among all variants, and date
+     * should tally the last mtime amoung all variants, and date
      * the most recent, but that could confuse the proxies.
      */
     r->mtime = 0;

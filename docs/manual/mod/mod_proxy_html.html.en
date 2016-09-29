@@ -7,7 +7,7 @@
               This file is generated from xml source: DO NOT EDIT
         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       -->
-<title>mod_proxy_html - Apache HTTP Server Version 2.5</title>
+<title>mod_proxy_html - Apache HTTP Server Version 2.4</title>
 <link href="../style/css/manual.css" rel="stylesheet" media="all" type="text/css" title="Main stylesheet" />
 <link href="../style/css/manual-loose-100pc.css" rel="alternate stylesheet" media="all" type="text/css" title="No Sidebar - Default font size" />
 <link href="../style/css/manual-print.css" rel="stylesheet" media="print" type="text/css" /><link rel="stylesheet" type="text/css" href="../style/css/prettify.css" />
@@ -17,16 +17,17 @@
 <link href="../images/favicon.ico" rel="shortcut icon" /></head>
 <body>
 <div id="page-header">
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
-<p class="apache">Apache HTTP Server Version 2.5</p>
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p>
+<p class="apache">Apache HTTP Server Version 2.4</p>
 <img alt="" src="../images/feather.png" /></div>
 <div class="up"><a href="./"><img title="&lt;-" alt="&lt;-" src="../images/left.gif" /></a></div>
 <div id="path">
-<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.5</a> &gt; <a href="./">Modules</a></div>
+<a href="http://www.apache.org/">Apache</a> &gt; <a href="http://httpd.apache.org/">HTTP Server</a> &gt; <a href="http://httpd.apache.org/docs/">Documentation</a> &gt; <a href="../">Version 2.4</a> &gt; <a href="./">Modules</a></div>
 <div id="page-content">
 <div id="preamble"><h1>Apache Module mod_proxy_html</h1>
 <div class="toplang">
-<p><span>Available Languages: </span><a href="../en/mod/mod_proxy_html.html" title="English">&nbsp;en&nbsp;</a></p>
+<p><span>Available Languages: </span><a href="../en/mod/mod_proxy_html.html" title="English">&nbsp;en&nbsp;</a> |
+<a href="../fr/mod/mod_proxy_html.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a></p>
 </div>
 <table class="module"><tr><th><a href="module-dict.html#Description">Description:</a></th><td>Rewrite HTML links in to ensure they are addressable
 from Clients' networks in a proxy context.</td></tr>
@@ -124,10 +125,7 @@ will generate output using the same encoding as the input.</p>
 <table class="directive">
 <tr><th><a href="directive-dict.html#Description">Description:</a></th><td>Sets an HTML or XHTML document type declaration.</td></tr>
 <tr><th><a href="directive-dict.html#Syntax">Syntax:</a></th><td><code>ProxyHTMLDocType <var>HTML|XHTML [Legacy]</var><br /><strong>OR</strong>
-<br />ProxyHTMLDocType <var>fpi [SGML|XML]</var><br /><strong>OR</strong>
-<br />ProxyHTMLDocType <var>html5</var><br /><strong>OR</strong>
-<br />ProxyHTMLDocType <var>auto</var></code></td></tr>
-<tr><th><a href="directive-dict.html#Default">Default:</a></th><td><code>ProxyHTMLDocType auto (2.5/trunk versions); no FPI (2.4.x)</code></td></tr>
+<br />ProxyHTMLDocType <var>fpi [SGML|XML]</var></code></td></tr>
 <tr><th><a href="directive-dict.html#Context">Context:</a></th><td>server config, virtual host, directory</td></tr>
 <tr><th><a href="directive-dict.html#Status">Status:</a></th><td>Base</td></tr>
 <tr><th><a href="directive-dict.html#Module">Module:</a></th><td>mod_proxy_html</td></tr>
@@ -144,9 +142,9 @@ be necessary if you are proxying pre-1998 content or working with defective
 authoring/publishing tools.</p>
 <p>In the second form, it will insert your own FPI.  The optional second
 argument determines whether SGML/HTML or XML/XHTML syntax will be used.</p>
-<p>The third form declares documents as HTML 5.</p>
-<p>The fourth form is new in HTTPD trunk and not yet available in released
-versions, and uses libxml2's HTML parser to detect the doctype.</p>
+<p>The default is changed to omitting any FPI,
+on the grounds that no FPI is better than a bogus one.  If your backend
+generates decent HTML or XHTML, set it accordingly.</p>
 <p>If the first form is used, mod_proxy_html
 will also clean up the HTML to the specified standard.  It cannot
 fix every error, but it will strip out bogus elements and attributes.
@@ -244,7 +242,7 @@ for earlier 2.x versions</td></tr>
 </ul>
 <p>Take care when using these.  The fixes will correct certain authoring
 mistakes, but risk also erroneously fixing links that were correct to start with.
-Only use them if you know you have a broken backend server.</p>
+Only use them if you know you have a broken backend server.</p> 
 
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
@@ -280,29 +278,13 @@ for earlier 2.x versions</td></tr>
 for earlier 2.x versions</td></tr>
 </table>
 <p>Specifies elements that have URL attributes that should be rewritten
-using standard <code class="directive"><a href="#proxyhtmlurlmap">ProxyHTMLURLMap</a></code>s.
-You will need one ProxyHTMLLinks directive per element,
-but it can have any number of attributes.</p>
+using standard <code class="directive">ProxyHTMLURLMap</code>s.  You will need one
+ProxyHTMLLinks directive per element, but it can have any number of attributes.</p>
 <p>Normally you'll set this globally.  If you set ProxyHTMLLinks in more than
 one scope so that one overrides the other, you'll need to specify a complete
 set in each of those scopes.</p>
 <p>A default configuration is supplied in <var>proxy-html.conf</var>
 and defines the HTML links for standard HTML 4 and XHTML 1.</p>
-<div class="example"><h3>Examples from proxy-html.conf</h3><pre class="prettyprint lang-config">ProxyHTMLLinks  a          href
-ProxyHTMLLinks  area       href
-ProxyHTMLLinks  link       href
-ProxyHTMLLinks  img        src longdesc usemap
-ProxyHTMLLinks  object     classid codebase data usemap
-ProxyHTMLLinks  q          cite
-ProxyHTMLLinks  blockquote cite
-ProxyHTMLLinks  ins        cite
-ProxyHTMLLinks  del        cite
-ProxyHTMLLinks  form       action
-ProxyHTMLLinks  input      src usemap
-ProxyHTMLLinks  head       profile
-ProxyHTMLLinks  base       href
-ProxyHTMLLinks  script     src for</pre>
-</div>
 
 </div>
 <div class="top"><a href="#page-header"><img alt="top" src="../images/up.gif" /></a></div>
@@ -373,14 +355,11 @@ filter chain if stripping comments!</p>
 <tr><th><a href="directive-dict.html#Compatibility">Compatibility:</a></th><td>Version 2.4 and later; available as a third-party
 module for earlier 2.x versions.</td></tr>
 </table>
-<p>This is the key directive for rewriting HTML links. When parsing a document,
+<p>This is the key directive for rewriting HTML links.  When parsing a document,
 whenever a link target matches <var>from-pattern</var>, the matching
 portion will be rewritten to <var>to-pattern</var>, as modified by any
-flags supplied and by the 
-<code class="directive"><a href="#proxyhtmlextended">ProxyHTMLExtended</a></code> directive.
-Only the elements specified using
-the <code class="directive"><a href="#proxyhtmllinks">ProxyHTMLLinks</a></code> directive
-will be considered as HTML links.</p>
+flags supplied and by the <code class="directive">ProxyHTMLExtended</code>
+directive.</p>
 
 <p>The optional third argument may define any of the following
 <strong>Flags</strong>.  Flags are case-sensitive.</p>
@@ -453,11 +432,12 @@ in mod_proxy_html 3.x for HTTPD 2.0 and 2.2 is also supported.</p>
 </div>
 </div>
 <div class="bottomlang">
-<p><span>Available Languages: </span><a href="../en/mod/mod_proxy_html.html" title="English">&nbsp;en&nbsp;</a></p>
+<p><span>Available Languages: </span><a href="../en/mod/mod_proxy_html.html" title="English">&nbsp;en&nbsp;</a> |
+<a href="../fr/mod/mod_proxy_html.html" hreflang="fr" rel="alternate" title="Français">&nbsp;fr&nbsp;</a></p>
 </div><div class="top"><a href="#page-header"><img src="../images/up.gif" alt="top" /></a></div><div class="section"><h2><a id="comments_section" name="comments_section">Comments</a></h2><div class="warning"><strong>Notice:</strong><br />This is not a Q&amp;A section. Comments placed here should be pointed towards suggestions on improving the documentation or server, and may be removed again by our moderators if they are either implemented or considered invalid/off-topic. Questions on how to manage the Apache HTTP Server should be directed at either our IRC channel, #httpd, on Freenode, or sent to our <a href="http://httpd.apache.org/lists.html">mailing lists</a>.</div>
 <script type="text/javascript"><!--//--><![CDATA[//><!--
 var comments_shortname = 'httpd';
-var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_proxy_html.html';
+var comments_identifier = 'http://httpd.apache.org/docs/2.4/mod/mod_proxy_html.html';
 (function(w, d) {
     if (w.location.hostname.toLowerCase() == "httpd.apache.org") {
         d.write('<div id="comments_thread"><\/div>');
@@ -467,13 +447,13 @@ var comments_identifier = 'http://httpd.apache.org/docs/trunk/mod/mod_proxy_html
         s.src = 'https://comments.apache.org/show_comments.lua?site=' + comments_shortname + '&page=' + comments_identifier;
         (d.getElementsByTagName('head')[0] || d.getElementsByTagName('body')[0]).appendChild(s);
     }
-    else {
+    else { 
         d.write('<div id="comments_thread">Comments are disabled for this page at the moment.<\/div>');
     }
 })(window, document);
 //--><!]]></script></div><div id="footer">
 <p class="apache">Copyright 2016 The Apache Software Foundation.<br />Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>.</p>
-<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/quickreference.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
+<p class="menu"><a href="../mod/">Modules</a> | <a href="../mod/directives.html">Directives</a> | <a href="http://wiki.apache.org/httpd/FAQ">FAQ</a> | <a href="../glossary.html">Glossary</a> | <a href="../sitemap.html">Sitemap</a></p></div><script type="text/javascript"><!--//--><![CDATA[//><!--
 if (typeof(prettyPrint) !== 'undefined') {
     prettyPrint();
 }

@@ -96,7 +96,7 @@ static void *merge_substitute_dcfg(apr_pool_t *p, void *basev, void *overv)
      * In later 2.2 and 2.4 versions, SubstituteInheritBefore may be toggled
      * 'on' to follow the corrected/expected behavior, without violating POLS.
      */
-    if (a->inherit_before) {
+    if (a->inherit_before == 1) {
         a->patterns = apr_array_append(p, base->patterns,
                                           over->patterns);
     }
@@ -431,7 +431,6 @@ static apr_status_t substitute_filter(ap_filter_t *f, apr_bucket_brigade *bb)
             }
             APR_BUCKET_REMOVE(b);
             APR_BRIGADE_INSERT_TAIL(ctx->passbb, b);
-            ap_remove_output_filter(f);
         }
         /*
          * No need to handle FLUSH buckets separately as we call
