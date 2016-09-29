@@ -7,10 +7,6 @@
 #include <vector>
 #include <set>
 
-#include "apr_strings.h"
-#define APR_WANT_STRFUNC
-#include "http_log.h"
-
 using std::ifstream;
 using std::ofstream;
 using std::getline;
@@ -170,8 +166,7 @@ void QUERY_START() {
 }
 
 void SESSION_START() {
-    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
-                  "SESSION_START");
+    log_command("SESSION_START");
 #ifdef LATENCY
     TraceTool::get_instance()->start_trx();
 #endif
@@ -423,8 +418,6 @@ void TraceTool::write_latency(string dir) {
 }
 
 void TraceTool::write_log() {
-    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
-                  "Writing log");
 //    log_file << "Write log on instance " << instance << ", id is " << id << endl;
     if (id > 0) {
         write_latency("/home/jiamin/usr/latency/");
