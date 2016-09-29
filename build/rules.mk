@@ -49,9 +49,9 @@ LT_CXX_COMPILE = $(LIBTOOL) --mode=compile $(CXX_COMPILE) $(LTCFLAGS) -c $< && t
 
 # Link-related commands
 
-LINK     = $(LIBTOOL) --mode=link $(CC) $(ALL_CFLAGS) $(PILDFLAGS) $(LT_LDFLAGS) $(ALL_LDFLAGS) -o $@
-SH_LINK  = $(SH_LIBTOOL) --mode=link $(CC) $(ALL_CFLAGS) $(LT_LDFLAGS) $(ALL_LDFLAGS) $(SH_LDFLAGS) $(CORE_IMPLIB) $(SH_LIBS) -o $@
-MOD_LINK = $(LIBTOOL) --mode=link $(CC) $(ALL_CFLAGS) -static $(LT_LDFLAGS) $(ALL_LDFLAGS) -o $@
+LINK     = $(LIBTOOL) --mode=link $(CXX) $(ALL_CFLAGS) $(PILDFLAGS) $(LT_LDFLAGS) $(ALL_LDFLAGS) -o $@
+SH_LINK  = $(SH_LIBTOOL) --mode=link $(CXX) $(ALL_CFLAGS) $(LT_LDFLAGS) $(ALL_LDFLAGS) $(SH_LDFLAGS) $(CORE_IMPLIB) $(SH_LIBS) -o $@
+MOD_LINK = $(LIBTOOL) --mode=link $(CXX) $(ALL_CFLAGS) -static $(LT_LDFLAGS) $(ALL_LDFLAGS) -o $@
 
 # Cross compile commands
 
