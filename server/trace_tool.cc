@@ -164,7 +164,7 @@ void SESSION_START() {
 #endif
 }
 
-void SESSION_END(int successful) {
+void SESSION_END() {
 #ifdef LATENCY
     TraceTool::get_instance()->is_commit = true;
     TraceTool::get_instance()->commit_successful = 1;
