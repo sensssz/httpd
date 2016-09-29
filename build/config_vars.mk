@@ -212,7 +212,7 @@ NOTEST_LDFLAGS =
 NOTEST_LIBS =
 EXTRA_CPPFLAGS = -DLINUX -D_REENTRANT -D_GNU_SOURCE
 EXTRA_CFLAGS = -g -O2 -pthread
-EXTRA_CXXFLAGS =
+EXTRA_CXXFLAGS = --std=c++11
 EXTRA_LDFLAGS =
 EXTRA_LIBS =
 EXTRA_INCLUDES = -I. -I$(top_srcdir)/os/$(OS_DIR) -I$(top_srcdir)/include -I/home/jiamin/usr/include/apr-1 -I/home/jiamin/usr/include -I$(top_srcdir)/modules/aaa -I$(top_srcdir)/modules/cache -I$(top_srcdir)/modules/core -I$(top_srcdir)/modules/database -I$(top_srcdir)/modules/filters -I$(top_srcdir)/modules/ldap -I$(top_srcdir)/modules/loggers -I$(top_srcdir)/modules/lua -I$(top_srcdir)/modules/proxy -I$(top_srcdir)/modules/session -I$(top_srcdir)/modules/ssl -I$(top_srcdir)/modules/test -I$(top_srcdir)/server -I$(top_srcdir)/modules/arch/unix -I$(top_srcdir)/modules/dav/main -I$(top_srcdir)/modules/generators -I$(top_srcdir)/modules/mappers
