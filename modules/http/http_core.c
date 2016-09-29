@@ -245,16 +245,16 @@ static int ap_process_http_sync_connection(conn_rec *c)
 
 static int ap_process_http_connection(conn_rec *c)
 {
-    ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(04200)
-            "ap_process_http_connection");
+    ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
+                  "ap_process_http_connection");
     if (async_mpm && !c->clogging_input_filters) {
-        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(04201)
-                "ap_process_http_async_connection");
+        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
+                      "ap_process_http_async_connection");
         return ap_process_http_async_connection(c);
     }
     else {
-        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c, APLOGNO(04202)
-                "ap_process_http_sync_connection");
+        ap_log_cerror(APLOG_MARK, APLOG_DEBUG, 0, c,
+                      "ap_process_http_sync_connection");
         return ap_process_http_sync_connection(c);
     }
 }
