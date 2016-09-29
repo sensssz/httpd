@@ -95,6 +95,7 @@
 #include "http_vhost.h"
 #include "unixd.h"
 #include "apr_skiplist.h"
+#include "trace_tool.h"
 
 #include <signal.h>
 #include <limits.h>             /* for INT_MAX */
@@ -2487,6 +2488,7 @@ static void startup_children(int number_to_start)
         if (ap_scoreboard_image->parent[i].pid != 0) {
             continue;
         }
+        set_id(i + 1);
         if (make_child(ap_server_conf, i, i % retained->num_buckets) < 0) {
             break;
         }

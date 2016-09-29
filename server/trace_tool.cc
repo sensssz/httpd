@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include "http_log.h"
 
 using std::ifstream;
 using std::ofstream;
@@ -159,6 +160,8 @@ void QUERY_START() {
 }
 
 void SESSION_START() {
+    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
+                  "SESSION_START");
 #ifdef LATENCY
     TraceTool::get_instance()->start_trx();
 #endif
@@ -329,9 +332,9 @@ void TraceTool::start_trx() {
     /* Use a write lock here because we are appending content to the vector. */
     current_transaction_id = transaction_id++;
     transaction_start_times[current_transaction_id] = now_micro();
-    for (vector < vector < int > > ::iterator iterator = function_times.begin();
-            iterator != function_times.end();
-    ++iterator) {
+    for (auto iterator = function_times.begin();
+         iterator != function_times.end();
+         ++iterator) {
         iterator->push_back(0);
     }
     transaction_start_times.push_back(0);
@@ -380,9 +383,9 @@ void TraceTool::write_latency(string dir) {
     }
 
     int function_index = 0;
-    for (vector < vector < int > > ::iterator iterator = function_times.begin();
-            iterator != function_times.end();
-    ++iterator) {
+    for (auto iterator = function_times.begin();
+         iterator != function_times.end();
+         ++iterator) {
         ulint number_of_transactions = iterator->size();
         for (ulint index = 0; index < number_of_transactions; ++index) {
             if (transaction_start_times[index] > 0) {
@@ -393,11 +396,13 @@ void TraceTool::write_latency(string dir) {
         function_index++;
         vector<int>().swap(*iterator);
     }
-    vector < vector < int > > ().swap(function_times);
+    vector < vector < int >> ().swap(function_times);
     tpcc_log.close();
 }
 
 void TraceTool::write_log() {
+    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
+                  "Writing log");
 //    log_file << "Write log on instance " << instance << ", id is " << id << endl;
     if (id > 0) {
         write_latency("/home/jiamin/usr/latency/");

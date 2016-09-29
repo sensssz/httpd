@@ -245,16 +245,10 @@ static int ap_process_http_sync_connection(conn_rec *c)
 
 static int ap_process_http_connection(conn_rec *c)
 {
-    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
-                  "ap_process_http_connection");
     if (async_mpm && !c->clogging_input_filters) {
-        ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
-                      "ap_process_http_async_connection");
         return ap_process_http_async_connection(c);
     }
     else {
-        ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
-                      "ap_process_http_sync_connection");
         return ap_process_http_sync_connection(c);
     }
 }
