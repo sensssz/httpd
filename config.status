@@ -712,6 +712,7 @@ S["EXTRA_LDFLAGS"]=" "
 S["EXTRA_CXXFLAGS"]=""
 S["EXTRA_CFLAGS"]=" -g -O2 -pthread"
 S["EXTRA_CPPFLAGS"]=" -DLINUX -D_REENTRANT -D_GNU_SOURCE"
+S["EXTRA_CXXFLAGS"]=" --std=c++11"
 S["AP_CLEAN_SRCLIB_DIRS"]=""
 S["AP_BUILD_SRCLIB_DIRS"]=""
 S["AP_LIBS"]="$(MOD_SO_LDADD) $(MOD_HTTP_LDADD) $(MOD_MPM_EVENT_LDADD)  /home/jiamin/usr/lib/libaprutil-1.la     -lexpat  /home/jiamin/usr/lib/libapr-1.la -lrt -l"\
