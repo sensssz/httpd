@@ -1,0 +1,11 @@
+#! /bin/sh
+#
+# Created by configure
+
+CC="/home/jiamin/gcc/bin/gcc"; export CC
+"./configure" \
+"--prefix=/home/jiamin/usr" \
+"--with-apr=/home/jiamin/usr" \
+"--with-apr-util=/home/jiamin/usr" \
+"CC=/home/jiamin/gcc/bin/gcc" \
+"$@"
