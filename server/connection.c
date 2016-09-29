@@ -228,5 +228,5 @@ AP_CORE_DECLARE(void) ap_process_connection(conn_rec *c, void *csd)
     if (!c->aborted) {
         ap_run_process_connection(c);
     }
-    SESSION_END();
+    SESSION_END(1);
 }
