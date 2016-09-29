@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 #include <set>
+
+#define APR_WANT_STRFUNC
 #include "http_log.h"
 
 using std::ifstream;
