@@ -248,8 +248,11 @@ static int ap_process_http_sync_connection(conn_rec *c)
 static int ap_process_http_connection(conn_rec *c)
 {
     char dirname[200] = {0};
-    getcwd(dirname, 200);
-    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c, dirname);
+    if (getcwd(dirname, sizeof(dirname)) != NULL) {
+        ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c, "cwd: %s", dirname);
+    } else {
+        ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c, "getcwd error!");
+    }
     ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
                   "ap_process_http_connection");
     if (async_mpm && !c->clogging_input_filters) {
