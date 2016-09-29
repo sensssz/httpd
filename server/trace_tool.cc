@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 
+#include "apr_strings.h"
 #define APR_WANT_STRFUNC
 #include "http_log.h"
 
