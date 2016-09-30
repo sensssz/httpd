@@ -144,6 +144,7 @@ static int ap_process_http_async_connection(conn_rec *c)
     while (cs->state == CONN_STATE_READ_REQUEST_LINE) {
         ap_update_child_status_from_conn(c->sbh, SERVER_BUSY_READ, c);
 
+        SESSION_START();
         if ((r = ap_read_request(c))) {
 
             c->keepalive = AP_CONN_UNKNOWN;
@@ -168,9 +169,11 @@ static int ap_process_http_async_connection(conn_rec *c)
                 /* Something went wrong; close the connection */
                 cs->state = CONN_STATE_LINGER;
             }
+            SESSION_END(1);
         }
         else {   /* ap_read_request failed - client may have closed */
             cs->state = CONN_STATE_LINGER;
+            SESSION_END(0);
         }
     }
 
