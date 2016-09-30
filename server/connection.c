@@ -216,9 +216,6 @@ AP_DECLARE(void) ap_lingering_close(conn_rec *c)
 
 AP_CORE_DECLARE(void) ap_process_connection(conn_rec *c, void *csd)
 {
-    ap_log_cerror(APLOG_MARK, APLOG_NOTICE, 0, c,
-                  "ap_process_connection");
-    SESSION_START();
     int rc;
     ap_update_vhost_given_ip(c);
 
@@ -230,5 +227,4 @@ AP_CORE_DECLARE(void) ap_process_connection(conn_rec *c, void *csd)
     if (!c->aborted) {
         ap_run_process_connection(c);
     }
-    SESSION_END(1);
 }
