@@ -45,6 +45,8 @@
 
 #include "mod_core.h"
 
+#include "trace_tool.h"
+
 #if APR_HAVE_STDARG_H
 #include <stdarg.h>
 #endif
