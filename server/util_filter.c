@@ -556,6 +556,10 @@ AP_DECLARE(apr_status_t) ap_get_brigade(ap_filter_t *next,
     return AP_NOBODY_READ;
 }
 
+long difftime(struct timespec start, struct timespec end) {
+    return (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
+}
+
 /* Pass the buckets to the next filter in the filter stack.  If the
  * current filter is a handler, we should get NULL passed in instead of
  * the current filter.  At that point, we can just call the first filter in
@@ -564,7 +568,12 @@ AP_DECLARE(apr_status_t) ap_get_brigade(ap_filter_t *next,
 AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                                          apr_bucket_brigade *bb)
 {
-    TRACE_FUNCTION_START();
+    struct timespec function_start;
+    struct timespec function_end;
+    struct timespec call_start;
+    struct timespec call_end;
+    long duration = 0;
+    clock_gettime(CLOCK_REALTIME, &function_start);
     if (next) {
         apr_bucket *e;
         if ((e = APR_BRIGADE_LAST(bb)) && APR_BUCKET_IS_EOS(e) && next->r) {
@@ -588,13 +597,20 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                 }
             }
         }
-        TRACE_START();
+        clock_gettime(CLOCK_REALTIME, &call_start);
         AP_DECLARE(apr_status_t) result = next->frec->filter_func.out_func(next, bb);
-        TRACE_END(1);
-        TRACE_FUNCTION_END();
+        clock_gettime(CLOCK_REALTIME, &call_end);
+        duration = difftime(call_start, call_end);
+        ADD_RECORD(1, duration);
+
+        clock_gettime(CLOCK_REALTIME, &function_end);
+        duration = difftime(function_start, function_end);
+        ADD_RECORD(0, duration);
         return result;
     }
-    TRACE_FUNCTION_END();
+    clock_gettime(CLOCK_REALTIME, &function_end);
+    duration = difftime(function_start, function_end);
+    ADD_RECORD(0, duration);
     return AP_NOBODY_WROTE;
 }
 

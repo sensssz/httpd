@@ -242,6 +242,14 @@ int TRACE_END(int index) {
     return 0;
 }
 
+void ADD_RECORD(int function_index, long duration) {
+#ifdef MONITOR
+    if (TraceTool::should_monitor()) {
+        TraceTool::get_instance()->add_record(function_index, duration);
+    }
+#endif
+}
+
 timespec get_trx_start() {
     return TraceTool::get_instance()->trans_start;
 }

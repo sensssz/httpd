@@ -60,6 +60,8 @@ This function marks the end of a child function call. */
 int TRACE_END(
         int index);   /*!< Index of the child function call. */
 
+void ADD_RECORD(int function_index, long duration);
+
 #ifdef __cplusplus
 }
 #endif
