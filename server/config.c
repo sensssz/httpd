@@ -431,7 +431,6 @@ AP_CORE_DECLARE(int) ap_invoke_handler(request_rec *r)
         r->handler = handler;
     }
 
-    ap_log_rerror(APLOG_MARK, APLOG_NOTICE, 0, r, "Handler is %s", r->handler);
     result = ap_run_handler(r);
 
     r->handler = old_handler;
