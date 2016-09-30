@@ -570,13 +570,6 @@ long diff_time(struct timespec start, struct timespec end) {
 AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                                          apr_bucket_brigade *bb)
 {
-    PATH_INC();
-    struct timespec function_start;
-    struct timespec function_end;
-    struct timespec call_start;
-    struct timespec call_end;
-    long duration = 0;
-    clock_gettime(CLOCK_REALTIME, &function_start);
     if (next) {
         apr_bucket *e;
         if ((e = APR_BRIGADE_LAST(bb)) && APR_BUCKET_IS_EOS(e) && next->r) {
@@ -600,24 +593,9 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                 }
             }
         }
-        clock_gettime(CLOCK_REALTIME, &call_start);
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "out_func is %pp address",
-                     ((void *) next->frec->filter_func.out_func));
         AP_DECLARE(apr_status_t) result = next->frec->filter_func.out_func(next, bb);
-        clock_gettime(CLOCK_REALTIME, &call_end);
-        duration = diff_time(call_start, call_end);
-        ADD_RECORD(1, duration);
-
-        clock_gettime(CLOCK_REALTIME, &function_end);
-        duration = diff_time(function_start, function_end);
-        ADD_RECORD(0, duration);
-        PATH_DEC();
         return result;
     }
-    clock_gettime(CLOCK_REALTIME, &function_end);
-    duration = diff_time(function_start, function_end);
-    ADD_RECORD(0, duration);
-    PATH_DEC();
     return AP_NOBODY_WROTE;
 }
 

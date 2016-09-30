@@ -4678,6 +4678,14 @@ static int default_handler(request_rec *r)
         APR_BRIGADE_INSERT_TAIL(bb, e);
 
         PATH_INC();
+        ap_filter_t *f = r->output_filters;
+        int num_filters = 0;
+        while (f != NULL) {
+            ++num_filters;
+            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter: %pp", num_filters, ((void *) f));
+            f = f->next;
+        }
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Number of filters: %d", num_filters);
         status = ap_pass_brigade(r->output_filters, bb);
         PATH_DEC();
         if (status == APR_SUCCESS
