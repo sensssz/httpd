@@ -1352,6 +1352,14 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_content_length_filter(
     int eos = 0;
     apr_read_type_e eblock = APR_NONBLOCK_READ;
 
+    if (f->next) {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_content_length_filter->next: %pp,",
+                     ((void *) f->next->frec->filter_func.out_func));
+    } else {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_content_length_filter->next: NULL",
+                     ((void *) f->next->frec->filter_func.out_func));
+    }
+
     ctx = f->ctx;
     if (!ctx) {
         f->ctx = ctx = apr_palloc(r->pool, sizeof(*ctx));
