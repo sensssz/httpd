@@ -58,6 +58,8 @@
 #endif
 #if APR_HAVE_UNISTD_H
 #include <unistd.h>
+#include <trace_tool.h>
+
 #endif
 
 /* LimitRequestBody handling */
