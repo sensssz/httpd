@@ -50,7 +50,6 @@ apr_status_t ap_http_chunk_filter(ap_filter_t *f, apr_bucket_brigade *b)
 #define ASCII_CRLF  "\015\012"
 #define ASCII_ZERO  "\060"
 
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_chunk_filter");
     conn_rec *c = f->r->connection;
     apr_bucket_brigade *more, *tmp;
     apr_bucket *e;
