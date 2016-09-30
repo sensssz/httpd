@@ -51,6 +51,8 @@
 
 #include "mod_so.h" /* for ap_find_loaded_module_symbol */
 
+#include "trace_tool.h"
+
 #if defined(RLIMIT_CPU) || defined (RLIMIT_DATA) || defined (RLIMIT_VMEM) || defined(RLIMIT_AS) || defined (RLIMIT_NPROC)
 #include "unixd.h"
 #endif
@@ -4673,7 +4675,9 @@ static int default_handler(request_rec *r)
         e = apr_bucket_eos_create(c->bucket_alloc);
         APR_BRIGADE_INSERT_TAIL(bb, e);
 
+        PATH_INC();
         status = ap_pass_brigade(r->output_filters, bb);
+        PATH_DEC();
         if (status == APR_SUCCESS
             || r->status != HTTP_OK
             || c->aborted) {
