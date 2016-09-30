@@ -601,7 +601,8 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
             }
         }
         clock_gettime(CLOCK_REALTIME, &call_start);
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "out_func is %p", (void *) next->frec->filter_func.out_func);
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "out_func is %p address",
+                     ((void *) next->frec->filter_func.out_func));
         AP_DECLARE(apr_status_t) result = next->frec->filter_func.out_func(next, bb);
         clock_gettime(CLOCK_REALTIME, &call_end);
         duration = diff_time(call_start, call_end);
