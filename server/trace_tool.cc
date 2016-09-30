@@ -380,6 +380,9 @@ void TraceTool::add_record(int function_index, long duration) {
         current_transaction_id = 0;
     }
     pthread_rwlock_rdlock(&data_lock);
+    log_file << "Num functions: " << function_times.size() << endl;
+    log_file << "Num transactions: " << function_times[0].size() << endl;
+    log_file << "Current transaction id: " << current_transaction_id << endl;
     function_times[function_index][current_transaction_id] += duration;
     pthread_rwlock_unlock(&data_lock);
 }
