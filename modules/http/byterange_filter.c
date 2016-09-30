@@ -608,5 +608,12 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     apr_brigade_destroy(tmpbb);
 
     /* send our multipart output */
+    if (f->next) {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: %pp,",
+                     ((void *) f->next->frec->filter_func.out_func));
+    } else {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: NULL",
+                     ((void *) f->next->frec->filter_func.out_func));
+    }
     return ap_pass_brigade(f->next, bsend);
 }
