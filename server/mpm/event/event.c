@@ -2485,7 +2485,6 @@ static void startup_children(int number_to_start)
 {
     int i;
 
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Starting %d children", number_to_start);
     for (i = 0; number_to_start && i < ap_daemons_limit; ++i) {
         if (ap_scoreboard_image->parent[i].pid != 0) {
             continue;
@@ -2493,7 +2492,6 @@ static void startup_children(int number_to_start)
         if (make_child(ap_server_conf, i, i % retained->num_buckets) < 0) {
             break;
         }
-        set_id(i + 1);
         --number_to_start;
     }
 }
@@ -2697,6 +2695,8 @@ static void server_main_loop(int remaining_children_to_start, int num_buckets)
         ap_wait_or_timeout(&exitwhy, &status, &pid, pconf, ap_server_conf);
 
         if (pid.pid != -1) {
+            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, ap_server_conf, "pid is %d, remaining is %d", pid.pid,
+                         remaining_children_to_start);
             processed_status = ap_process_child_status(&pid, exitwhy, status);
             child_slot = ap_find_child_by_pid(&pid);
             if (processed_status == APEXIT_CHILDFATAL) {
