@@ -2243,6 +2243,8 @@ static void child_main(int child_num_arg, int child_bucket)
     apr_thread_t *start_thread_id;
     int i;
 
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Child number %d, bucket", child_num_arg, child_bucket);
+
     mpm_state = AP_MPMQ_STARTING;       /* for benefit of any hooks that run as this
                                          * child initializes
                                          */
