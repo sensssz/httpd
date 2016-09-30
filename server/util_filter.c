@@ -564,6 +564,7 @@ AP_DECLARE(apr_status_t) ap_get_brigade(ap_filter_t *next,
 AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                                          apr_bucket_brigade *bb)
 {
+    TRACE_FUNCTION_START();
     if (next) {
         apr_bucket *e;
         if ((e = APR_BRIGADE_LAST(bb)) && APR_BUCKET_IS_EOS(e) && next->r) {
@@ -587,8 +588,12 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                 }
             }
         }
-        return next->frec->filter_func.out_func(next, bb);
+        TRACE_START();
+        AP_DECLARE(apr_status_t) result = next->frec->filter_func.out_func(next, bb);
+        TRACE_END(1);
+        return result;
     }
+    TRACE_FUNCTION_END();
     return AP_NOBODY_WROTE;
 }
 
