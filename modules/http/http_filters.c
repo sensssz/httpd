@@ -1211,7 +1211,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
          */
         if (AP_BUCKET_IS_EOC(e)) {
             ap_remove_output_filter(f);
-            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT");
+            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT1");
             return ap_pass_brigade(f->next, b);
         }
     }
@@ -1228,7 +1228,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
     if (r->assbackwards) {
         r->sent_bodyct = 1;
         ap_remove_output_filter(f);
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT");
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT2");
         return ap_pass_brigade(f->next, b);
     }
 
@@ -1387,7 +1387,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
      * brigade won't be chunked properly.
      */
     ap_remove_output_filter(f);
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT");
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT3");
     return ap_pass_brigade(f->next, b);
 }
 
