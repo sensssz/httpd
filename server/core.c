@@ -4682,7 +4682,7 @@ static int default_handler(request_rec *r)
         int num_filters = 0;
         while (f != NULL) {
             ++num_filters;
-            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter: %p", num_filters,
+            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter: %pF", num_filters,
                          ((void *) f->frec->filter_func.out_func));
             f = f->next;
         }
