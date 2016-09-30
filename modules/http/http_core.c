@@ -35,6 +35,8 @@
 
 #include "mod_core.h"
 
+#include "trace_tool.h"
+
 /* Handles for core filters */
 AP_DECLARE_DATA ap_filter_rec_t *ap_http_input_filter_handle;
 AP_DECLARE_DATA ap_filter_rec_t *ap_http_header_filter_handle;
