@@ -591,6 +591,7 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
         TRACE_START();
         AP_DECLARE(apr_status_t) result = next->frec->filter_func.out_func(next, bb);
         TRACE_END(1);
+        TRACE_FUNCTION_END();
         return result;
     }
     TRACE_FUNCTION_END();
