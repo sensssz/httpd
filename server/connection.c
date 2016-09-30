@@ -216,6 +216,7 @@ AP_DECLARE(void) ap_lingering_close(conn_rec *c)
 
 AP_CORE_DECLARE(void) ap_process_connection(conn_rec *c, void *csd)
 {
+    ap_log_cerror_(APLOG_MARK, APLOG_NOTICE, 0, c, "ap_process_connection");
     int rc;
     ap_update_vhost_given_ip(c);
 
