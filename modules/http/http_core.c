@@ -148,6 +148,7 @@ static int ap_process_http_async_connection(conn_rec *c)
 
         if ((r = ap_read_request(c))) {
             SESSION_START();
+            TRACE_FUNCTION_START();
             c->keepalive = AP_CONN_UNKNOWN;
             /* process the request if it was read without error */
 
@@ -169,8 +170,10 @@ static int ap_process_http_async_connection(conn_rec *c)
                 cs->state != CONN_STATE_SUSPENDED) {
                 /* Something went wrong; close the connection */
                 cs->state = CONN_STATE_LINGER;
+                TRACE_FUNCTION_END();
                 SESSION_END(0);
             } else {
+                TRACE_FUNCTION_END();
                 SESSION_END(1);
             }
         }
