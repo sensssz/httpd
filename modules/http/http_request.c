@@ -386,9 +386,7 @@ void ap_process_async_request(request_rec *r)
      */
     AP_PROCESS_REQUEST_ENTRY((uintptr_t)r, r->uri);
     if (ap_extended_status) {
-        TRACE_START();
         ap_time_process_request(r->connection->sbh, START_PREQUEST);
-        TRACE_END(1);
     }
 
     if (APLOGrtrace4(r)) {
@@ -408,18 +406,16 @@ void ap_process_async_request(request_rec *r)
     apr_thread_mutex_create(&r->invoke_mtx, APR_THREAD_MUTEX_DEFAULT, r->pool);
     apr_thread_mutex_lock(r->invoke_mtx);
 #endif
-    TRACE_START();
     access_status = ap_run_quick_handler(r, 0);  /* Not a look-up request */
-    TRACE_END(2);
     if (access_status == DECLINED) {
         TRACE_START();
         access_status = ap_process_request_internal(r);
-        TRACE_END(3);
+        TRACE_END(1);
         TRACE_START();
         if (access_status == OK) {
             access_status = ap_invoke_handler(r);
         }
-        TRACE_END(4);
+        TRACE_END(2);
     }
 
     if (access_status == SUSPENDED) {
@@ -428,9 +424,7 @@ void ap_process_async_request(request_rec *r)
          */
         AP_PROCESS_REQUEST_RETURN((uintptr_t)r, r->uri, access_status);
         if (ap_extended_status) {
-            TRACE_START();
             ap_time_process_request(c->sbh, STOP_PREQUEST);
-            TRACE_END(5);
         }
         if (c->cs)
             c->cs->state = CONN_STATE_SUSPENDED;
@@ -448,7 +442,7 @@ void ap_process_async_request(request_rec *r)
 
     TRACE_START();
     ap_process_request_after_handler(r);
-    TRACE_END(6);
+    TRACE_END(3);
     TRACE_FUNCTION_END();
 }
 
