@@ -251,11 +251,13 @@ Get the current TraceTool instance. */
 TraceTool *TraceTool::get_instance() {
     if (instance == NULL) {
         pthread_mutex_lock(&instance_mutex);
-        instance = new TraceTool;
+        if (instance == NULL) {
+            instance = new TraceTool;
 #ifdef LATENCY
-        /* Create a background thread for dumping function running time
-           and latency data. */
-        pthread_create(&back_thread, NULL, check_write_log, NULL);
+            /* Create a background thread for dumping function running time
+               and latency data. */
+            pthread_create(&back_thread, NULL, check_write_log, NULL);
+        }
 #endif
         pthread_mutex_unlock(&instance_mutex);
     }
