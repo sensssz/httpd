@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <set>
+#include <cassert>
 
 using std::ifstream;
 using std::ofstream;
