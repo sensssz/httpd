@@ -145,15 +145,20 @@ static int ap_process_http_async_connection(conn_rec *c)
         ap_update_child_status_from_conn(c->sbh, SERVER_BUSY_READ, c);
 
         SESSION_START();
-        if ((r = ap_read_request(c))) {
+        TRACE_FUNCTION_START();
+        if (TRACE_S_E(((r = ap_read_request(c)) != NULL), 1)) {
 
             c->keepalive = AP_CONN_UNKNOWN;
             /* process the request if it was read without error */
 
             if (r->status == HTTP_OK) {
                 cs->state = CONN_STATE_HANDLER;
+                TRACE_START();
                 ap_update_child_status(c->sbh, SERVER_BUSY_WRITE, r);
+                TRACE_END(2);
+                TRACE_START();
                 ap_process_async_request(r);
+                TRACE_END(3);
                 /* After the call to ap_process_request, the
                  * request pool may have been deleted.  We set
                  * r=NULL here to ensure that any dereference
@@ -168,13 +173,16 @@ static int ap_process_http_async_connection(conn_rec *c)
                 cs->state != CONN_STATE_SUSPENDED) {
                 /* Something went wrong; close the connection */
                 cs->state = CONN_STATE_LINGER;
+                TRACE_FUNCTION_END();
                 SESSION_END(0);
             } else {
+                TRACE_FUNCTION_END();
                 SESSION_END(1);
             }
         }
         else {   /* ap_read_request failed - client may have closed */
             cs->state = CONN_STATE_LINGER;
+            TRACE_FUNCTION_END();
             SESSION_END(0);
         }
     }
