@@ -4677,19 +4677,9 @@ static int default_handler(request_rec *r)
         e = apr_bucket_eos_create(c->bucket_alloc);
         APR_BRIGADE_INSERT_TAIL(bb, e);
 
-        PATH_INC();
-        ap_filter_t *f = r->output_filters;
-        int num_filters = 0;
-        while (f != NULL) {
-            ++num_filters;
-            void *p = (void *) f->frec->filter_func.out_func;
-            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter: %pF, %pp, %pf, %pB, %ps, %pS", num_filters,
-                         p, p, p, p, p, p);
-            f = f->next;
-        }
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Number of filters: %d", num_filters);
+        TRACE_FUNCTION_START();
         status = ap_pass_brigade(r->output_filters, bb);
-        PATH_DEC();
+        TRACE_FUNCTION_END();
         if (status == APR_SUCCESS
             || r->status != HTTP_OK
             || c->aborted) {

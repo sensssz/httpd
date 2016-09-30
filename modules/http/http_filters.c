@@ -53,6 +53,8 @@
 #endif
 #if APR_HAVE_UNISTD_H
 #include <unistd.h>
+#include <trace_tool.h>
+
 #endif
 
 APLOG_USE_MODULE(http);
@@ -1165,6 +1167,7 @@ typedef struct header_filter_ctx {
 AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
                                                            apr_bucket_brigade *b)
 {
+    TRACE_START();
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     const char *clheader;
@@ -1178,21 +1181,13 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
 
     AP_DEBUG_ASSERT(!r->main);
 
-    if (f->next) {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_header_filter->next: %pp,",
-                     ((void *) f->next->frec->filter_func.out_func));
-    } else {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_header_filter->next: NULL",
-                     ((void *) f->next->frec->filter_func.out_func));
-    }
-
     if (r->header_only) {
         if (!ctx) {
             ctx = f->ctx = apr_pcalloc(r->pool, sizeof(header_filter_ctx));
         }
         else if (ctx->headers_sent) {
             apr_brigade_cleanup(b);
-            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "OK");
+            TRACE_END(3);
             return OK;
         }
     }
@@ -1211,7 +1206,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
          */
         if (AP_BUCKET_IS_EOC(e)) {
             ap_remove_output_filter(f);
-            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT1");
+            TRACE_END(3);
             return ap_pass_brigade(f->next, b);
         }
     }
@@ -1221,14 +1216,14 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
         status = eb->status;
         apr_brigade_cleanup(b);
         ap_die(status, r);
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ERROR");
+        TRACE_END(3);
         return AP_FILTER_ERROR;
     }
 
     if (r->assbackwards) {
         r->sent_bodyct = 1;
         ap_remove_output_filter(f);
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT2");
+        TRACE_END(3);
         return ap_pass_brigade(f->next, b);
     }
 
@@ -1368,7 +1363,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
     if (r->header_only) {
         apr_brigade_cleanup(b);
         ctx->headers_sent = 1;
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "OK");
+        TRACE_END(3);
         return OK;
     }
 
@@ -1387,7 +1382,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
      * brigade won't be chunked properly.
      */
     ap_remove_output_filter(f);
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "NEXT3");
+    TRACE_END(3);
     return ap_pass_brigade(f->next, b);
 }
 
@@ -1694,6 +1689,7 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
                                      apr_bucket_brigade *b)
 {
 
+    TRACE_START();
     request_rec *r = f->r;
     outerror_filter_ctx_t *ctx = (outerror_filter_ctx_t *)(f->ctx);
     apr_bucket *e;
@@ -1753,13 +1749,6 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
         }
     }
 
-    if (f->next) {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter->next: %pp,",
-                     ((void *) f->next->frec->filter_func.out_func));
-    } else {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter->next: NULL",
-                     ((void *) f->next->frec->filter_func.out_func));
-    }
-
+    TRACE_END(4);
     return ap_pass_brigade(f->next,  b);
 }

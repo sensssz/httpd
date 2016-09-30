@@ -53,6 +53,8 @@
 #endif
 #if APR_HAVE_UNISTD_H
 #include <unistd.h>
+#include <trace_tool.h>
+
 #endif
 
 #ifndef AP_DEFAULT_MAX_RANGES
@@ -430,7 +432,7 @@ static apr_status_t send_416(ap_filter_t *f, apr_bucket_brigade *tmpbb)
 AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
                                                          apr_bucket_brigade *bb)
 {
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_byterange_filter");
+    TRACE_START();
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     apr_bucket *e;
@@ -451,13 +453,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     int overlaps = 0, reversals = 0;
     core_dir_config *core_conf = ap_get_core_module_config(r->per_dir_config);
 
-    if (f->next) {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: %pp,",
-                     ((void *) f->next->frec->filter_func.out_func));
-    } else {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: NULL",
-                     ((void *) f->next->frec->filter_func.out_func));
-    }
 
     max_ranges = ( (core_conf->max_ranges >= 0 || core_conf->max_ranges == AP_MAXRANGES_UNLIMITED)
                    ? core_conf->max_ranges
@@ -487,6 +482,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
      */
     if (!APR_BUCKET_IS_EOS(e) || clength <= 0) {
         ap_remove_output_filter(f);
+        TRACE_END(1);
         return ap_pass_brigade(f->next, bb);
     }
 
@@ -500,14 +496,17 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
         (max_reversals >= 0 && reversals > max_reversals)) {
         r->status = original_status;
         ap_remove_output_filter(f);
+        TRACE_END(1);
         return ap_pass_brigade(f->next, bb);
     }
 
     /* this brigade holds what we will be sending */
     bsend = apr_brigade_create(r->pool, c->bucket_alloc);
 
-    if (num_ranges < 0)
+    if (num_ranges < 0) {
+        TRACE_END(1);
         return send_416(f, bsend);
+    }
 
     if (num_ranges > 1) {
         /* Is ap_make_content_type required here? */
@@ -586,14 +585,17 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
              * header already present.
              */
             apr_table_unset(r->headers_out, "Content-Length");
-            if ((rv = ap_pass_brigade(f->next, bsend)) != APR_SUCCESS)
+            if ((rv = ap_pass_brigade(f->next, bsend)) != APR_SUCCESS) {
+                TRACE_END(1);
                 return rv;
+            }
             apr_brigade_cleanup(bsend);
         }
     }
 
     if (found == 0) {
         /* bsend is assumed to be empty if we get here. */
+        TRACE_END(1);
         return send_416(f, bsend);
     }
 
@@ -616,5 +618,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     apr_brigade_destroy(tmpbb);
 
     /* send our multipart output */
+    TRACE_END(1);
     return ap_pass_brigade(f->next, bsend);
 }
