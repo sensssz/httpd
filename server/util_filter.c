@@ -32,6 +32,8 @@
 #define FILTER_POOL     apr_hook_global_pool
 #include "ap_hooks.h"   /* for apr_hook_global_pool */
 
+#include "trace_tool.h"
+
 /*
 ** This macro returns true/false if a given filter should be inserted BEFORE
 ** another filter. This will happen when one of: 1) there isn't another
