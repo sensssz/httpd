@@ -1358,7 +1358,9 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
 
     terminate_header(b2);
 
+    PATH_INC();
     ap_pass_brigade(f->next, b2);
+    PATH_DEC();
 
     if (r->header_only) {
         apr_brigade_cleanup(b);
