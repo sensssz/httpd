@@ -2459,6 +2459,7 @@ static int make_child(server_rec * s, int slot, int bucket)
 #endif
         RAISE_SIGSTOP(MAKE_CHILD);
 
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, s, "slot number is %d", slot);
         apr_signal(SIGTERM, just_die);
         child_main(slot, bucket);
         /* NOTREACHED */
@@ -2694,13 +2695,9 @@ static void server_main_loop(int remaining_children_to_start, int num_buckets)
     while (!restart_pending && !shutdown_pending) {
         ap_wait_or_timeout(&exitwhy, &status, &pid, pconf, ap_server_conf);
 
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, ap_server_conf, "pid is %d, remaining is %d", pid.pid,
-                     remaining_children_to_start);
-
         if (pid.pid != -1) {
             processed_status = ap_process_child_status(&pid, exitwhy, status);
             child_slot = ap_find_child_by_pid(&pid);
-            ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, ap_server_conf, "child slot: %d", child_slot);
             if (processed_status == APEXIT_CHILDFATAL) {
                 /* fix race condition found in PR 39311
                  * A child created at the same time as a graceful happens 
