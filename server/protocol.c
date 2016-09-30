@@ -1348,7 +1348,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_content_length_filter(
     ap_filter_t *f,
     apr_bucket_brigade *b)
 {
-    TRACE_START();
     request_rec *r = f->r;
     struct content_length_ctx *ctx;
     apr_bucket *e;
@@ -1396,7 +1395,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_content_length_filter(
                     APR_BRIGADE_INSERT_TAIL(b, flush);
                     rv = ap_pass_brigade(f->next, b);
                     if (rv != APR_SUCCESS || f->c->aborted) {
-                        TRACE_END(2);
                         return rv;
                     }
                     apr_brigade_cleanup(b);
@@ -1412,7 +1410,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_content_length_filter(
                 ap_log_rerror(APLOG_MARK, APLOG_ERR, rv, r, APLOGNO(00574)
                               "ap_content_length_filter: "
                               "apr_bucket_read() failed");
-                TRACE_END(2);
                 return rv;
             }
         }
@@ -1445,7 +1442,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_content_length_filter(
     }
 
     ctx->data_sent = 1;
-    TRACE_END(2);
     return ap_pass_brigade(f->next, b);
 }
 

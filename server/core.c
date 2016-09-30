@@ -4678,9 +4678,7 @@ static int default_handler(request_rec *r)
         APR_BRIGADE_INSERT_TAIL(bb, e);
 
         PATH_INC();
-        TRACE_FUNCTION_START();
         status = ap_pass_brigade(r->output_filters, bb);
-        TRACE_FUNCTION_END();
         PATH_DEC();
         if (status == APR_SUCCESS
             || r->status != HTTP_OK

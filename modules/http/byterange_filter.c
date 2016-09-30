@@ -432,7 +432,6 @@ static apr_status_t send_416(ap_filter_t *f, apr_bucket_brigade *tmpbb)
 AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
                                                          apr_bucket_brigade *bb)
 {
-    TRACE_START();
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     apr_bucket *e;
@@ -482,7 +481,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
      */
     if (!APR_BUCKET_IS_EOS(e) || clength <= 0) {
         ap_remove_output_filter(f);
-        TRACE_END(1);
         return ap_pass_brigade(f->next, bb);
     }
 
@@ -496,7 +494,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
         (max_reversals >= 0 && reversals > max_reversals)) {
         r->status = original_status;
         ap_remove_output_filter(f);
-        TRACE_END(1);
         return ap_pass_brigade(f->next, bb);
     }
 
@@ -504,7 +501,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     bsend = apr_brigade_create(r->pool, c->bucket_alloc);
 
     if (num_ranges < 0) {
-        TRACE_END(1);
         return send_416(f, bsend);
     }
 
@@ -586,7 +582,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
              */
             apr_table_unset(r->headers_out, "Content-Length");
             if ((rv = ap_pass_brigade(f->next, bsend)) != APR_SUCCESS) {
-                TRACE_END(1);
                 return rv;
             }
             apr_brigade_cleanup(bsend);
@@ -595,7 +590,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
 
     if (found == 0) {
         /* bsend is assumed to be empty if we get here. */
-        TRACE_END(1);
         return send_416(f, bsend);
     }
 
@@ -618,6 +612,5 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     apr_brigade_destroy(tmpbb);
 
     /* send our multipart output */
-    TRACE_END(1);
     return ap_pass_brigade(f->next, bsend);
 }
