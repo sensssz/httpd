@@ -1178,6 +1178,14 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
 
     AP_DEBUG_ASSERT(!r->main);
 
+    if (f->next) {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_header_filter->next: %pp,",
+                     ((void *) f->next->frec->filter_func.out_func));
+    } else {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_header_filter->next: NULL",
+                     ((void *) f->next->frec->filter_func.out_func));
+    }
+
     if (r->header_only) {
         if (!ctx) {
             ctx = f->ctx = apr_pcalloc(r->pool, sizeof(header_filter_ctx));
