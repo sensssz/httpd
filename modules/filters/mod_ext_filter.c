@@ -34,6 +34,7 @@
 #include "apr_poll.h"
 #define APR_WANT_STRFUNC
 #include "apr_want.h"
+#include "http_log.h"
 
 typedef struct ef_server_t {
     apr_pool_t *p;
@@ -640,6 +641,7 @@ static apr_status_t init_filter_instance(ap_filter_t *f)
 static apr_status_t drain_available_output(ap_filter_t *f,
                                            apr_bucket_brigade *bb)
 {
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "drain_available_output");
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     ef_ctx_t *ctx = f->ctx;
@@ -735,6 +737,7 @@ static apr_status_t pass_data_to_filter(ap_filter_t *f, const char *data,
 
 static int ef_unified_filter(ap_filter_t *f, apr_bucket_brigade *bb)
 {
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ef_unified_filter");
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     ef_ctx_t *ctx = f->ctx;
@@ -834,6 +837,7 @@ static int ef_unified_filter(ap_filter_t *f, apr_bucket_brigade *bb)
 
 static apr_status_t ef_output_filter(ap_filter_t *f, apr_bucket_brigade *bb)
 {
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ef_output_filter");
     request_rec *r = f->r;
     ef_ctx_t *ctx = f->ctx;
     apr_status_t rv;

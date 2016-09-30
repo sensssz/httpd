@@ -430,6 +430,7 @@ static apr_status_t send_416(ap_filter_t *f, apr_bucket_brigade *tmpbb)
 AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
                                                          apr_bucket_brigade *bb)
 {
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_byterange_filter");
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     apr_bucket *e;
