@@ -479,6 +479,7 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
                           "core_output_filter: writing data to the network");
             apr_brigade_cleanup(bb);
             c->aborted = 1;
+            TRACE_END(6);
             return rv;
         }
         setaside_remaining_output(f, ctx, bb, c);
