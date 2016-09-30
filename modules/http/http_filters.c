@@ -1751,8 +1751,6 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
     }
 
     TRACE_END(4);
-    PATH_INC();
     apr_status_t result = ap_pass_brigade(f->next, b);
-    PATH_DEC();
     return result;
 }
