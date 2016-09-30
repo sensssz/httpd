@@ -451,6 +451,14 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     int overlaps = 0, reversals = 0;
     core_dir_config *core_conf = ap_get_core_module_config(r->per_dir_config);
 
+    if (f->next) {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: %pp,",
+                     ((void *) f->next->frec->filter_func.out_func));
+    } else {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: NULL",
+                     ((void *) f->next->frec->filter_func.out_func));
+    }
+
     max_ranges = ( (core_conf->max_ranges >= 0 || core_conf->max_ranges == AP_MAXRANGES_UNLIMITED)
                    ? core_conf->max_ranges
                    : AP_DEFAULT_MAX_RANGES );
@@ -608,12 +616,5 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_byterange_filter(ap_filter_t *f,
     apr_brigade_destroy(tmpbb);
 
     /* send our multipart output */
-    if (f->next) {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: %pp,",
-                     ((void *) f->next->frec->filter_func.out_func));
-    } else {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "byterange->next: NULL",
-                     ((void *) f->next->frec->filter_func.out_func));
-    }
     return ap_pass_brigade(f->next, bsend);
 }
