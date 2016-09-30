@@ -364,6 +364,7 @@ AP_DECLARE(void) ap_process_request_after_handler(request_rec *r)
 
 void ap_process_async_request(request_rec *r)
 {
+    TRACE_FUNCTION_START();
     conn_rec *c = r->connection;
     int access_status;
 
@@ -383,7 +384,9 @@ void ap_process_async_request(request_rec *r)
      */
     AP_PROCESS_REQUEST_ENTRY((uintptr_t)r, r->uri);
     if (ap_extended_status) {
+        TRACE_START();
         ap_time_process_request(r->connection->sbh, START_PREQUEST);
+        TRACE_END(1);
     }
 
     if (APLOGrtrace4(r)) {
@@ -403,12 +406,16 @@ void ap_process_async_request(request_rec *r)
     apr_thread_mutex_create(&r->invoke_mtx, APR_THREAD_MUTEX_DEFAULT, r->pool);
     apr_thread_mutex_lock(r->invoke_mtx);
 #endif
+    TRACE_START();
     access_status = ap_run_quick_handler(r, 0);  /* Not a look-up request */
+    TRACE_END(2);
     if (access_status == DECLINED) {
+        TRACE_START();
         access_status = ap_process_request_internal(r);
         if (access_status == OK) {
             access_status = ap_invoke_handler(r);
         }
+        TRACE_END(3);
     }
 
     if (access_status == SUSPENDED) {
@@ -424,6 +431,7 @@ void ap_process_async_request(request_rec *r)
 #if APR_HAS_THREADS
         apr_thread_mutex_unlock(r->invoke_mtx);
 #endif
+        TRACE_FUNCTION_END();
         return;
     }
 #if APR_HAS_THREADS
@@ -432,7 +440,10 @@ void ap_process_async_request(request_rec *r)
 
     ap_die_r(access_status, r, HTTP_OK);
 
+    TRACE_START();
     ap_process_request_after_handler(r);
+    TRACE_END(4);
+    TRACE_FUNCTION_END();
 }
 
 AP_DECLARE(void) ap_process_request(request_rec *r)
