@@ -166,7 +166,6 @@ void QUERY_START() {
 }
 
 void SESSION_START() {
-    log_command("SESSION_START");
 #ifdef LATENCY
     TraceTool::get_instance()->start_trx();
 #endif
@@ -288,7 +287,7 @@ void *TraceTool::check_write_log(void *arg) {
     while (true) {
         sleep(5);
         timespec now = get_time();
-        if (now.tv_sec - global_last_query.tv_sec >= 10 && transaction_id > 0) {
+        if (now.tv_sec - global_last_query.tv_sec >= 5 && transaction_id > 0) {
             /* Create a new TraceTool instance. */
             TraceTool *old_instance = instance;
             instance = new TraceTool;
@@ -419,7 +418,5 @@ void TraceTool::write_latency(string dir) {
 
 void TraceTool::write_log() {
 //    log_file << "Write log on instance " << instance << ", id is " << id << endl;
-    if (id > 0) {
-        write_latency("/home/jiamin/usr/latency/");
-    }
+    write_latency("/home/jiamin/usr/latency/");
 }
