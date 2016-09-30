@@ -1167,7 +1167,6 @@ typedef struct header_filter_ctx {
 AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
                                                            apr_bucket_brigade *b)
 {
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_header_filter");
     TRACE_START();
     request_rec *r = f->r;
     conn_rec *c = r->connection;
@@ -1691,7 +1690,6 @@ typedef struct {
 apr_status_t ap_http_outerror_filter(ap_filter_t *f,
                                      apr_bucket_brigade *b)
 {
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter");
     TRACE_START();
     request_rec *r = f->r;
     outerror_filter_ctx_t *ctx = (outerror_filter_ctx_t *)(f->ctx);
@@ -1753,5 +1751,8 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
     }
 
     TRACE_END(4);
-    return ap_pass_brigade(f->next,  b);
+    PATH_INC();
+    apr_status_t result = ap_pass_brigade(f->next, b);
+    PATH_DEC();
+    return result;
 }
