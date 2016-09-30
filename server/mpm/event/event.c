@@ -2485,6 +2485,7 @@ static void startup_children(int number_to_start)
 {
     int i;
 
+    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Starting %d children", number_to_start);
     for (i = 0; number_to_start && i < ap_daemons_limit; ++i) {
         if (ap_scoreboard_image->parent[i].pid != 0) {
             continue;
@@ -2492,6 +2493,7 @@ static void startup_children(int number_to_start)
         if (make_child(ap_server_conf, i, i % retained->num_buckets) < 0) {
             break;
         }
+        set_id(i + 1);
         --number_to_start;
     }
 }
