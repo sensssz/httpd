@@ -1694,13 +1694,6 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
                                      apr_bucket_brigade *b)
 {
 
-    if (f->next) {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter->next: %pp,",
-                     ((void *) f->next->frec->filter_func.out_func));
-    } else {
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter->next: NULL",
-                     ((void *) f->next->frec->filter_func.out_func));
-    }
     request_rec *r = f->r;
     outerror_filter_ctx_t *ctx = (outerror_filter_ctx_t *)(f->ctx);
     apr_bucket *e;
@@ -1758,6 +1751,14 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
                 APR_BUCKET_REMOVE(e);
             }
         }
+    }
+
+    if (f->next) {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter->next: %pp,",
+                     ((void *) f->next->frec->filter_func.out_func));
+    } else {
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_http_outerror_filter->next: NULL",
+                     ((void *) f->next->frec->filter_func.out_func));
     }
 
     return ap_pass_brigade(f->next,  b);

@@ -4684,7 +4684,7 @@ static int default_handler(request_rec *r)
             ++num_filters;
             void *p = (void *) f->frec->filter_func.out_func;
             ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter: %pF, %pp, %pf, %pB, %ps, %pS", num_filters,
-                         p);
+                         p, p, p, p, p, p);
             f = f->next;
         }
         ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Number of filters: %d", num_filters);
