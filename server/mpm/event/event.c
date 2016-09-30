@@ -2098,6 +2098,7 @@ static void *APR_THREAD_FUNC start_threads(apr_thread_t * thd, void *dummy)
                                  * sizeof(apr_socket_t *));
 
     loops = prev_threads_created = 0;
+    set_id(my_child_num);
     while (1) {
         /* threads_per_child does not include the listener thread */
         for (i = 0; i < threads_per_child; i++) {
@@ -2488,7 +2489,6 @@ static void startup_children(int number_to_start)
         if (ap_scoreboard_image->parent[i].pid != 0) {
             continue;
         }
-        set_id(i + 1);
         if (make_child(ap_server_conf, i, i % retained->num_buckets) < 0) {
             break;
         }
