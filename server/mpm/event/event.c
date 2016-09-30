@@ -2098,7 +2098,6 @@ static void *APR_THREAD_FUNC start_threads(apr_thread_t * thd, void *dummy)
                                  * sizeof(apr_socket_t *));
 
     loops = prev_threads_created = 0;
-    set_id(my_child_num);
     while (1) {
         /* threads_per_child does not include the listener thread */
         for (i = 0; i < threads_per_child; i++) {
@@ -2242,8 +2241,6 @@ static void child_main(int child_num_arg, int child_bucket)
     apr_threadattr_t *thread_attr;
     apr_thread_t *start_thread_id;
     int i;
-
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "Child number %d, bucket", child_num_arg, child_bucket);
 
     mpm_state = AP_MPMQ_STARTING;       /* for benefit of any hooks that run as this
                                          * child initializes
@@ -2461,7 +2458,7 @@ static int make_child(server_rec * s, int slot, int bucket)
 #endif
         RAISE_SIGSTOP(MAKE_CHILD);
 
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, s, "slot number is %d", slot);
+        set_id(slot);
         apr_signal(SIGTERM, just_die);
         child_main(slot, bucket);
         /* NOTREACHED */
