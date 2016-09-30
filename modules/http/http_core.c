@@ -168,8 +168,10 @@ static int ap_process_http_async_connection(conn_rec *c)
                 cs->state != CONN_STATE_SUSPENDED) {
                 /* Something went wrong; close the connection */
                 cs->state = CONN_STATE_LINGER;
+                SESSION_END(0);
+            } else {
+                SESSION_END(1);
             }
-            SESSION_END(1);
         }
         else {   /* ap_read_request failed - client may have closed */
             cs->state = CONN_STATE_LINGER;
