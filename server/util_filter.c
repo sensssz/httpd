@@ -571,7 +571,6 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
                                          apr_bucket_brigade *bb)
 {
     PATH_INC();
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_pass_brigade start");
     struct timespec function_start;
     struct timespec function_end;
     struct timespec call_start;
@@ -611,14 +610,12 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
         duration = diff_time(function_start, function_end);
         ADD_RECORD(0, duration);
         PATH_DEC();
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_pass_brigade end 1");
         return result;
     }
     clock_gettime(CLOCK_REALTIME, &function_end);
     duration = diff_time(function_start, function_end);
     ADD_RECORD(0, duration);
     PATH_DEC();
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_pass_brigade end 2");
     return AP_NOBODY_WROTE;
 }
 
