@@ -19,7 +19,7 @@ using std::to_string;
 using std::set;
 
 #define TARGET_PATH_COUNT 0
-#define NUMBER_OF_FUNCTIONS 0
+#define NUMBER_OF_FUNCTIONS 6
 #define LATENCY
 #define MONITOR
 
@@ -383,12 +383,6 @@ void TraceTool::add_record(int function_index, long duration) {
         current_transaction_id = 0;
     }
     pthread_rwlock_rdlock(&data_lock);
-    int size = function_times.size();
-    assert(function_index < function_times.size());
-    assert(current_transaction_id < function_times[function_index].size());
-    log_file << "Num functions: " << function_times.size() << endl;
-    log_file << "Num transactions: " << function_times[0].size() << endl;
-    log_file << "Current transaction id: " << current_transaction_id << endl;
     function_times[function_index][current_transaction_id] += duration;
     pthread_rwlock_unlock(&data_lock);
 }
