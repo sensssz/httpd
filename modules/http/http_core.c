@@ -154,7 +154,9 @@ static int ap_process_http_async_connection(conn_rec *c)
             if (r->status == HTTP_OK) {
                 cs->state = CONN_STATE_HANDLER;
                 ap_update_child_status(c->sbh, SERVER_BUSY_WRITE, r);
+                PATH_INC();
                 ap_process_async_request(r);
+                PATH_DEC();
                 /* After the call to ap_process_request, the
                  * request pool may have been deleted.  We set
                  * r=NULL here to ensure that any dereference
