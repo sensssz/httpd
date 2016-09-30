@@ -558,7 +558,7 @@ AP_DECLARE(apr_status_t) ap_get_brigade(ap_filter_t *next,
     return AP_NOBODY_READ;
 }
 
-long difftime(struct timespec start, struct timespec end) {
+long diff_time(struct timespec start, struct timespec end) {
     return (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec);
 }
 
@@ -602,16 +602,16 @@ AP_DECLARE(apr_status_t) ap_pass_brigade(ap_filter_t *next,
         clock_gettime(CLOCK_REALTIME, &call_start);
         AP_DECLARE(apr_status_t) result = next->frec->filter_func.out_func(next, bb);
         clock_gettime(CLOCK_REALTIME, &call_end);
-        duration = difftime(call_start, call_end);
+        duration = diff_time(call_start, call_end);
         ADD_RECORD(1, duration);
 
         clock_gettime(CLOCK_REALTIME, &function_end);
-        duration = difftime(function_start, function_end);
+        duration = diff_time(function_start, function_end);
         ADD_RECORD(0, duration);
         return result;
     }
     clock_gettime(CLOCK_REALTIME, &function_end);
-    duration = difftime(function_start, function_end);
+    duration = diff_time(function_start, function_end);
     ADD_RECORD(0, duration);
     return AP_NOBODY_WROTE;
 }
