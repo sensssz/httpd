@@ -1690,7 +1690,9 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
 
     /* Create context if none is present */
     if (!ctx) {
+        TRACE_START();
         ctx = apr_pcalloc(r->pool, sizeof(outerror_filter_ctx_t));
+        TRACE_END(1);
         f->ctx = ctx;
     }
     for (e = APR_BRIGADE_FIRST(b);
@@ -1740,12 +1742,14 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
             if (!APR_BUCKET_IS_METADATA(e)) {
                 TRACE_START();
                 APR_BUCKET_REMOVE(e);
-                TRACE_END(1);
+                TRACE_END(2);
             }
         }
     }
 
-    TRACE_FUNCTION_END();
+    TRACE_START();
     apr_status_t result = ap_pass_brigade(f->next, b);
+    TRACE_END(3);
+    TRACE_FUNCTION_END();
     return result;
 }
