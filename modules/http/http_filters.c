@@ -1683,6 +1683,7 @@ typedef struct {
 apr_status_t ap_http_outerror_filter(ap_filter_t *f,
                                      apr_bucket_brigade *b)
 {
+    TRACE_FUNCTION_START();
     request_rec *r = f->r;
     outerror_filter_ctx_t *ctx = (outerror_filter_ctx_t *)(f->ctx);
     apr_bucket *e;
@@ -1742,6 +1743,9 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
         }
     }
 
+    TRACE_START();
     apr_status_t result = ap_pass_brigade(f->next, b);
+    TRACE_END(1);
+    TRACE_FUNCTION_END();
     return result;
 }

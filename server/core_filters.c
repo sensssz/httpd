@@ -371,7 +371,6 @@ extern APR_OPTIONAL_FN_TYPE(ap_logio_add_bytes_out) *ap__logio_add_bytes_out;
 
 apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
 {
-    TRACE_FUNCTION_START();
     conn_rec *c = f->c;
     core_net_rec *net = f->ctx;
     core_output_filter_ctx_t *ctx = net->out_ctx;
@@ -386,7 +385,6 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
         if (new_bb != NULL) {
             apr_brigade_cleanup(new_bb);
         }
-        TRACE_FUNCTION_END();
         return APR_ECONNABORTED;
     }
 
@@ -417,7 +415,6 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
         c->data_in_output_filters = 0;
     }
     else if (new_bb == NULL) {
-        TRACE_FUNCTION_END();
         return APR_SUCCESS;
     }
 
@@ -477,11 +474,9 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
                           "core_output_filter: writing data to the network");
             apr_brigade_cleanup(bb);
             c->aborted = 1;
-            TRACE_FUNCTION_END();
             return rv;
         }
         setaside_remaining_output(f, ctx, bb, c);
-        TRACE_FUNCTION_END();
         return APR_SUCCESS;
     }
 
@@ -553,7 +548,6 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
                           "core_output_filter: writing data to the network");
             apr_brigade_cleanup(bb);
             c->aborted = 1;
-            TRACE_FUNCTION_END();
             return rv;
         }
         APR_BRIGADE_CONCAT(bb, ctx->tmp_flush_bb);
@@ -568,13 +562,11 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
                           "core_output_filter: writing data to the network");
             apr_brigade_cleanup(bb);
             c->aborted = 1;
-            TRACE_FUNCTION_END();
             return rv;
         }
     }
 
     setaside_remaining_output(f, ctx, bb, c);
-    TRACE_FUNCTION_END();
     return APR_SUCCESS;
 }
 
