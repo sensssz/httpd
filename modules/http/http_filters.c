@@ -945,6 +945,7 @@ static void basic_http_header(request_rec *r, apr_bucket_brigade *bb,
 
     if (r->assbackwards) {
         /* there are no headers to send */
+        TRACE_FUNCTION_END();
         return;
     }
 
