@@ -579,7 +579,9 @@ static void setaside_remaining_output(ap_filter_t *f,
                                       apr_bucket_brigade *bb,
                                       conn_rec *c)
 {
+    TRACE_FUNCTION_START();
     if (bb == NULL) {
+        TRACE_FUNCTION_END();
         return;
     }
     remove_empty_buckets(bb);
@@ -587,7 +589,9 @@ static void setaside_remaining_output(ap_filter_t *f,
         c->data_in_output_filters = 1;
         if (bb != ctx->buffered_bb) {
             if (!ctx->deferred_write_pool) {
+                TRACE_START();
                 apr_pool_create(&ctx->deferred_write_pool, c->pool);
+                TRACE_END(1);
                 apr_pool_tag(ctx->deferred_write_pool, "deferred_write");
             }
             ap_save_brigade(f, &(ctx->buffered_bb), &bb,
@@ -601,6 +605,7 @@ static void setaside_remaining_output(ap_filter_t *f,
          */
         apr_pool_clear(ctx->deferred_write_pool);
     }
+    TRACE_FUNCTION_END();
 }
 
 #ifndef APR_MAX_IOVEC_SIZE
