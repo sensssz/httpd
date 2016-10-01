@@ -935,7 +935,6 @@ static void basic_http_header_check(request_rec *r,
 static void basic_http_header(request_rec *r, apr_bucket_brigade *bb,
                               const char *protocol)
 {
-    TRACE_FUNCTION_START();
     char *date = NULL;
     const char *proxy_date = NULL;
     const char *server = NULL;
@@ -945,7 +944,6 @@ static void basic_http_header(request_rec *r, apr_bucket_brigade *bb,
 
     if (r->assbackwards) {
         /* there are no headers to send */
-        TRACE_FUNCTION_END();
         return;
     }
 
@@ -968,9 +966,7 @@ static void basic_http_header(request_rec *r, apr_bucket_brigade *bb,
         apr_brigade_write(bb, NULL, NULL, tmp, len);
     }
 #else
-    TRACE_START();
     apr_brigade_writev(bb, NULL, NULL, vec, 4);
-    TRACE_END(1);
 #endif
 
     h.pool = r->pool;
@@ -1028,7 +1024,6 @@ static void basic_http_header(request_rec *r, apr_bucket_brigade *bb,
     if (server) {
         apr_table_unset(r->headers_out, "Server");
     }
-    TRACE_FUNCTION_END();
 }
 
 AP_DECLARE(void) ap_basic_http_header(request_rec *r, apr_bucket_brigade *bb)
