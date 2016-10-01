@@ -1353,6 +1353,14 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
 
     terminate_header(b2);
 
+    ap_filter_t *filter = f->next;
+    int num_filters = 0;
+    while (filter) {
+        ++num_filters;
+        void *p = (void *) filter->frec->filter_func.out_func;
+        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter %pp, %p, %pf, %pF", num_filters, p, p, p, p);
+        filter = filter->next;
+    }
     PATH_INC();
     ap_pass_brigade(f->next, b2);
     PATH_DEC();
