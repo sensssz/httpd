@@ -1353,14 +1353,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
 
     terminate_header(b2);
 
-    ap_filter_t *filter = f->next;
-    int num_filters = 0;
-    while (filter) {
-        ++num_filters;
-        void *p = (void *) filter->frec->filter_func.out_func;
-        ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "%d-th filter %pp, %p, %pf, %pF", num_filters, p, p, p, p);
-        filter = filter->next;
-    }
     PATH_INC();
     ap_pass_brigade(f->next, b2);
     PATH_DEC();
@@ -1691,16 +1683,13 @@ typedef struct {
 apr_status_t ap_http_outerror_filter(ap_filter_t *f,
                                      apr_bucket_brigade *b)
 {
-    TRACE_FUNCTION_START();
     request_rec *r = f->r;
     outerror_filter_ctx_t *ctx = (outerror_filter_ctx_t *)(f->ctx);
     apr_bucket *e;
 
     /* Create context if none is present */
     if (!ctx) {
-        TRACE_START();
         ctx = apr_pcalloc(r->pool, sizeof(outerror_filter_ctx_t));
-        TRACE_END(1);
         f->ctx = ctx;
     }
     for (e = APR_BRIGADE_FIRST(b);
@@ -1748,16 +1737,11 @@ apr_status_t ap_http_outerror_filter(ap_filter_t *f,
              e = APR_BUCKET_NEXT(e))
         {
             if (!APR_BUCKET_IS_METADATA(e)) {
-                TRACE_START();
                 APR_BUCKET_REMOVE(e);
-                TRACE_END(2);
             }
         }
     }
 
-    TRACE_START();
     apr_status_t result = ap_pass_brigade(f->next, b);
-    TRACE_END(3);
-    TRACE_FUNCTION_END();
     return result;
 }

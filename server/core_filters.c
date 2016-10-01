@@ -380,8 +380,6 @@ apr_status_t ap_core_output_filter(ap_filter_t *f, apr_bucket_brigade *new_bb)
     int eor_buckets_in_brigade, morphing_bucket_in_brigade;
     apr_status_t rv;
 
-    ap_log_error(APLOG_MARK, APLOG_NOTICE, 0, NULL, "ap_core_output_filter");
-
     /* Fail quickly if the connection has already been aborted. */
     if (c->aborted) {
         if (new_bb != NULL) {
