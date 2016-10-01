@@ -4558,6 +4558,7 @@ static int core_override_type(request_rec *r)
 
 static int default_handler(request_rec *r)
 {
+    TRACE_FUNCTION_START();
     conn_rec *c = r->connection;
     apr_bucket_brigade *bb;
     apr_bucket *e;
@@ -4586,6 +4587,7 @@ static int default_handler(request_rec *r)
      * the output filters are invoked by the default handler.
      */
     if ((errstatus = ap_discard_request_body(r)) != OK) {
+        TRACE_FUNCTION_END();
         return errstatus;
     }
 
@@ -4594,6 +4596,7 @@ static int default_handler(request_rec *r)
             ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(00128)
                           "File does not exist: %s",
                           apr_pstrcat(r->pool, r->filename, r->path_info, NULL));
+            TRACE_FUNCTION_END();
             return HTTP_NOT_FOUND;
         }
 
@@ -4603,6 +4606,7 @@ static int default_handler(request_rec *r)
         if (r->finfo.filetype == APR_DIR) {
             ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(00129)
                           "Attempt to serve directory: %s", r->filename);
+            TRACE_FUNCTION_END();
             return HTTP_NOT_FOUND;
         }
 
@@ -4613,6 +4617,7 @@ static int default_handler(request_rec *r)
             ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, r, APLOGNO(00130)
                           "File does not exist: %s",
                           apr_pstrcat(r->pool, r->filename, r->path_info, NULL));
+            TRACE_FUNCTION_END();
             return HTTP_NOT_FOUND;
         }
 
@@ -4638,11 +4643,11 @@ static int default_handler(request_rec *r)
         }
 
 
-        if ((status = apr_file_open(&fd, r->filename, APR_READ | APR_BINARY
+        if (TRACE_S_E((status = apr_file_open(&fd, r->filename, APR_READ | APR_BINARY
 #if APR_HAS_SENDFILE
                             | AP_SENDFILE_ENABLED(d->enable_sendfile)
 #endif
-                                    , 0, r->pool)) != APR_SUCCESS) {
+                              , 0, r->pool)) != APR_SUCCESS, 1)) {
             ap_log_rerror(APLOG_MARK, APLOG_ERR, status, r, APLOGNO(00132)
                           "file permissions deny server access: %s", r->filename);
             return HTTP_FORBIDDEN;
@@ -4677,12 +4682,15 @@ static int default_handler(request_rec *r)
         e = apr_bucket_eos_create(c->bucket_alloc);
         APR_BRIGADE_INSERT_TAIL(bb, e);
 
+        TRACE_START();
         PATH_INC();
         status = ap_pass_brigade(r->output_filters, bb);
         PATH_DEC();
+        TRACE_END(2);
         if (status == APR_SUCCESS
             || r->status != HTTP_OK
             || c->aborted) {
+            TRACE_FUNCTION_END();
             return OK;
         }
         else {
@@ -4690,6 +4698,7 @@ static int default_handler(request_rec *r)
             ap_log_rerror(APLOG_MARK, APLOG_DEBUG, status, r, APLOGNO(00133)
                           "default_handler: ap_pass_brigade returned %i",
                           status);
+            TRACE_FUNCTION_END();
             return AP_FILTER_ERROR;
         }
     }
@@ -4708,14 +4717,17 @@ static int default_handler(request_rec *r)
                 ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(00135)
                               "Invalid method in request %s", r->the_request);
             }
+            TRACE_FUNCTION_END();
             return HTTP_NOT_IMPLEMENTED;
         }
 
         if (r->method_number == M_OPTIONS) {
             return ap_send_http_options(r);
         }
+        TRACE_FUNCTION_END();
         return HTTP_METHOD_NOT_ALLOWED;
     }
+    TRACE_FUNCTION_END();
 }
 
 /* Optional function coming from mod_logio, used for logging of output
