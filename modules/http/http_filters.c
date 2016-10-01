@@ -1167,7 +1167,6 @@ typedef struct header_filter_ctx {
 AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
                                                            apr_bucket_brigade *b)
 {
-    TRACE_FUNCTION_START();
     request_rec *r = f->r;
     conn_rec *c = r->connection;
     const char *clheader;
@@ -1187,7 +1186,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
         }
         else if (ctx->headers_sent) {
             apr_brigade_cleanup(b);
-            TRACE_FUNCTION_END();
             return OK;
         }
     }
@@ -1198,7 +1196,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
     {
         if (AP_BUCKET_IS_ERROR(e) && !eb) {
             eb = e->data;
-            TRACE_FUNCTION_END();
             continue;
         }
         /*
@@ -1207,7 +1204,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
          */
         if (AP_BUCKET_IS_EOC(e)) {
             ap_remove_output_filter(f);
-            TRACE_FUNCTION_END();
             return ap_pass_brigade(f->next, b);
         }
     }
@@ -1217,14 +1213,12 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
         status = eb->status;
         apr_brigade_cleanup(b);
         ap_die(status, r);
-        TRACE_FUNCTION_END();
         return AP_FILTER_ERROR;
     }
 
     if (r->assbackwards) {
         r->sent_bodyct = 1;
         ap_remove_output_filter(f);
-        TRACE_FUNCTION_END();
         return ap_pass_brigade(f->next, b);
     }
 
@@ -1331,9 +1325,7 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
     }
 
     b2 = apr_brigade_create(r->pool, c->bucket_alloc);
-    TRACE_START();
     basic_http_header(r, b2, protocol);
-    TRACE_END(1);
 
     h.pool = r->pool;
     h.bb = b2;
@@ -1361,16 +1353,13 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
 
     terminate_header(b2);
 
-    TRACE_START();
     PATH_INC();
     ap_pass_brigade(f->next, b2);
     PATH_DEC();
-    TRACE_END(2);
 
     if (r->header_only) {
         apr_brigade_cleanup(b);
         ctx->headers_sent = 1;
-        TRACE_FUNCTION_END();
         return OK;
     }
 
@@ -1389,7 +1378,6 @@ AP_CORE_DECLARE_NONSTD(apr_status_t) ap_http_header_filter(ap_filter_t *f,
      * brigade won't be chunked properly.
      */
     ap_remove_output_filter(f);
-    TRACE_FUNCTION_END();
     return ap_pass_brigade(f->next, b);
 }
 
