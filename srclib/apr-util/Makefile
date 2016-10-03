@@ -10,9 +10,9 @@ APRUTIL_DOTTED_VERSION=1.5.4
 srcdir = .
 
 
-INCLUDES = -I/home/jiamin/apr-util-1.5.4/include -I/home/jiamin/apr-util-1.5.4/include/private -I/home/jiamin/postgres/include -I/home/jiamin/usr/include  -I/home/jiamin/usr/include/apr-1  -I/home/jiamin/apr-util-1.5.4/xml/expat/lib
+INCLUDES = -I/home/jiamin/httpd/srclib/apr-util/include -I/home/jiamin/httpd/srclib/apr-util/include/private -I/home/jiamin/postgres/include -I/home/jiamin/usr/include  -I/home/jiamin/httpd/srclib/apr/include  -I/home/jiamin/httpd/srclib/apr-util/xml/expat/lib
 APRUTIL_LDFLAGS = 
-APRUTIL_LIBS = /home/jiamin/apr-util-1.5.4/xml/expat/libexpat.la /home/jiamin/usr/lib/libapr-1.la -lrt -lcrypt -lpthread
+APRUTIL_LIBS = /home/jiamin/httpd/srclib/apr-util/xml/expat/libexpat.la /home/jiamin/httpd/srclib/apr/libapr-1.la -lrt -lcrypt -lpthread
 
 TARGET_LIB = libaprutil-${APRUTIL_MAJOR_VERSION}.la
 INSTALL_SUBDIRS =  xml/expat
@@ -47,8 +47,8 @@ LDADD_crypto_nss =
 TARGETS = $(TARGET_LIB) aprutil.exp apu-config.out $(APU_MODULES)
 
 # bring in rules.mk for standard functionality
-include /home/jiamin/apr-util-1.5.4/build/rules.mk
-include /home/jiamin/apr-util-1.5.4/build-outputs.mk
+include /home/jiamin/httpd/srclib/apr-util/build/rules.mk
+include /home/jiamin/httpd/srclib/apr-util/build-outputs.mk
 
 CLEAN_SUBDIRS = test  xml/expat
 
@@ -64,12 +64,12 @@ EXTRACLEAN_TARGETS = configure aclocal.m4 include/private/apu_config.h.in \
 	build/config.guess build/config.sub
 
 prefix=/home/jiamin/usr
-exec_prefix=${prefix}
-bindir=${exec_prefix}/bin
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include/apr-${APRUTIL_MAJOR_VERSION}
-top_srcdir=/home/jiamin/apr-util-1.5.4
-top_blddir=/home/jiamin/apr-util-1.5.4
+exec_prefix=/home/jiamin/usr
+bindir=${prefix}/bin
+libdir=${prefix}/lib
+includedir=/home/jiamin/usr/include
+top_srcdir=/home/jiamin/httpd/srclib/apr-util
+top_blddir=/home/jiamin/httpd/srclib/apr-util
 
 # Create apu-config script suitable for the install tree
 apu-config.out: $(APU_CONFIG)

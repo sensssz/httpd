@@ -3,16 +3,17 @@
 # Created by configure
 
 CC="/home/jiamin/gcc/bin/gcc"; export CC
-"/home/jiamin/httpd/srclib/apr-util/configure" \
+"/home/jiamin/httpd/srclib/apr/configure" \
 "--disable-option-checking" \
 "--with-included-apr" \
 "CC=/home/jiamin/gcc/bin/gcc" \
 "--cache-file=/dev/null" \
-"--srcdir=/home/jiamin/httpd/srclib/apr-util" \
-"--with-apr=../apr" \
+"--srcdir=/home/jiamin/httpd/srclib/apr" \
 "--prefix=/home/jiamin/usr" \
 "--exec-prefix=/home/jiamin/usr" \
 "--libdir=/home/jiamin/usr/lib" \
 "--includedir=/home/jiamin/usr/include" \
 "--bindir=/home/jiamin/usr/bin" \
+"--datadir=/home/jiamin/usr" \
+"--with-installbuilddir=/home/jiamin/usr/build" \
 "$@"

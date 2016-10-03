@@ -24,12 +24,12 @@ srcdir = .
 top_srcdir = .
 
 
-prefix = /home/jiamin/usr
-exec_prefix = /home/jiamin/usr
+prefix = /home/jiamin/httpd/srclib/apr-util/xml/expat
+exec_prefix = ${prefix}
 
-bindir = ${prefix}/bin
-libdir = ${prefix}/lib
-includedir = /home/jiamin/usr/include/apr-1
+bindir = ${exec_prefix}/bin
+libdir = ${exec_prefix}/lib
+includedir = ${prefix}/include
 mandir = ${prefix}/man/man1
 
 top_builddir = .

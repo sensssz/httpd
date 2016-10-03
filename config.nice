@@ -5,7 +5,6 @@
 CC="/home/jiamin/gcc/bin/gcc"; export CC
 "./configure" \
 "--prefix=/home/jiamin/usr" \
-"--with-apr=/home/jiamin/usr" \
-"--with-apr-util=/home/jiamin/usr" \
+"--with-included-apr" \
 "CC=/home/jiamin/gcc/bin/gcc" \
 "$@"

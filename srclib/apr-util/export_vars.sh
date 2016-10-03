@@ -8,6 +8,6 @@
 #   $ . path/to/apr-util/export_vars.sh
 #
 
-APRUTIL_EXPORT_INCLUDES="-I/home/jiamin/apr-util-1.5.4/xml/expat/lib"
-APRUTIL_EXPORT_LIBS="/home/jiamin/apr-util-1.5.4/xml/expat/libexpat.la"
+APRUTIL_EXPORT_INCLUDES="-I/home/jiamin/httpd/srclib/apr-util/xml/expat/lib"
+APRUTIL_EXPORT_LIBS="/home/jiamin/httpd/srclib/apr-util/xml/expat/libexpat.la"
 APRUTIL_LDFLAGS=""

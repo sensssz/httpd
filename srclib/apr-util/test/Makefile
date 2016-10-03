@@ -10,7 +10,7 @@ srcdir = .
 #   programs such as sockperf, that have to be invoked in a special sequence
 #   or with special parameters
 
-INCLUDES = -I/home/jiamin/apr-util-1.5.4/include -I/home/jiamin/apr-util-1.5.4/include/private -I/home/jiamin/postgres/include -I/home/jiamin/usr/include  -I/home/jiamin/usr/include/apr-1  -I/home/jiamin/apr-util-1.5.4/xml/expat/lib
+INCLUDES = -I/home/jiamin/httpd/srclib/apr-util/include -I/home/jiamin/httpd/srclib/apr-util/include/private -I/home/jiamin/postgres/include -I/home/jiamin/usr/include  -I/home/jiamin/httpd/srclib/apr/include  -I/home/jiamin/httpd/srclib/apr-util/xml/expat/lib
 
 STDTEST_PORTABLE = dbd testall
 
@@ -28,8 +28,8 @@ LOCAL_LIBS = ../libaprutil-${APRUTIL_MAJOR_VERSION}1.la
 CLEAN_TARGETS = manyfile.bin testfile.txt data/sqlite*.db
 
 # bring in rules.mk for standard functionality
-include /home/jiamin/apr-util-1.5.4/build/rules.mk
-APRUTIL_LIBS = /home/jiamin/apr-util-1.5.4/xml/expat/libexpat.la /home/jiamin/usr/lib/libapr-1.la -lrt -lcrypt -lpthread
+include /home/jiamin/httpd/srclib/apr-util/build/rules.mk
+APRUTIL_LIBS = /home/jiamin/httpd/srclib/apr-util/xml/expat/libexpat.la /home/jiamin/httpd/srclib/apr/libapr-1.la -lrt -lcrypt -lpthread
 APRUTIL_LDFLAGS = $(ALL_LDFLAGS) -no-install 
 
 # link programs using -no-install to get real executables not
