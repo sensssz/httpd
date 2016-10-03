@@ -163,10 +163,8 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
 
 #if APR_HAS_THREADS
     if ((flag & APR_FOPEN_BUFFERED) && (flag & APR_FOPEN_XTHREAD)) {
-        TRACE_START();
         rv = apr_thread_mutex_create(&thlock,
                                      APR_THREAD_MUTEX_DEFAULT, pool);
-        TRACE_END(1);
         if (rv) {
             TRACE_FUNCTION_END();
             return rv;
@@ -174,14 +172,12 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
     }
 #endif
 
-    TRACE_START();
     if (perm == APR_OS_DEFAULT) {
         fd = open(fname, oflags, 0666);
     }
     else {
         fd = open(fname, oflags, apr_unix_perms2mode(perm));
     }
-    TRACE_END(2);
     if (fd < 0) {
         TRACE_FUNCTION_END();
        return errno;
@@ -215,24 +211,20 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
         }
     }
 
-    TRACE_START();
     (*new) = (apr_file_t *)apr_pcalloc(pool, sizeof(apr_file_t));
-    TRACE_END(3);
     (*new)->pool = pool;
     (*new)->flags = flag;
     (*new)->filedes = fd;
 
     TRACE_START();
     (*new)->fname = apr_pstrdup(pool, fname);
-    TRACE_END(4);
+    TRACE_END(1);
 
     (*new)->blocking = BLK_ON;
     (*new)->buffered = (flag & APR_FOPEN_BUFFERED) > 0;
 
     if ((*new)->buffered) {
-        TRACE_START();
         (*new)->buffer = apr_palloc(pool, APR_FILE_DEFAULT_BUFSIZE);
-        TRACE_END(5);
         (*new)->bufsize = APR_FILE_DEFAULT_BUFSIZE;
 #if APR_HAS_THREADS
         if ((*new)->flags & APR_FOPEN_XTHREAD) {
@@ -259,11 +251,9 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
     (*new)->pollset = NULL;
 #endif
     if (!(flag & APR_FOPEN_NOCLEANUP)) {
-        TRACE_START();
         apr_pool_cleanup_register((*new)->pool, (void *)(*new), 
                                   apr_unix_file_cleanup, 
                                   apr_unix_child_file_cleanup);
-        TRACE_END(6);
     }
     TRACE_FUNCTION_END();
     return APR_SUCCESS;
