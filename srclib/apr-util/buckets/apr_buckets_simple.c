@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <trace_tool.h>
 #include "apr_buckets.h"
 
 APU_DECLARE_NONSTD(apr_status_t) apr_bucket_simple_copy(apr_bucket *a,
@@ -110,12 +111,19 @@ APU_DECLARE(apr_bucket *) apr_bucket_transient_create(const char *buf,
                                                       apr_size_t length,
                                                       apr_bucket_alloc_t *list)
 {
+    TRACE_FUNCTION_START();
+    TRACE_START();
     apr_bucket *b = apr_bucket_alloc(sizeof(*b), list);
+    TRACE_END(1);
 
     APR_BUCKET_INIT(b);
     b->free = apr_bucket_free;
     b->list = list;
-    return apr_bucket_transient_make(b, buf, length);
+    TRACE_START();
+    apr_bucket *result = apr_bucket_transient_make(b, buf, length);
+    TRACE_END(2);
+    TRACE_FUNCTION_END();
+    return result;
 }
 
 const apr_bucket_type_t apr_bucket_type_immortal = {

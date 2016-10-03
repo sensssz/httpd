@@ -27,8 +27,6 @@
 
 #if APR_HAVE_SYS_UIO_H
 #include <sys/uio.h>
-#include <trace_tool.h>
-
 #endif
 
 static apr_status_t brigade_cleanup(void *data) 
@@ -493,7 +491,6 @@ APU_DECLARE(apr_status_t) apr_brigade_writev(apr_bucket_brigade *b,
                                              const struct iovec *vec,
                                              apr_size_t nvec)
 {
-    TRACE_FUNCTION_START();
     apr_bucket *e;
     apr_size_t total_len;
     apr_size_t i;
@@ -511,30 +508,21 @@ APU_DECLARE(apr_status_t) apr_brigade_writev(apr_bucket_brigade *b,
      */
     if (total_len > APR_BUCKET_BUFF_SIZE) {
         if (flush) {
-            TRACE_START();
             for (i = 0; i < nvec; i++) {
                 e = apr_bucket_transient_create(vec[i].iov_base,
                                                 vec[i].iov_len,
                                                 b->bucket_alloc);
                 APR_BRIGADE_INSERT_TAIL(b, e);
             }
-            TRACE_END(1);
-            TRACE_START();
-            apr_status_t result = flush(b, ctx);
-            TRACE_END(2);
-            TRACE_FUNCTION_END();
-            return result;
+            return flush(b, ctx);
         }
         else {
-            TRACE_START();
             for (i = 0; i < nvec; i++) {
                 e = apr_bucket_heap_create((const char *) vec[i].iov_base,
                                            vec[i].iov_len, NULL,
                                            b->bucket_alloc);
                 APR_BRIGADE_INSERT_TAIL(b, e);
             }
-            TRACE_END(3);
-            TRACE_FUNCTION_END();
             return APR_SUCCESS;
         }
     }
@@ -562,7 +550,6 @@ APU_DECLARE(apr_status_t) apr_brigade_writev(apr_bucket_brigade *b,
                 buf += len;
             }
             e->length += total_len;
-            TRACE_FUNCTION_END();
             return APR_SUCCESS;
         }
         else {
@@ -587,7 +574,6 @@ APU_DECLARE(apr_status_t) apr_brigade_writev(apr_bucket_brigade *b,
             if (flush) {
                 apr_status_t rv = flush(b, ctx);
                 if (rv != APR_SUCCESS) {
-                    TRACE_FUNCTION_END();
                     return rv;
                 }
             }
@@ -606,13 +592,9 @@ APU_DECLARE(apr_status_t) apr_brigade_writev(apr_bucket_brigade *b,
      * The checks above ensure that the amount of data to be
      * written here is no larger than APR_BUCKET_BUFF_SIZE.
      */
-    TRACE_START();
     buf = apr_bucket_alloc(APR_BUCKET_BUFF_SIZE, b->bucket_alloc);
-    TRACE_END(4);
-    TRACE_START();
     e = apr_bucket_heap_create(buf, APR_BUCKET_BUFF_SIZE,
                                apr_bucket_free, b->bucket_alloc);
-    TRACE_END(5);
     for (; i < nvec; i++) {
         apr_size_t len = vec[i].iov_len;
         memcpy(buf, (const void *) vec[i].iov_base, len);
@@ -621,7 +603,6 @@ APU_DECLARE(apr_status_t) apr_brigade_writev(apr_bucket_brigade *b,
     e->length = total_len;
     APR_BRIGADE_INSERT_TAIL(b, e);
 
-    TRACE_FUNCTION_END();
     return APR_SUCCESS;
 }
 
