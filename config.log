@@ -939,7 +939,7 @@ configure:7567: /home/jiamin/gcc/bin/gcc -std=gnu99 -o conftest  -g -O2 -pthread
 conftest.c:42:6: warning: conflicting types for built-in function 'sqrt'
  char sqrt ();
       ^
-/tmp/ccjXg4RE.o: In function `main':
+/tmp/ccbso9hx.o: In function `main':
 /home/jiamin/httpd/conftest.c:46: undefined reference to `sqrt'
 collect2: error: ld returned 1 exit status
 configure:7567: $? = 1
@@ -1001,7 +1001,7 @@ configure:7567: $? = 0
 configure:7584: result: -lm
 configure:7601: checking for library containing crypt
 configure:7632: /home/jiamin/gcc/bin/gcc -std=gnu99 -o conftest  -g -O2 -pthread  -DLINUX -D_REENTRANT -D_GNU_SOURCE   conftest.c  >&5
-/tmp/ccAg5GxQ.o: In function `main':
+/tmp/cc1gy9qK.o: In function `main':
 /home/jiamin/httpd/conftest.c:46: undefined reference to `crypt'
 collect2: error: ld returned 1 exit status
 configure:7632: $? = 1
@@ -1072,7 +1072,7 @@ configure:7678: $? = 0
 configure:7678: result: yes
 configure:7678: checking for bindprocessor
 configure:7678: /home/jiamin/gcc/bin/gcc -std=gnu99 -o conftest  -g -O2 -pthread  -DLINUX -D_REENTRANT -D_GNU_SOURCE   conftest.c  >&5
-/tmp/ccmr9YTp.o: In function `main':
+/tmp/ccFTBdqh.o: In function `main':
 /home/jiamin/httpd/conftest.c:72: undefined reference to `bindprocessor'
 collect2: error: ld returned 1 exit status
 configure:7678: $? = 1
@@ -1783,7 +1783,7 @@ configure:26928: result: yes
 configure:26997: checking whether APR supports thread-safe pollsets
 configure:27016: checking for kqueue
 configure:27016: /home/jiamin/gcc/bin/gcc -std=gnu99 -o conftest  -g -O2 -pthread  -DLINUX -D_REENTRANT -D_GNU_SOURCE   conftest.c  >&5
-/tmp/ccsSWzyH.o: In function `main':
+/tmp/ccg72uMF.o: In function `main':
 /home/jiamin/httpd/conftest.c:96: undefined reference to `kqueue'
 collect2: error: ld returned 1 exit status
 configure:27016: $? = 1
@@ -1890,7 +1890,7 @@ configure: failed program was:
 configure:27016: result: no
 configure:27016: checking for port_create
 configure:27016: /home/jiamin/gcc/bin/gcc -std=gnu99 -o conftest  -g -O2 -pthread  -DLINUX -D_REENTRANT -D_GNU_SOURCE   conftest.c  >&5
-/tmp/ccqpKwnP.o: In function `main':
+/tmp/ccdFs6zN.o: In function `main':
 /home/jiamin/httpd/conftest.c:96: undefined reference to `port_create'
 collect2: error: ld returned 1 exit status
 configure:27016: $? = 1
@@ -2234,6 +2234,7 @@ config.status:1190: creating build/rules.mk
 config.status:1190: creating build/pkg/pkginfo
 config.status:1190: creating build/config_vars.sh
 config.status:1190: creating include/ap_config_auto.h
+config.status:1360: include/ap_config_auto.h is unchanged
 config.status:1374: executing default commands
 
 ## ---------------- ##
@@ -2386,7 +2387,7 @@ ENABLED_DSO_MODULES=',authn_file,authn_core,authz_host,authz_groupfile,authz_use
 EXEEXT=''
 EXTRA_CFLAGS=' -g -O2 -pthread'
 EXTRA_CPPFLAGS=' -DLINUX -D_REENTRANT -D_GNU_SOURCE'
-EXTRA_CXXFLAGS=''
+EXTRA_CXXFLAGS=' --std=c++11'
 EXTRA_INCLUDES='-I. -I$(top_srcdir)/os/$(OS_DIR) -I$(top_srcdir)/include -I/home/jiamin/usr/include/apr-1 -I/home/jiamin/usr/include -I$(top_srcdir)/modules/aaa -I$(top_srcdir)/modules/cache -I$(top_srcdir)/modules/core -I$(top_srcdir)/modules/database -I$(top_srcdir)/modules/filters -I$(top_srcdir)/modules/ldap -I$(top_srcdir)/modules/loggers -I$(top_srcdir)/modules/lua -I$(top_srcdir)/modules/proxy -I$(top_srcdir)/modules/session -I$(top_srcdir)/modules/ssl -I$(top_srcdir)/modules/test -I$(top_srcdir)/server -I$(top_srcdir)/modules/arch/unix -I$(top_srcdir)/modules/dav/main -I$(top_srcdir)/modules/generators -I$(top_srcdir)/modules/mappers'
 EXTRA_LDFLAGS=' '
 EXTRA_LIBS=''
