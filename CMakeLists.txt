@@ -531,6 +531,7 @@ set(SOURCE_FILES
         srclib/apr/include/arch/unix/apr_arch_thread_mutex.h
         srclib/apr/include/arch/unix/apr_arch_thread_rwlock.h
         srclib/apr/include/arch/unix/apr_arch_threadproc.h
+        srclib/apr/include/arch/unix/apr_private.h
         srclib/apr/include/arch/win32/apr_arch_atime.h
         srclib/apr/include/arch/win32/apr_arch_dso.h
         srclib/apr/include/arch/win32/apr_arch_file_io.h
@@ -546,6 +547,7 @@ set(SOURCE_FILES
         srclib/apr/include/arch/win32/apr_dbg_win32_handles.h
         srclib/apr/include/arch/win32/apr_private.h
         srclib/apr/include/arch/apr_private_common.h
+        srclib/apr/include/apr.h
         srclib/apr/include/apr_allocator.h
         srclib/apr/include/apr_atomic.h
         srclib/apr/include/apr_dso.h
@@ -912,6 +914,7 @@ set(SOURCE_FILES
         srclib/apr-util/test/testxml.c
         srclib/apr-util/uri/apr_uri.c
         srclib/apr-util/xlate/xlate.c
+        srclib/apr-util/xml/expat/include/expat.h
         srclib/apr-util/xml/expat/lib/ascii.h
         srclib/apr-util/xml/expat/lib/asciitab.h
         srclib/apr-util/xml/expat/lib/expat.h
@@ -933,8 +936,6 @@ set(SOURCE_FILES
         srclib/apr-util/xml/expat/lib/xmltok_ns.c
         srclib/apr-util/xml/expat/expat_config.h
         srclib/apr-util/xml/apr_xml.c
-        srclib/apr-util/export_vars.c
-        srclib/apr-util/exports.c
     support/win32/ApacheMonitor.c
     support/win32/ApacheMonitor.h
     support/win32/wintty.c
@@ -963,6 +964,7 @@ set(SOURCE_FILES
 
 add_executable(httpd ${SOURCE_FILES})
 
-include_directories(include)
-include_directories(/usr/local/Cellar/apr/1.5.2_3/libexec/include/apr-1/)
-include_directories(/usr/local/Cellar/apr-util/1.5.4_4/libexec/include/apr-1/)
+include_directories(include
+        srclib/apr/include
+        srclib/apr/include/arch/unix
+        srclib/apr-util/include)
