@@ -256,10 +256,9 @@ void ADD_RECORD(int function_index, long duration) {
 }
 
 void *alloc(size_t size) {
-    offset += size;
-    if (offset <= MAX_SIZE) {
-        char *result = memory + offset.load();
-        offset += size;
+    long new_offset = offset.fetch_add(size);
+    if (new_offset <= MAX_SIZE) {
+        char *result = memory + new_offset - size;
         return result;
     } else {
         offset -= size;
