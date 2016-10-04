@@ -669,14 +669,15 @@ APR_DECLARE(void) apr_pool_terminate(void)
 
 APR_DECLARE(void *) apr_palloc(apr_pool_t *pool, apr_size_t in_size)
 {
-    apr_size_t aligned_size = APR_ALIGN_DEFAULT(in_size);
-    if (aligned_size < in_size) {
-        if (pool->abort_fn)
-            pool->abort_fn(APR_ENOMEM);
-
-        return NULL;
-    }
-    return alloc(aligned_size);
+//    apr_size_t aligned_size = APR_ALIGN_DEFAULT(in_size);
+//    if (aligned_size < in_size) {
+//        if (pool->abort_fn)
+//            pool->abort_fn(APR_ENOMEM);
+//
+//        return NULL;
+//    }
+//    return alloc(aligned_size);
+    
     apr_memnode_t *active, *node;
     void *mem;
     apr_size_t size, free_index;
