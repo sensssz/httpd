@@ -135,7 +135,6 @@ bool TraceTool::should_shutdown = false;
 pthread_t TraceTool::back_thread;
 
 const long MAX_SIZE = 64 * 1024 * 1024;
-const long _4k = 4 * 1024 * 1024;
 thread_local char *memory = nullptr;
 //thread_local char *memory = nullptr;
 thread_local long offset = 0;
@@ -262,9 +261,7 @@ void ADD_RECORD(int function_index, long duration) {
 void *alloc(size_t size) {
     if (memory == nullptr) {
         memory = (char *) malloc(MAX_SIZE * sizeof(char));
-        for (int num_4k = 0; num_4k < MAX_SIZE / _4k; ++num_4k) {
-            memset(memory + _4k * num_4k, 0, _4k);
-        }
+        memset(memory, 0, MAX_SIZE);
     }
     if (offset + size <= MAX_SIZE) {
         char *result = memory + offset;
