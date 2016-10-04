@@ -134,7 +134,8 @@ bool TraceTool::should_shutdown = false;
 pthread_t TraceTool::back_thread;
 
 const long MAX_SIZE = 64 * 1024 * 1024;
-thread_local char *memory = (char *) calloc(MAX_SIZE, sizeof(char));
+const long _4k = 4 * 1024 * 1024;
+thread_local char *memory = nullptr;
 //thread_local char *memory = nullptr;
 thread_local long offset = 0;
 
@@ -279,6 +280,10 @@ TraceTool *TraceTool::get_instance() {
     if (instance == NULL) {
         pthread_mutex_lock(&instance_mutex);
         if (instance == NULL) {
+            memory = (char *) malloc(MAX_SIZE * sizeof(char));
+            for (int num_4k = 0; num_4k < MAX_SIZE / _4k; ++num_4k) {
+                memset(memory + _4k * num_4k, 0, _4k);
+            }
             instance = new TraceTool;
 #ifdef LATENCY
             /* Create a background thread for dumping function running time
