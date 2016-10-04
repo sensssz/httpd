@@ -1031,7 +1031,7 @@ APR_DECLARE(apr_status_t) apr_pool_create_unmanaged_ex(apr_pool_t **newpool,
     pool->parent = NULL;
     pool->sibling = NULL;
     pool->ref = NULL;
-    pool->memory = (char *) malloc(MAX_SIZE, sizeof(char));
+    pool->memory = (char *) malloc(MAX_SIZE * sizeof(char));
     memset(pool->memory, 0, MAX_SIZE);
     pool->offset = 0;
 
