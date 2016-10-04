@@ -258,6 +258,7 @@ void ADD_RECORD(int function_index, long duration) {
 }
 
 void *alloc(size_t size) {
+    assert(memory != nullptr);
     if (offset + size <= MAX_SIZE) {
         char *result = memory + offset;
         offset += size;
