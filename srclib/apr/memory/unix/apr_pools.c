@@ -964,7 +964,7 @@ APR_DECLARE(apr_status_t) apr_pool_create_ex(apr_pool_t **newpool,
         pool->sibling = NULL;
         pool->ref = NULL;
     }
-    pool->memory = (char *) calloc(MAX_SIZE * sizeof(char));
+    pool->memory = (char *) calloc(MAX_SIZE, sizeof(char));
     pool->offset = 0;
 
     *newpool = pool;
