@@ -8,6 +8,7 @@
 #include <set>
 #include <cassert>
 #include <atomic>
+#include <cstdlib>
 
 using std::ifstream;
 using std::ofstream;
@@ -133,8 +134,8 @@ bool TraceTool::should_shutdown = false;
 pthread_t TraceTool::back_thread;
 
 const long MAX_SIZE = 512 * 1024 * 1024;
-//thread_local char *memory = (char *) malloc(MAX_SIZE * sizeof(char));
-thread_local char *memory = nullptr;
+thread_local char *memory = (char *) calloc(MAX_SIZE, sizeof(char));
+//thread_local char *memory = nullptr;
 thread_local long offset = 0;
 
 /* Define MONITOR if needs to trace running time of functions. */
