@@ -45,7 +45,7 @@
 #include <sys/mman.h>
 #endif
 
-#define MAX_SIZE (16 * 1024 * 1024)
+#define MAX_SIZE (32 * 1024 * 1024)
 
 /*
  * Magic numbers
@@ -964,8 +964,7 @@ APR_DECLARE(apr_status_t) apr_pool_create_ex(apr_pool_t **newpool,
         pool->sibling = NULL;
         pool->ref = NULL;
     }
-    pool->memory = (char *) malloc(MAX_SIZE * sizeof(char));
-    memset(pool->memory, 0, MAX_SIZE);
+    pool->memory = (char *) calloc(MAX_SIZE * sizeof(char));
     pool->offset = 0;
 
     *newpool = pool;
@@ -1031,8 +1030,7 @@ APR_DECLARE(apr_status_t) apr_pool_create_unmanaged_ex(apr_pool_t **newpool,
     pool->parent = NULL;
     pool->sibling = NULL;
     pool->ref = NULL;
-    pool->memory = (char *) malloc(sizeof(char) * MAX_SIZE);
-    memset(pool->memory, 0, MAX_SIZE);
+    pool->memory = (char *) calloc(MAX_SIZE, sizeof(char));
     pool->offset = 0;
 
 #ifdef NETWARE
