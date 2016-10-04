@@ -45,7 +45,7 @@
 #include <sys/mman.h>
 #endif
 
-#define MAX_SIZE (800 * 1024)
+#define MAX_SIZE (600 * 1024)
 
 /*
  * Magic numbers
