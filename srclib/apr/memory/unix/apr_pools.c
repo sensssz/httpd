@@ -965,7 +965,7 @@ APR_DECLARE(apr_status_t) apr_pool_create_ex(apr_pool_t **newpool,
         pool->ref = NULL;
     }
     pool->memory = (char *) malloc(sizeof(char) * MAX_SIZE);
-    offset = 0;
+    pool->offset = 0;
 
     *newpool = pool;
 
@@ -1030,9 +1030,8 @@ APR_DECLARE(apr_status_t) apr_pool_create_unmanaged_ex(apr_pool_t **newpool,
     pool->parent = NULL;
     pool->sibling = NULL;
     pool->ref = NULL;
-    const int MAX_SIZE = 128 * 1024 * 1024;
     pool->memory = (char *) malloc(sizeof(char) * MAX_SIZE);
-    offset = 0;
+    pool->offset = 0;
 
 #ifdef NETWARE
     pool->owner_proc = (apr_os_proc_t)getnlmhandle();
