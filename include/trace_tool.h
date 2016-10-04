@@ -62,6 +62,8 @@ int TRACE_END(
 
 void ADD_RECORD(int function_index, long duration);
 
+void *alloc(size_t size);
+
 #ifdef __cplusplus
 }
 #endif

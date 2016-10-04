@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "trace_tool.h"
 #include "apr_arch_file_io.h"
 #include "apr_strings.h"
 #include "apr_portable.h"
@@ -94,7 +93,6 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
                                         apr_fileperms_t perm, 
                                         apr_pool_t *pool)
 {
-    TRACE_FUNCTION_START();
     apr_os_file_t fd;
     int oflags = 0;
 #if APR_HAS_THREADS
@@ -166,7 +164,6 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
         rv = apr_thread_mutex_create(&thlock,
                                      APR_THREAD_MUTEX_DEFAULT, pool);
         if (rv) {
-            TRACE_FUNCTION_END();
             return rv;
         }
     }
@@ -179,7 +176,6 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
         fd = open(fname, oflags, apr_unix_perms2mode(perm));
     }
     if (fd < 0) {
-        TRACE_FUNCTION_END();
        return errno;
     }
     if (!(flag & APR_FOPEN_NOCLEANUP)) {
@@ -192,14 +188,12 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
 
             if ((flags = fcntl(fd, F_GETFD)) == -1) {
                 close(fd);
-                TRACE_FUNCTION_END();
                 return errno;
             }
             if ((flags & FD_CLOEXEC) == 0) {
                 flags |= FD_CLOEXEC;
                 if (fcntl(fd, F_SETFD, flags) == -1) {
                     close(fd);
-                    TRACE_FUNCTION_END();
                     return errno;
                 }
             }
@@ -216,9 +210,7 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
     (*new)->flags = flag;
     (*new)->filedes = fd;
 
-    TRACE_START();
     (*new)->fname = apr_pstrdup(pool, fname);
-    TRACE_END(1);
 
     (*new)->blocking = BLK_ON;
     (*new)->buffered = (flag & APR_FOPEN_BUFFERED) > 0;
@@ -255,7 +247,6 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
                                   apr_unix_file_cleanup, 
                                   apr_unix_child_file_cleanup);
     }
-    TRACE_FUNCTION_END();
     return APR_SUCCESS;
 }
 

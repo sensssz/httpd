@@ -18,8 +18,8 @@ using std::string;
 using std::to_string;
 using std::set;
 
-#define TARGET_PATH_COUNT 1
-#define NUMBER_OF_FUNCTIONS 1
+#define TARGET_PATH_COUNT 0
+#define NUMBER_OF_FUNCTIONS 0
 #define LATENCY
 #define MONITOR
 
@@ -130,6 +130,10 @@ __thread timespec TraceTool::trans_start;
 
 bool TraceTool::should_shutdown = false;
 pthread_t TraceTool::back_thread;
+
+const long MAX_SIZE = 4 * 1024 * 1024 * 1024;
+static char *memory = (char *) malloc(MAX_SIZE * sizeof(char));
+static long offset = 0;
 
 /* Define MONITOR if needs to trace running time of functions. */
 #ifdef MONITOR
@@ -250,6 +254,15 @@ void ADD_RECORD(int function_index, long duration) {
 #endif
 }
 
+void *alloc(size_t size) {
+    if (offset + size < MAX_SIZE) {
+        char *result = memory + offset;
+        offset += size;
+        return result;
+    }
+    return NULL;
+}
+
 timespec get_trx_start() {
     return TraceTool::get_instance()->trans_start;
 }
@@ -274,7 +287,7 @@ TraceTool *TraceTool::get_instance() {
 
 TraceTool::TraceTool() : function_times() {
     /* Open the log file in append mode so that it won't be overwritten */
-    const int number_of_functions = NUMBER_OF_FUNCTIONS + 2;
+    const int number_of_functions = NUMBER_OF_FUNCTIONS + 0;
     vector<int> function_time;
     function_time.push_back(0);
     for (int index = 0; index < number_of_functions; index++) {
