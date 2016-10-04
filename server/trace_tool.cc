@@ -7,6 +7,7 @@
 #include <vector>
 #include <set>
 #include <cassert>
+#include <atomic>
 
 using std::ifstream;
 using std::ofstream;
