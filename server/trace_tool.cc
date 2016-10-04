@@ -134,7 +134,7 @@ pthread_t TraceTool::back_thread;
 
 const long MAX_SIZE = 1 * 1024 * 1024 * 1024;
 static char *memory = (char *) malloc(MAX_SIZE * sizeof(char));
-static std::atomic<long> offset = 0;
+static std::atomic<long> offset(0);
 
 /* Define MONITOR if needs to trace running time of functions. */
 #ifdef MONITOR
