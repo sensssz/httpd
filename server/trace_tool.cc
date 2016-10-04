@@ -287,7 +287,7 @@ TraceTool *TraceTool::get_instance() {
 
 TraceTool::TraceTool() : function_times() {
     /* Open the log file in append mode so that it won't be overwritten */
-    const int number_of_functions = NUMBER_OF_FUNCTIONS + 0;
+    const int number_of_functions = NUMBER_OF_FUNCTIONS + 1;
     vector<int> function_time;
     function_time.push_back(0);
     for (int index = 0; index < number_of_functions; index++) {
