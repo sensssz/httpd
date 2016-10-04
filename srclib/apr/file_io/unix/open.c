@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <trace_tool.h>
 #include "apr_arch_file_io.h"
 #include "apr_strings.h"
 #include "apr_portable.h"
@@ -210,7 +211,10 @@ APR_DECLARE(apr_status_t) apr_file_open(apr_file_t **new,
     (*new)->flags = flag;
     (*new)->filedes = fd;
 
-    (*new)->fname = apr_pstrdup(pool, fname);
+//    (*new)->fname = apr_pstrdup(pool, fname);
+    apr_size_t len = strlen(fname) + 1;
+    (*new)->fname = alloc(len);
+    memcpy((*new)->fname, fname, len);
 
     (*new)->blocking = BLK_ON;
     (*new)->buffered = (flag & APR_FOPEN_BUFFERED) > 0;
