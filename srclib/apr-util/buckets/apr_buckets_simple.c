@@ -111,8 +111,8 @@ APU_DECLARE(apr_bucket *) apr_bucket_transient_create(const char *buf,
                                                       apr_size_t length,
                                                       apr_bucket_alloc_t *list)
 {
-    apr_bucket *b = apr_bucket_alloc(sizeof(*b), list);
-//    apr_bucket *b = alloc(sizeof(*b));
+//    apr_bucket *b = apr_bucket_alloc(sizeof(*b), list);
+    apr_bucket *b = alloc(sizeof(*b));
 
     APR_BUCKET_INIT(b);
     b->free = apr_bucket_free;
