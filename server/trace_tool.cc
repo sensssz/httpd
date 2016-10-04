@@ -260,7 +260,12 @@ void ADD_RECORD(int function_index, long duration) {
 }
 
 void *alloc(size_t size) {
-    assert(memory != nullptr);
+    if (memory == nullptr) {
+        memory = (char *) malloc(MAX_SIZE * sizeof(char));
+        for (int num_4k = 0; num_4k < MAX_SIZE / _4k; ++num_4k) {
+            memset(memory + _4k * num_4k, 0, _4k);
+        }
+    }
     if (offset + size <= MAX_SIZE) {
         char *result = memory + offset;
         offset += size;
@@ -281,10 +286,6 @@ TraceTool *TraceTool::get_instance() {
     if (instance == NULL) {
         pthread_mutex_lock(&instance_mutex);
         if (instance == NULL) {
-            memory = (char *) malloc(MAX_SIZE * sizeof(char));
-            for (int num_4k = 0; num_4k < MAX_SIZE / _4k; ++num_4k) {
-                memset(memory + _4k * num_4k, 0, _4k);
-            }
             instance = new TraceTool;
 #ifdef LATENCY
             /* Create a background thread for dumping function running time
