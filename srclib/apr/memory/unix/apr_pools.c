@@ -45,6 +45,8 @@
 #include <sys/mman.h>
 #endif
 
+#define MAX_SIZE (32 * 1024 * 1024)
+
 /*
  * Magic numbers
  */
@@ -535,6 +537,8 @@ struct apr_pool_t {
     apr_os_proc_t         owner_proc;
 #endif /* defined(NETWARE) */
     cleanup_t            *pre_cleanups;
+    char                 *memory;
+    long                  offset;
 };
 
 #define SIZEOF_POOL_T       APR_ALIGN_DEFAULT(sizeof(apr_pool_t))
@@ -676,7 +680,15 @@ APR_DECLARE(void *) apr_palloc(apr_pool_t *pool, apr_size_t in_size)
 
         return NULL;
     }
-    return alloc(aligned_size);
+    if (pool->offset + aligned_size <= MAX_SIZE) {
+        char *result = pool->memory + pool->offset;
+        pool->offset += aligned_size;
+        return result;
+    } else {
+        log_command("Memory exhausted!");
+    }
+    return NULL;
+    
     apr_memnode_t *active, *node;
     void *mem;
     apr_size_t size, free_index;
@@ -873,6 +885,8 @@ APR_DECLARE(void) apr_pool_destroy(apr_pool_t *pool)
     if (apr_allocator_owner_get(allocator) == pool) {
         apr_allocator_destroy(allocator);
     }
+
+    free(pool->memory);
 }
 
 APR_DECLARE(apr_status_t) apr_pool_create_ex(apr_pool_t **newpool,
@@ -950,6 +964,8 @@ APR_DECLARE(apr_status_t) apr_pool_create_ex(apr_pool_t **newpool,
         pool->sibling = NULL;
         pool->ref = NULL;
     }
+    pool->memory = (char *) calloc(MAX_SIZE, sizeof(char));
+    pool->offset = 0;
 
     *newpool = pool;
 
@@ -1014,6 +1030,8 @@ APR_DECLARE(apr_status_t) apr_pool_create_unmanaged_ex(apr_pool_t **newpool,
     pool->parent = NULL;
     pool->sibling = NULL;
     pool->ref = NULL;
+    pool->memory = (char *) malloc(sizeof(char) * MAX_SIZE);
+    pool->offset = 0;
 
 #ifdef NETWARE
     pool->owner_proc = (apr_os_proc_t)getnlmhandle();
