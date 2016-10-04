@@ -667,7 +667,7 @@ APR_DECLARE(void) apr_pool_terminate(void)
 
 APR_DECLARE(void *) apr_palloc(apr_pool_t *pool, apr_size_t in_size)
 {
-//    return alloca(in_size);
+    return alloca(in_size);
     apr_memnode_t *active, *node;
     void *mem;
     apr_size_t size, free_index;
