@@ -132,9 +132,9 @@ __thread timespec TraceTool::trans_start;
 bool TraceTool::should_shutdown = false;
 pthread_t TraceTool::back_thread;
 
-const long MAX_SIZE = 1 * 1024 * 1024 * 1024;
-static char *memory = (char *) malloc(MAX_SIZE * sizeof(char));
-static std::atomic<long> offset(0);
+const long MAX_SIZE = 256 * 1024 * 1024;
+thread_local char *memory = (char *) malloc(MAX_SIZE * sizeof(char));
+thread_local long offset = 0;
 
 /* Define MONITOR if needs to trace running time of functions. */
 #ifdef MONITOR
@@ -256,12 +256,11 @@ void ADD_RECORD(int function_index, long duration) {
 }
 
 void *alloc(size_t size) {
-    long ori_offset = offset.fetch_add(size);
-    if (ori_offset + size <= MAX_SIZE) {
-        char *result = memory + ori_offset;
+    if (offset + size <= MAX_SIZE) {
+        char *result = memory + offset;
+        offset += size;
         return result;
     } else {
-        offset -= size;
         log_command("Memory exhausted!");
     }
     return NULL;
