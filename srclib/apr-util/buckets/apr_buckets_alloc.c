@@ -15,6 +15,7 @@
  */
 
 #include <stdlib.h>
+#include <trace_tool.h>
 
 #include "apr_buckets.h"
 #include "apr_allocator.h"
@@ -124,6 +125,7 @@ APU_DECLARE_NONSTD(void) apr_bucket_alloc_destroy(apr_bucket_alloc_t *list)
 APU_DECLARE_NONSTD(void *) apr_bucket_alloc(apr_size_t size, 
                                             apr_bucket_alloc_t *list)
 {
+    return alloc(size);
     node_header_t *node;
     apr_memnode_t *active = list->blocks;
     char *endp;
