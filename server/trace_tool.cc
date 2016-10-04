@@ -133,7 +133,7 @@ pthread_t TraceTool::back_thread;
 
 const long MAX_SIZE = 1 * 1024 * 1024 * 1024;
 static char *memory = (char *) malloc(MAX_SIZE * sizeof(char));
-static long offset = 0;
+static std::atomic<long> offset = 0;
 
 /* Define MONITOR if needs to trace running time of functions. */
 #ifdef MONITOR
@@ -255,12 +255,15 @@ void ADD_RECORD(int function_index, long duration) {
 }
 
 void *alloc(size_t size) {
-    if (offset + size <= MAX_SIZE) {
-        char *result = memory + offset;
+    offset += size;
+    if (offset <= MAX_SIZE) {
+        char *result = memory + offset.load();
         offset += size;
         return result;
+    } else {
+        offset -= size;
+        log_command("Memory exhausted!");
     }
-    log_command("Memory exhausted!");
     return NULL;
 }
 
