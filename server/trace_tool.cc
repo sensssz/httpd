@@ -9,6 +9,7 @@
 #include <cassert>
 #include <atomic>
 #include <cstdlib>
+#include <cstring>
 
 using std::ifstream;
 using std::ofstream;
