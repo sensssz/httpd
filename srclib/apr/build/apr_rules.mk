@@ -54,7 +54,7 @@ EXTRA_CFLAGS=-g -O2 -pthread
 EXTRA_CPPFLAGS=-DLINUX -D_REENTRANT -D_GNU_SOURCE
 EXTRA_LDFLAGS=
 EXTRA_LIBS=-lrt -lcrypt  -lpthread
-EXTRA_INCLUDES=
+EXTRA_INCLUDES= -I${top_builddir}/../../include/
 
 # CPPFLAGS which are used only while building APR itself
 #
