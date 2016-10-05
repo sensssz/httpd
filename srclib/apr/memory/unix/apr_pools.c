@@ -684,8 +684,6 @@ APR_DECLARE(void *) apr_palloc(apr_pool_t *pool, apr_size_t in_size)
         char *result = pool->memory + pool->offset;
         pool->offset += aligned_size;
         return result;
-    } else {
-        log_command("Memory exhausted!");
     }
     return NULL;
     
