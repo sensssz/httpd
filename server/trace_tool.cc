@@ -175,17 +175,13 @@ void QUERY_START() {
 }
 
 void SESSION_START() {
-    log_command("session start");
 #ifdef LATENCY
-    log_command("session start in");
     TraceTool::get_instance()->start_trx();
 #endif
 }
 
 void SESSION_END() {
-    log_command("session end");
 #ifdef LATENCY
-    log_command("session end in");
     TraceTool::get_instance()->is_commit = true;
     TraceTool::get_instance()->commit_successful = 1;
     TraceTool::get_instance()->end_trx();
@@ -322,7 +318,8 @@ bool TraceTool::should_monitor() {
 void *TraceTool::check_write_log(void *arg) {
     /* Runs in an infinite loop and for every 5 seconds,
        check if there's any query comes in. If not, then
-       dump data to log files. */
+     dump data to log files. */
+    log_command("thread started");
     while (true) {
         sleep(5);
         log_command("checking");
@@ -346,6 +343,7 @@ void *TraceTool::check_write_log(void *arg) {
             break;
         }
     }
+    log_command("thread ends");
     return NULL;
 }
 
