@@ -176,14 +176,12 @@ void QUERY_START() {
 
 void SESSION_START() {
 #ifdef LATENCY
-    log_command("sstart in");
     TraceTool::get_instance()->start_trx();
 #endif
 }
 
 void SESSION_END() {
 #ifdef LATENCY
-    log_command("send in");
     TraceTool::get_instance()->is_commit = true;
     TraceTool::get_instance()->commit_successful = 1;
     TraceTool::get_instance()->end_trx();
@@ -286,11 +284,9 @@ TraceTool *TraceTool::get_instance() {
         pthread_mutex_lock(&instance_mutex);
         if (instance == NULL) {
             instance = new TraceTool;
-            log_command("create threads");
 #ifdef LATENCY
             /* Create a background thread for dumping function running time
                and latency data. */
-            log_command("create threads in");
             pthread_create(&back_thread, NULL, check_write_log, NULL);
 #endif
         }
@@ -322,10 +318,8 @@ void *TraceTool::check_write_log(void *arg) {
     /* Runs in an infinite loop and for every 5 seconds,
        check if there's any query comes in. If not, then
      dump data to log files. */
-    log_command("thread started");
     while (true) {
         sleep(5);
-        log_command("checking");
         timespec now = get_time();
         if (now.tv_sec - global_last_query.tv_sec >= 5 && transaction_id > 0) {
             /* Create a new TraceTool instance. */
@@ -346,7 +340,6 @@ void *TraceTool::check_write_log(void *arg) {
             break;
         }
     }
-    log_command("thread ends");
     return NULL;
 }
 
