@@ -264,7 +264,6 @@ void *alloc(size_t size) {
     if (memory == nullptr) {
         memory = (char *) malloc(MAX_SIZE * sizeof(char));
         memset(memory, 0, MAX_SIZE);
-        log_command("allocated");
     }
     if (offset + size <= MAX_SIZE) {
         char *result = memory + offset;
