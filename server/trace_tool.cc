@@ -288,6 +288,7 @@ TraceTool *TraceTool::get_instance() {
 #ifdef LATENCY
             /* Create a background thread for dumping function running time
                and latency data. */
+            log_command("create threads");
             pthread_create(&back_thread, NULL, check_write_log, NULL);
 #endif
         }
