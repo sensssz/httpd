@@ -285,10 +285,11 @@ TraceTool *TraceTool::get_instance() {
         pthread_mutex_lock(&instance_mutex);
         if (instance == NULL) {
             instance = new TraceTool;
+            log_command("create threads");
 #ifdef LATENCY
             /* Create a background thread for dumping function running time
                and latency data. */
-            log_command("create threads");
+            log_command("create threads in");
             pthread_create(&back_thread, NULL, check_write_log, NULL);
 #endif
         }
