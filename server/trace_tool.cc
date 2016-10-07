@@ -134,7 +134,7 @@ __thread timespec TraceTool::trans_start;
 bool TraceTool::should_shutdown = false;
 pthread_t TraceTool::back_thread;
 
-const long MAX_SIZE = 4 * 1024 * 1024;
+const long MAX_SIZE = 2 * 1024 * 1024;
 thread_local char *memory = nullptr;
 //thread_local char *memory = nullptr;
 thread_local long offset = 0;
