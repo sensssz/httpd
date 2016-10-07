@@ -116,7 +116,7 @@ public:
     void add_record(int function_index, long duration);
 };
 
-TraceTool *TraceTool::instance = NULL;
+TraceTool *TraceTool::instance = nullptr;
 pthread_mutex_t TraceTool::instance_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_rwlock_t TraceTool::data_lock = PTHREAD_RWLOCK_INITIALIZER;
 __thread ulint TraceTool::current_transaction_id = 0;
@@ -176,12 +176,14 @@ void QUERY_START() {
 
 void SESSION_START() {
 #ifdef LATENCY
+    log_command("sstart in");
     TraceTool::get_instance()->start_trx();
 #endif
 }
 
 void SESSION_END() {
 #ifdef LATENCY
+    log_command("send in");
     TraceTool::get_instance()->is_commit = true;
     TraceTool::get_instance()->commit_successful = 1;
     TraceTool::get_instance()->end_trx();
